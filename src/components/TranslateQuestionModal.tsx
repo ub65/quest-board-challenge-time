@@ -22,6 +22,19 @@ const shuffle = (arr: any[]) => {
 const MIN_TIME = 6;
 const MAX_TIME = 40;
 
+const getTimeSliderColor = (timeLeft: number, timeLimit: number) => {
+  const percent = timeLeft / timeLimit;
+  if (percent > 2 / 3) {
+    return "bg-green-500"; // lots of time left
+  } else if (percent > 1 / 3) {
+    return "bg-yellow-400"; // middle time
+  } else if (percent > 0.15) {
+    return "bg-orange-400"; // getting low
+  } else {
+    return "bg-red-500"; // danger zone
+  }
+};
+
 const TranslateQuestionModal = ({
   isOpen,
   question,
@@ -72,6 +85,8 @@ const TranslateQuestionModal = ({
     setTimeout(() => onSubmit(correct), 800);
   };
 
+  const sliderColorClass = getTimeSliderColor(time, timeLimit);
+
   return (
     <div
       className={`
@@ -93,6 +108,7 @@ const TranslateQuestionModal = ({
             hideThumb
             className="mt-1"
             aria-label={t('question.timeLeft')}
+            rangeClassName={sliderColorClass}
           />
         </div>
         {/* Question prompt */}
@@ -141,4 +157,3 @@ const TranslateQuestionModal = ({
 };
 
 export default TranslateQuestionModal;
-

@@ -1,9 +1,9 @@
-
 import React, { useEffect, useState, useRef } from "react";
 import TranslateQuestionModal from "./TranslateQuestionModal";
 import SoundManager from "./SoundManager";
 import { questionsByDifficulty } from "@/lib/questions";
 import GameSettingsModal from "./GameSettingsModal";
+import AITranslateQuestionModal from "./AITranslateQuestionModal";
 
 export type PlayerType = "human" | "ai";
 
@@ -15,7 +15,7 @@ const initialPositions = {
 };
 
 type Tile = { x: number; y: number };
-type MoveState = null | { tile: Tile; question: any; resolve: (ok: boolean) => void };
+type MoveState = null | { tile: any; question: any; resolve: (ok: boolean) => void };
 
 function positionsEqual(a: Tile, b: Tile) {
   return a.x === b.x && a.y === b.y;
@@ -65,7 +65,7 @@ const GameBoard = ({
 }) => {
   const [positions, setPositions] = useState({ ...initialPositions });
   const [turn, setTurn] = useState<PlayerType>("human");
-  const [moveState, setMoveState] = useState<MoveState>(null);
+  const [moveState, setMoveState] = useState<null | { tile: any; question: any; resolve: (ok: boolean) => void }>(null);
   const [winner, setWinner] = useState<null | PlayerType>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [sound, setSound] = useState<"move" | "wrong" | "win" | null>(null);
@@ -76,6 +76,9 @@ const GameBoard = ({
 
   // AI is pending a move? We use this flag to prevent multiple AI triggers
   const aiMovingRef = useRef(false);
+
+  // --- New: AI question modal state ---
+  const [aiModalState, setAIModalState] = useState<null | { question: any; targetTile: any }>(null);
 
   const aiTarget = { x: 0, y: 0 };
   const humanTarget = { x: BOARD_SIZE - 1, y: BOARD_SIZE - 1 };
@@ -91,31 +94,41 @@ const GameBoard = ({
     }
   }, [positions]);
 
-  // AI turn: "think", then move
+  // --- Reworked AI turn: trigger question modal before moving ---
   useEffect(() => {
-    if (turn === "ai" && !winner && !aiMovingRef.current) {
+    if (turn === "ai" && !winner && !aiModalState && !aiMovingRef.current) {
       aiMovingRef.current = true;
       setDisableInput(true);
+
+      // Prepare to ask a question before allowing AI to move
+      const move = getAIMove(positions.ai, aiTarget);
+      const question = getRandomQuestion(difficulty);
       setTimeout(() => {
-        const move = getAIMove(positions.ai, aiTarget);
-        setSound("move");
-        setPositions((p) => ({ ...p, ai: move }));
-        setTimeout(() => {
-          // Only set human turn and enable input if winner not decided after move
-          setTurn("human");
-          setDisableInput(false);
-          aiMovingRef.current = false;
-        }, 600);
-      }, 800 + Math.random() * 500);
+        setAIModalState({ question, targetTile: move });
+      }, 650); // small "thinking" delay before showing
     }
     // If player's turn or winner, always reset the flag
     if (turn === "human" || winner) {
       aiMovingRef.current = false;
     }
-  }, [turn, winner, positions.ai]);
+    // eslint-disable-next-line
+  }, [turn, winner, positions.ai, aiModalState]);
+
+  // When AI finishes answering, move it and return turn to player
+  const handleAIModalSubmit = () => {
+    if (!aiModalState) return;
+    setSound("move");
+    setPositions((p) => ({ ...p, ai: aiModalState.targetTile }));
+    setAIModalState(null);
+    setTimeout(() => {
+      setTurn("human");
+      setDisableInput(false);
+      aiMovingRef.current = false;
+    }, 600);
+  };
 
   // Human move: pick tile -> answer question
-  const handleTileClick = async (tile: Tile) => {
+  const handleTileClick = async (tile: any) => {
     if (turn !== "human" || winner || disableInput) return;
     const validMoves = getValidMoves(positions.human);
     if (!validMoves.some((t) => positionsEqual(t, tile))) return;
@@ -257,13 +270,22 @@ const GameBoard = ({
           </div>
         )}
       </div>
-      {/* Question modal */}
+      {/* Human question modal */}
       {moveState && (
         <TranslateQuestionModal
           isOpen={isModalOpen}
           question={moveState.question}
-          key={moveState.tile.x + "-" + moveState.tile.y}
+          key={moveState.tile.x + "-" + moveState.tile.y + "-human"}
           onSubmit={moveState.resolve}
+        />
+      )}
+      {/* AI question modal */}
+      {aiModalState && (
+        <AITranslateQuestionModal
+          isOpen={true}
+          question={aiModalState.question}
+          key={aiModalState.targetTile.x + "-" + aiModalState.targetTile.y + "-ai"}
+          onSubmit={handleAIModalSubmit}
         />
       )}
       {!winner && (

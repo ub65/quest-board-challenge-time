@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState, useRef } from "react";
 import TranslateQuestionModal from "./TranslateQuestionModal";
 import SoundManager from "./SoundManager";
@@ -208,62 +207,50 @@ const GameBoard = ({
     return doFreeMove;
   }
 
-  // HUMAN MOVE HANDLER (now: turn switches after every successful move)
-  const handleTileClick = async (tile: any) => {
-    if (winner || disableInput) return;
-
-    // In defense mode, clicks should place a defense instead of moving
-    if (defenseMode) {
-      handleDefenseClick(tile);
-      setDefenseMode(false); // immediately exit defense mode after placement
-      return;
-    }
-
-    // NOT DEFENSE MODE: regular move
-    if (turn !== "human") return;
-
-    const validMoves = getValidMoves(positions.human, BOARD_SIZE, defenseTiles, positions.ai).filter(
-      t => t.x >= 0 && t.y >= 0 && t.x < BOARD_SIZE && t.y < BOARD_SIZE
-    );
-    if (!validMoves.some((t) => positionsEqual(t, tile))) return;
-    const question = getRandomQuestion(difficulty);
-    const ok = await new Promise<boolean>((resolve) => {
-      setMoveState({ tile, question, resolve });
-      setIsModalOpen(true);
+  // Refactored: HUD Actions
+  function handlePlaceDefenseButton() {
+    setDefenseMode(true);
+    toast({
+      title: t("game.defense_mode_on"),
+      description: t("game.defense_mode_on_desc"),
+      duration: 2200,
     });
-    setIsModalOpen(false);
-    setMoveState(null);
-    if (winner) return;
+    const handler = (ev: MouseEvent) => {
+      if (!(ev.target instanceof HTMLElement)) return;
+      let tileDiv = ev.target.closest("button[data-tile-x]");
+      if (!tileDiv) return;
+      const x = parseInt(tileDiv.getAttribute("data-tile-x") || "-1");
+      const y = parseInt(tileDiv.getAttribute("data-tile-y") || "-1");
+      if (x < 0 || y < 0) return;
+      handleDefenseClick({ x, y });
+      document.removeEventListener("click", handler, true);
+      setDefenseMode(false);
+    };
+    setTimeout(() => {
+      document.addEventListener("click", handler, true);
+    }, 100);
+  }
 
-    if (ok) {
-      setPositions((p) => {
-        const { x, y } = tile;
-        setBoardPoints((prev) => {
-          if (prev[y][x] === 0) return prev;
-          if ((x === 0 && y === 0) || (x === BOARD_SIZE - 1 && y === BOARD_SIZE - 1)) return prev;
-          setHumanPoints((cur) => cur + prev[y][x]);
-          const next = prev.map((row) => [...row]);
-          next[y][x] = 0;
-          return next;
-        });
-        return { ...p, human: { x, y } };
-      });
-      setSound("move");
-
-      setTimeout(() => {
-        const doFreeMove = handleSurprise(tile, "human");
-        if (!doFreeMove) {
-          // Switch to AI turn after a single successful move and no free move
-          setTurn("ai");
-        }
-        // If doFreeMove: stay on human (player gets another move)
-      }, 100);
-    } else {
-      setSound("wrong");
-      // On wrong answer, pass the turn to the AI
-      setTurn("ai");
-    }
-  };
+  // Refactor: human move handler
+  const { handleTileClick } = useHumanMoveHandler({
+    winner,
+    disableInput,
+    turn,
+    positions,
+    BOARD_SIZE,
+    defenseTiles,
+    difficulty,
+    defenseMode,
+    handleDefenseClick,
+    setSound,
+    setPositions,
+    setBoardPoints,
+    setIsModalOpen,
+    setMoveState,
+    setTurn,
+    setHumanPoints,
+    handleSurprise,
+  });
 
   // AI move handler (after answering modal) - FIXED: Only zero out the correct tile's points
   const handleAIModalSubmit = () => {
@@ -363,63 +350,17 @@ const GameBoard = ({
         onRestart={handleRestart}
         difficulty={difficulty}
       />
-      {/* Scoreboard + Defense Button (moved) */}
-      <div className="w-full flex flex-col items-center">
-        <GameScoreboard humanPoints={humanPoints} aiPoints={aiPoints} />
-        <div className="flex items-center gap-4 mt-1">
-          <div className="flex items-center gap-2">
-            <Shield size={18} className="text-primary" />
-            <span className="text-xs text-blue-700 font-semibold">
-              {t("game.defenses_left")}: {numDefenses - defensesUsed.human}
-            </span>
-          </div>
-          <div className="flex items-center gap-2">
-            <Shield size={18} className="text-red-700" />
-            <span className="text-xs text-red-700 font-semibold">
-              {t("game.ai_defenses_left")}: {numDefenses - defensesUsed.ai}
-            </span>
-          </div>
-          {/* Place Defense Button */}
-          {!winner && turn === "human" && (numDefenses - defensesUsed.human > 0) && (
-            <button
-              onClick={() => {
-                setDefenseMode(true);
-                toast({
-                  title: t("game.defense_mode_on"),
-                  description: t("game.defense_mode_on_desc"),
-                  duration: 2200,
-                });
-                // Next tile click will be for defense, add a handler…
-                const handler = (ev: MouseEvent) => {
-                  if (!(ev.target instanceof HTMLElement)) return;
-                  let tileDiv = ev.target.closest("button[data-tile-x]");
-                  if (!tileDiv) return;
-                  const x = parseInt(tileDiv.getAttribute("data-tile-x") || "-1");
-                  const y = parseInt(tileDiv.getAttribute("data-tile-y") || "-1");
-                  if (x < 0 || y < 0) return;
-                  handleDefenseClick({ x, y });
-                  document.removeEventListener("click", handler, true);
-                  setDefenseMode(false);
-                };
-                setTimeout(() => {
-                  document.addEventListener("click", handler, true);
-                }, 100);
-              }}
-              className="bg-blue-500 text-white font-semibold px-4 py-2 rounded-lg shadow hover:bg-blue-700 transition-all animate-pulse"
-            >
-              <Shield size={20} className="inline-block mr-1" />
-              {t("game.defense_place_btn")}
-            </button>
-          )}
-        </div>
-        <div className="w-full flex justify-center">
-          {defenseMode && (
-            <span className="text-sm text-blue-600 mt-2 animate-pulse">
-              {t("game.defense_mode_select")}
-            </span>
-          )}
-        </div>
-      </div>
+      <GameBoardHud
+        humanPoints={humanPoints}
+        aiPoints={aiPoints}
+        numDefenses={numDefenses}
+        defensesUsed={defensesUsed}
+        t={t}
+        winner={winner}
+        turn={turn}
+        onPlaceDefense={handlePlaceDefenseButton}
+        defenseMode={defenseMode}
+      />
       <div className="relative my-3">
         <GameBoardGrid
           BOARD_SIZE={BOARD_SIZE}
@@ -429,7 +370,6 @@ const GameBoard = ({
           aiTarget={aiTarget}
           winner={winner}
           turn={turn}
-          // IMPORTANT: We want to disable input for modal/win, but not for defense mode.
           disableInput={disableInput}
           onTileClick={handleTileClick}
           getValidMoves={(pos) =>
@@ -437,13 +377,13 @@ const GameBoard = ({
               pos,
               BOARD_SIZE,
               defenseTiles,
-              pos === positions.human ? positions.ai : positions.human // Block other player
+              pos === positions.human ? positions.ai : positions.human
             )
           }
           positionsEqual={positionsEqual}
           surpriseTiles={surpriseTiles}
           defenseTiles={defenseTiles}
-          aiPendingTarget={aiModalState ? aiModalState.targetTile : null} // Pass AI's preview target
+          aiPendingTarget={aiModalState ? aiModalState.targetTile : null}
         />
         {winner && (
           <div className="absolute inset-0 bg-black/70 flex flex-col items-center justify-center rounded-lg animate-fade-in z-10">
@@ -468,24 +408,16 @@ const GameBoard = ({
         )}
       </div>
       {/* Question modals */}
-      {moveState && !winner && (
-        <TranslateQuestionModal
-          isOpen={isModalOpen}
-          question={moveState.question}
-          timeLimit={questionTime}
-          key={moveState.tile.x + "-" + moveState.tile.y + "-human"}
-          onSubmit={moveState.resolve}
-        />
-      )}
-      {aiModalState && !winner && (
-        <AITranslateQuestionModal
-          isOpen={true}
-          question={aiModalState.question}
-          key={aiModalState.targetTile.x + "-" + aiModalState.targetTile.y + "-ai"}
-          onSubmit={handleAIModalSubmit}
-        />
-      )}
-      {/* Turn/who info */}
+      <GameBoardModals
+        moveState={moveState}
+        isModalOpen={isModalOpen}
+        aiModalState={aiModalState}
+        winner={winner}
+        questionTime={questionTime}
+        onHumanSubmit={moveState?.resolve}
+        onAISubmit={handleAIModalSubmit}
+      />
+      {/* Turn info */}
       {!winner && (
         <div
           className={`w-full mt-4 flex justify-between items-center`}
@@ -524,4 +456,4 @@ const GameBoard = ({
 
 export default GameBoard;
 
-// NOTE: This file is getting too long! After this change, you should consider splitting GameBoard into smaller files for maintainability.
+// NOTE: This file was refactored to split out GameBoardHud, GameBoardModals, and move handlers/hook logic for maintainability.

@@ -7,6 +7,12 @@ import GameSettingsModal from "@/components/GameSettingsModal";
 import GameModeSelector from "@/components/GameModeSelector";
 import OnlineLobby from "@/components/OnlineLobby";
 
+// Define an online game interface to store online info
+type OnlineGameState = {
+  gameCode: string;
+  role: "host" | "guest";
+} | null;
+
 const Index = () => {
   const { t, language } = useLocalization();
   const [difficulty, setDifficulty] = useState<"easy" | "medium" | "hard">("easy");
@@ -15,20 +21,22 @@ const Index = () => {
   const [step, setStep] = useState<"mode" | "welcome" | "game" | "online">("mode");
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [playerName, setPlayerName] = useState("");
-  // Game settings state for initial modal - pass dummy handlers as non-restart game
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [questionTime, setQuestionTime] = useState(20);
   const [boardSize, setBoardSize] = useState(8);
   const [numSurprises, setNumSurprises] = useState(4);
   const [numDefenses, setNumDefenses] = useState(2);
 
-  // New: Track current mode ("ai" or "online")
   const [mode, setMode] = useState<"ai" | "online" | null>(null);
+
+  // Online game state
+  const [onlineGame, setOnlineGame] = useState<OnlineGameState>(null);
 
   const handleRestart = () => {
     setGameKey((k) => k + 1);
     setStep("mode");
     setMode(null);
+    setOnlineGame(null);
   };
 
   // Handle mode selection
@@ -41,7 +49,13 @@ const Index = () => {
     }
   };
 
-  // If mode selection, show that first
+  // Callback triggered by OnlineLobby to actually start the online game
+  const handleOnlineGameStart = (gameCode: string, role: "host" | "guest") => {
+    setOnlineGame({ gameCode, role });
+    setStep("game");
+  };
+
+  // Mode selection screen
   if (step === "mode") {
     return (
       <GameModeSelector
@@ -51,20 +65,39 @@ const Index = () => {
     );
   }
 
-  // Online: show online lobby (placeholder)
-  if (mode === "online" && step === "online") {
-    return (
-      <OnlineLobby
-        t={t}
-        onBack={() => {
-          setMode(null);
-          setStep("mode");
-        }}
-      />
-    );
+  // Online: if onlineGame is set, show board; else show OnlineLobby
+  if (mode === "online") {
+    if (step === "online" && !onlineGame) {
+      return (
+        <OnlineLobby
+          t={t}
+          onBack={() => {
+            setMode(null);
+            setStep("mode");
+          }}
+          onGameStart={handleOnlineGameStart}
+        />
+      );
+    }
+    // If onlineGame is set, show game board (pass online props here as needed)
+    if (step === "game" && onlineGame) {
+      return (
+        <div className="w-full max-w-3xl animate-fade-in">
+          <GameBoard
+            key={gameKey}
+            difficulty={difficulty}
+            onRestart={handleRestart}
+            playerName={playerName}
+            // Optionally, pass gameCode/role as props for online
+            // gameCode={onlineGame.gameCode}
+            // onlineRole={onlineGame.role}
+          />
+        </div>
+      );
+    }
   }
 
-  // AI: normal flow (welcome -> game)
+  // AI flow (welcome -> game)
   return (
     <div
       className={`
@@ -98,7 +131,7 @@ const Index = () => {
           onSettings={() => setSettingsOpen(true)}
         />
       )}
-      {step === "game" && (
+      {step === "game" && mode === "ai" && (
         <div className="w-full max-w-3xl animate-fade-in">
           <GameBoard
             key={gameKey}

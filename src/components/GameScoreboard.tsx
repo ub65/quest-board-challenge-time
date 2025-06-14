@@ -18,8 +18,12 @@ const GameScoreboard: React.FC<GameScoreboardProps> = ({ humanPoints, aiPoints, 
       `}
       dir={language === "he" ? "rtl" : "ltr"}
     >
-      <div className="flex flex-row items-center gap-2">
-        <span className="w-7 rounded bg-blue-600 text-white flex items-center justify-center font-bold shadow-md">
+      <div className="flex flex-row items-center gap-2 min-w-0">
+        <span
+          className="rounded bg-blue-600 text-white flex items-center justify-center font-bold shadow-md px-3 max-w-[124px] truncate cursor-pointer"
+          title={playerName?.trim() || t("game.youLabel")}
+          style={{ minHeight: 28 /* To match .w-7 for a single char, but allow stretching */ }}
+        >
           {playerName?.trim() || t("game.youLabel")}
         </span>
         <span className="text-blue-900 ml-2">{t("game.points")}: {humanPoints}</span>
@@ -35,3 +39,4 @@ const GameScoreboard: React.FC<GameScoreboardProps> = ({ humanPoints, aiPoints, 
 };
 
 export default GameScoreboard;
+

@@ -8,13 +8,26 @@ import GameHeader from "./GameHeader";
 import GameScoreboard from "./GameScoreboard";
 import GameBoardGrid from "./GameBoardGrid";
 import { useLocalization } from "@/contexts/LocalizationContext";
+import { Gift } from "lucide-react";
+import { toast } from "@/components/ui/use-toast";
 
 export type PlayerType = "human" | "ai";
 
 const DEFAULT_BOARD_SIZE = 7;
 const DEFAULT_QUESTION_TIME = 14;
+const NUM_SURPRISES = 4;
+const SURPRISE_TYPES = [
+  "double", // double points
+  "lose",   // lose points
+  "free",   // free move
+  "steal",  // take points from opponent
+  "extra",  // get extra points
+] as const;
+type SurpriseType = typeof SURPRISE_TYPES[number];
 
 type Tile = { x: number; y: number };
+// Surprise => location + type + active
+type SurpriseTile = Tile & { type: SurpriseType; used: boolean; };
 
 function positionsEqual(a: Tile, b: Tile) {
   return a.x === b.x && a.y === b.y;
@@ -39,7 +52,7 @@ function getDistance(a: Tile, b: Tile) {
   return Math.abs(a.x - b.x) + Math.abs(a.y - b.y);
 }
 
-// Simple AI: move closer to target, always answers correctly.
+// AI moves towards target
 function getAIMove(pos: Tile, target: Tile, BOARD_SIZE: number) {
   const moves = getValidMoves(pos, BOARD_SIZE);
   let best = moves[0];
@@ -54,11 +67,37 @@ function getAIMove(pos: Tile, target: Tile, BOARD_SIZE: number) {
   return best;
 }
 
-// Generate a 2D array of random ints [1,100] for points
+// Generate 2D array of points
 function generateRandomPoints(boardSize: number) {
   return Array.from({ length: boardSize }, () =>
     Array.from({ length: boardSize }, () => Math.floor(Math.random() * 100) + 1)
   );
+}
+
+// Pick N non-overlapping, non-start/end surprise tiles (use Math.random, no cryptosec needed)
+function getRandomSurpriseTiles(boardSize: number, count: number): SurpriseTile[] {
+  const chosen: SurpriseTile[] = [];
+  for (let i = 0; i < count; i++) {
+    let attempt = 0;
+    while (attempt++ < 30) { // limit attempts
+      const x = Math.floor(Math.random() * boardSize);
+      const y = Math.floor(Math.random() * boardSize);
+      // Exclude corners and start/end positions
+      if (
+        (x === 0 && y === 0) ||
+        (x === boardSize - 1 && y === boardSize - 1) ||
+        chosen.some((t) => t.x === x && t.y === y)
+      ) continue;
+      const t: SurpriseTile = {
+        x, y,
+        type: SURPRISE_TYPES[Math.floor(Math.random() * SURPRISE_TYPES.length)],
+        used: false,
+      };
+      chosen.push(t);
+      break;
+    }
+  }
+  return chosen;
 }
 
 const GameBoard = ({
@@ -84,6 +123,11 @@ const GameBoard = ({
   const [humanPoints, setHumanPoints] = useState(0);
   const [aiPoints, setAIPoints] = useState(0);
 
+  // Surprise tile state
+  const [surpriseTiles, setSurpriseTiles] = useState<SurpriseTile[]>(
+    () => getRandomSurpriseTiles(DEFAULT_BOARD_SIZE, NUM_SURPRISES)
+  );
+
   // Gameplay state
   const [positions, setPositions] = useState(() => ({
     human: { x: 0, y: 0 },
@@ -105,7 +149,7 @@ const GameBoard = ({
   const aiTarget = { x: 0, y: 0 };
   const humanTarget = { x: BOARD_SIZE - 1, y: BOARD_SIZE - 1 };
 
-  // When board size changes, reset positions, winner, boardPoints, points
+  // Reset game when board size changes
   useEffect(() => {
     setPositions({
       human: { x: 0, y: 0 },
@@ -116,6 +160,7 @@ const GameBoard = ({
     setHumanPoints(0);
     setAIPoints(0);
     setBoardPoints(generateRandomPoints(BOARD_SIZE));
+    setSurpriseTiles(getRandomSurpriseTiles(BOARD_SIZE, NUM_SURPRISES));
   }, [BOARD_SIZE]);
 
   useEffect(() => {
@@ -146,13 +191,11 @@ const GameBoard = ({
     if (turn === "ai" && !aiModalState && !aiMovingRef.current) {
       aiMovingRef.current = true;
       setDisableInput(true);
-
       // Prepare to ask a question before allowing AI to move
       const move = getValidMoves(positions.ai, BOARD_SIZE).filter(
         tile => tile.x >= 0 && tile.y >= 0 && tile.x < BOARD_SIZE && tile.y < BOARD_SIZE
       );
       const nextTile = move.length > 0 ? getAIMove(positions.ai, aiTarget, BOARD_SIZE) : positions.ai;
-
       const question = getRandomQuestion(difficulty);
       setTimeout(() => {
         if (!winner) setAIModalState({ question, targetTile: nextTile });
@@ -164,31 +207,77 @@ const GameBoard = ({
     // eslint-disable-next-line
   }, [turn, winner, positions.ai, aiModalState, BOARD_SIZE, difficulty]);
 
-  const handleAIModalSubmit = () => {
-    if (!aiModalState || winner) return;
-    setSound("move");
-    setPositions((p) => {
-      const { x, y } = aiModalState.targetTile;
-      setBoardPoints((prev) => {
-        if (prev[y][x] === 0) return prev;
-        if ((x === 0 && y === 0) || (x === BOARD_SIZE - 1 && y === BOARD_SIZE - 1)) return prev;
-        setAIPoints((cur) => cur + prev[y][x]);
-        const next = prev.map((row) => [...row]);
-        next[y][x] = 0;
-        return next;
-      });
-      return { ...p, ai: { x, y } };
+  // Handles surprise when a player lands on a surprise tile
+  function handleSurprise(tile: Tile, player: PlayerType) {
+    // Find surprise
+    const sIdx = surpriseTiles.findIndex(st => st.x === tile.x && st.y === tile.y && !st.used);
+    if (sIdx === -1) return; // no active surprise here
+    const s = surpriseTiles[sIdx];
+    let message = "";
+    let pointsChange = 0;
+    let doFreeMove = false;
+    let update: Partial<{ human: number; ai: number }> = {};
+    // Get tile points for this move (already 0 if collected!)
+    const tilePoints = boardPoints[tile.y]?.[tile.x] || 0;
+    // Surprise event logic
+    switch (s.type) {
+      case "double":
+        if (tilePoints > 0) {
+          pointsChange = tilePoints;
+          if (player === "human") { setHumanPoints(v => v + tilePoints); }
+          else { setAIPoints(v => v + tilePoints); }
+        }
+        message = player === "human" ? t("surprise.double.self") : t("surprise.double.ai");
+        break;
+      case "lose":
+        pointsChange = -Math.ceil((player === "human" ? humanPoints : aiPoints) * 0.2);
+        if (player === "human") setHumanPoints(v => Math.max(0, v + pointsChange));
+        else setAIPoints(v => Math.max(0, v + pointsChange));
+        message = player === "human" ? t("surprise.lose.self") : t("surprise.lose.ai");
+        break;
+      case "free":
+        doFreeMove = true;
+        message = player === "human" ? t("surprise.free.self") : t("surprise.free.ai");
+        break;
+      case "steal":
+        const take = 15 + Math.floor(Math.random() * 15);
+        if (player === "human") {
+          setAIPoints(aiv => Math.max(0, aiv - take));
+          setHumanPoints(hv => hv + take);
+        } else {
+          setHumanPoints(hv => Math.max(0, hv - take));
+          setAIPoints(aiv => aiv + take);
+        }
+        message = player === "human"
+          ? t("surprise.steal.self", { n: take })
+          : t("surprise.steal.ai", { n: take });
+        break;
+      case "extra":
+        pointsChange = 15 + Math.floor(Math.random() * 15);
+        if (player === "human") setHumanPoints(v => v + pointsChange);
+        else setAIPoints(v => v + pointsChange);
+        message = player === "human"
+          ? t("surprise.extra.self", { n: pointsChange })
+          : t("surprise.extra.ai", { n: pointsChange });
+        break;
+    }
+    // Mark surprise as used
+    setSurpriseTiles(prev => prev.map((s, i) => i === sIdx ? { ...s, used: true } : s));
+    // Show a toast
+    toast({
+      title: t("surprise.title"),
+      description: (
+        <span className="flex items-center gap-2">
+          <Gift className="inline-block text-pink-500" size={24} />
+          {message}
+        </span>
+      ),
+      duration: 2600,
     });
-    setAIModalState(null);
-    setTimeout(() => {
-      if (!winner) {
-        setTurn("human");
-        setDisableInput(false);
-        aiMovingRef.current = false;
-      }
-    }, 600);
-  };
+    return doFreeMove;
+  }
 
+  // HUMAN MOVE HANDLER
   const handleTileClick = async (tile: any) => {
     if (turn !== "human" || winner || disableInput) return;
     const validMoves = getValidMoves(positions.human, BOARD_SIZE).filter(
@@ -217,13 +306,55 @@ const GameBoard = ({
         return { ...p, human: { x, y } };
       });
       setSound("move");
-      setTurn("ai");
+      // Surprise tile handling (after position is updated)
+      setTimeout(() => {
+        const doFreeMove = handleSurprise(tile, "human");
+        if (!doFreeMove) setTurn("ai");
+        // Else: free move, keep turn as human
+      }, 100);
     } else {
       setSound("wrong");
       setTurn("ai");
     }
   };
 
+  // AI move handler (after answering modal)
+  const handleAIModalSubmit = () => {
+    if (!aiModalState || winner) return;
+    setSound("move");
+    setPositions((p) => {
+      const { x, y } = aiModalState.targetTile;
+      setBoardPoints((prev) => {
+        if (prev[y][x] === 0) return prev;
+        if ((x === 0 && y === 0) || (x === BOARD_SIZE - 1 && y === BOARD_SIZE - 1)) return prev;
+        setAIPoints((cur) => cur + prev[y][x]);
+        const next = prev.map((row) => [...row]);
+        next[y][x] = 0;
+        return next;
+      });
+      return { ...p, ai: { x, y } };
+    });
+    // Surprise tile logic: after AI moves
+    setTimeout(() => {
+      const doFreeMove = handleSurprise(aiModalState.targetTile, "ai");
+      setAIModalState(null);
+      setTimeout(() => {
+        if (!winner) {
+          if (!doFreeMove) {
+            setTurn("human");
+            setDisableInput(false);
+            aiMovingRef.current = false;
+          } else {
+            setDisableInput(true);
+            aiMovingRef.current = false;
+            setTimeout(() => setTurn("ai"), 700);
+          }
+        }
+      }, 600);
+    }, 100);
+  };
+
+  // Reset game
   const handleRestart = () => {
     setPositions({
       human: { x: 0, y: 0 },
@@ -238,6 +369,7 @@ const GameBoard = ({
     setHumanPoints(0);
     setAIPoints(0);
     setBoardPoints(generateRandomPoints(BOARD_SIZE));
+    setSurpriseTiles(getRandomSurpriseTiles(BOARD_SIZE, NUM_SURPRISES));
     onRestart();
   };
 
@@ -276,6 +408,8 @@ const GameBoard = ({
           onTileClick={handleTileClick}
           getValidMoves={(pos) => getValidMoves(pos, BOARD_SIZE)}
           positionsEqual={positionsEqual}
+          // Added:
+          surpriseTiles={surpriseTiles}
         />
         {winner && (
           <div className="absolute inset-0 bg-black/70 flex flex-col items-center justify-center rounded-lg animate-fade-in z-10">
@@ -338,3 +472,5 @@ const GameBoard = ({
 };
 
 export default GameBoard;
+
+// NOTE: This file is getting too long! After this change, you should consider splitting GameBoard into smaller files for maintainability.

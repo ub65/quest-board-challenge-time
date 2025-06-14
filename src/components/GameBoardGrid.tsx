@@ -1,8 +1,10 @@
 
 import React from "react";
+import { Gift } from "lucide-react";
 
 type Tile = { x: number; y: number };
 type PlayerPositions = { human: Tile; ai: Tile };
+type SurpriseTile = Tile & { type: string; used: boolean };
 
 type GameBoardGridProps = {
   BOARD_SIZE: number;
@@ -16,6 +18,8 @@ type GameBoardGridProps = {
   onTileClick: (tile: Tile) => void;
   getValidMoves: (pos: Tile) => Tile[];
   positionsEqual: (a: Tile, b: Tile) => boolean;
+  // NEW
+  surpriseTiles: SurpriseTile[];
 };
 
 const GameBoardGrid: React.FC<GameBoardGridProps> = ({
@@ -29,14 +33,15 @@ const GameBoardGrid: React.FC<GameBoardGridProps> = ({
   disableInput,
   onTileClick,
   getValidMoves,
-  positionsEqual
+  positionsEqual,
+  surpriseTiles,
 }) => {
-  // Tile rendering logic extracted from original GameBoard
   const renderTile = (x: number, y: number) => {
     const isHuman = positions.human.x === x && positions.human.y === y;
     const isAI = positions.ai.x === x && positions.ai.y === y;
     const isHumanTarget = x === humanTarget.x && y === humanTarget.y;
     const isAITarget = x === aiTarget.x && y === aiTarget.y;
+
     let bg = "bg-gray-200";
     let border = "";
     let content = "";
@@ -55,6 +60,10 @@ const GameBoardGrid: React.FC<GameBoardGridProps> = ({
       bg = "bg-orange-200";
       content = "";
     }
+
+    // Surprise tile
+    const surprise =
+      surpriseTiles?.find(st => st.x === x && st.y === y && !st.used);
 
     const highlight =
       !winner &&
@@ -107,6 +116,12 @@ const GameBoardGrid: React.FC<GameBoardGridProps> = ({
               {boardPoints[y][x]}
             </span>
           )}
+        {/* Surprise tile: if not occupied or target */}
+        {surprise && !isHuman && !isAI && !isHumanTarget && !isAITarget && (
+          <span className="absolute top-1 left-1">
+            <Gift size={22} className="text-pink-500 animate-bounce" />
+          </span>
+        )}
         {isHumanTarget && (
           <span className="absolute inset-1 rounded bg-green-400/40 border border-green-600 pointer-events-none">
             <span className="sr-only">Your target</span>

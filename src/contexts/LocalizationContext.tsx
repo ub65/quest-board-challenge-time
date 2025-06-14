@@ -5,7 +5,7 @@ export type Language = 'en' | 'he';
 interface LocalizationContextType {
   language: Language;
   setLanguage: (lang: Language) => void;
-  t: (key: string) => string;
+  t: (key: string, vars?: Record<string, string | number>) => string;
 }
 
 const LocalizationContext = createContext<LocalizationContextType | undefined>(undefined);
@@ -57,6 +57,19 @@ const translations = {
     // Languages
     'lang.english': 'English',
     'lang.hebrew': 'עברית',
+    
+    // SURPRISES
+    'surprise.title': 'Surprise!',
+    'surprise.double.self': 'You got double points from this tile!',
+    'surprise.double.ai': 'AI got double points from this tile!',
+    'surprise.lose.self': 'Oh no! You lost 20% of your points!',
+    'surprise.lose.ai': 'AI lost 20% of its points!',
+    'surprise.free.self': 'Free move! Answer another question for a bonus move.',
+    'surprise.free.ai': 'AI got a free move!',
+    'surprise.steal.self': 'You stole {n} points from AI!',
+    'surprise.steal.ai': 'AI stole {n} points from you!',
+    'surprise.extra.self': 'Bonus! You got {n} extra points!',
+    'surprise.extra.ai': 'AI got {n} extra points!',
   },
   he: {
     // Game titles and UI
@@ -104,14 +117,34 @@ const translations = {
     // Languages
     'lang.english': 'English',
     'lang.hebrew': 'עברית',
+    
+    // SURPRISES
+    'surprise.title': 'הפתעה!',
+    'surprise.double.self': 'קיבלת נקודות כפולות מהמשבצת!',
+    'surprise.double.ai': 'הבינה קיבלה נקודות כפולות מהמשבצת!',
+    'surprise.lose.self': 'אוי לא! איבדת 20% מהנקודות שלך!',
+    'surprise.lose.ai': 'הבינה איבדה 20% מהנקודות!',
+    'surprise.free.self': 'קיבלת תור נוסף! ענה על שאלה נוספת.',
+    'surprise.free.ai': 'הבינה קיבלה תור נוסף!',
+    'surprise.steal.self': 'גנבת {n} נקודות מהבינה!',
+    'surprise.steal.ai': 'הבינה גנבה {n} נקודות ממך!',
+    'surprise.extra.self': 'בונוס! קיבלת {n} נקודות נוספות!',
+    'surprise.extra.ai': 'הבינה קיבלה {n} נקודות נוספות!',
   },
 };
 
 export const LocalizationProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [language, setLanguage] = useState<Language>("en");
 
-  const t = (key: string): string => {
-    return translations[language][key as keyof typeof translations[typeof language]] || key;
+  // New: support fallbacks for {n} interpolation
+  const t = (key: string, vars?: Record<string, string | number>) => {
+    let txt = translations[language][key as keyof typeof translations[typeof language]] || key;
+    if (vars) {
+      Object.keys(vars).forEach(k => {
+        txt = txt.replace(`{${k}}`, String(vars[k]));
+      });
+    }
+    return txt;
   };
 
   return (

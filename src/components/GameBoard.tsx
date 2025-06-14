@@ -1,26 +1,12 @@
-import React, { useRef, useEffect, useState } from "react";
-import TranslateQuestionModal from "./TranslateQuestionModal";
-import SoundManager from "./SoundManager";
-import GameSettingsModal from "./GameSettingsModal";
-import AITranslateQuestionModal from "./AITranslateQuestionModal";
-import GameHeader from "./GameHeader";
-import GameScoreboard from "./GameScoreboard";
-import GameBoardGrid from "./GameBoardGrid";
-import { useLocalization } from "@/contexts/LocalizationContext";
-import { Gift, Shield } from "lucide-react";
-import { toast } from "@/components/ui/use-toast";
 
-// Refactored logic
+import React, { useRef, useEffect, useState } from "react";
+import { useLocalization } from "@/contexts/LocalizationContext";
+import { toast } from "@/components/ui/use-toast";
 import {
   PlayerType,
   DEFAULT_BOARD_SIZE,
   DEFAULT_QUESTION_TIME,
   DEFAULT_DEFENSES,
-  SurpriseType,
-  Tile,
-  SurpriseTile,
-  DefenseTile,
-  DefenseOwner,
   SURPRISE_TYPES,
 } from "./GameBoard/types";
 import {
@@ -35,18 +21,12 @@ import {
 } from "./GameBoard/utils";
 import { useAITurn } from "./GameBoard/aiHooks";
 import { useHumanMoveHandler } from "./GameBoard/humanHooks";
-import GameBoardHud from "./GameBoard/GameBoardHud";
-import GameBoardModals from "./GameBoard/GameBoardModals";
-import GameBoardWinnerOverlay from "./GameBoard/GameBoardWinnerOverlay";
-import GameBoardTurnInfo from "./GameBoard/GameBoardTurnInfo";
 import { useSurprise } from "./GameBoard/useSurprise";
 import { useGameRestart } from "./GameBoard/useGameRestart";
-import { getInitialPositions, getInitialPoints, getInitialSurprises, getInitialDefenses, getInitialDefensesUsed } from "./GameBoard/gameBoardDefaults";
 import { canPlaceDefenseHere } from "./GameBoard/defenseHelpers";
-
-// New hooks!
 import { useGameSettings } from "./GameBoard/useGameSettings";
 import { useGameBoardState } from "./GameBoard/useGameBoardState";
+import GameBoardArea from "./GameBoard/GameBoardArea";
 
 const GameBoard = ({
   difficulty: initialDifficulty,
@@ -223,15 +203,10 @@ const GameBoard = ({
     setPositions((p) => {
       const { x, y } = aiModalState.targetTile;
       setBoardPoints((prev) => {
-        console.log("AI is collecting tile at:", x, y, "Current points:", prev[y][x]);
-        const newBoard = prev.map((row) => [...row]); // Make sure we copy the board
-        // Only collect the tile if it's not a corner and has points
+        const newBoard = prev.map((row) => [...row]);
         if (!((x === 0 && y === 0) || (x === BOARD_SIZE - 1 && y === BOARD_SIZE - 1))) {
           setAIPoints((cur) => cur + newBoard[y][x]);
-          // DO NOT clear the points! Commented out:
-          // newBoard[y][x] = 0;
         }
-        console.log("AI finished move; updated board (should only change [y][x]):", newBoard);
         return newBoard;
       });
       return { ...p, ai: { x, y } };
@@ -250,7 +225,7 @@ const GameBoard = ({
   };
 
   // Defense placement handler
-  function handleDefenseClick(tile: Tile) {
+  function handleDefenseClick(tile: { x: number; y: number }) {
     const problem = canPlaceDefenseHere({
       tile,
       BOARD_SIZE,
@@ -305,96 +280,57 @@ const GameBoard = ({
   }, [turn, winner]);
 
   return (
-    <div
-      className="flex flex-col items-center"
-      dir={language === "he" ? "rtl" : "ltr"}
-    >
-      <SoundManager trigger={sound} />
-      <GameHeader
-        onSettingsOpen={() => setSettingsOpen(true)}
-        onRestart={handleRestart}
-        difficulty={difficulty}
-      />
-      <GameBoardHud
-        humanPoints={humanPoints}
-        aiPoints={aiPoints}
-        numDefenses={numDefenses}
-        defensesUsed={defensesUsed}
-        t={t}
-        winner={winner}
-        turn={turn}
-        onPlaceDefense={handlePlaceDefenseButton}
-        defenseMode={defenseMode}
-      />
-      <div className="relative my-3">
-        <GameBoardGrid
-          BOARD_SIZE={BOARD_SIZE}
-          boardPoints={boardPoints}
-          positions={positions}
-          humanTarget={humanTarget}
-          aiTarget={aiTarget}
-          winner={winner}
-          turn={turn}
-          disableInput={disableInput}
-          onTileClick={handleTileClick}
-          getValidMoves={(pos) =>
-            getValidMoves(
-              pos,
-              BOARD_SIZE,
-              defenseTiles,
-              pos === positions.human ? positions.ai : positions.human
-            )
-          }
-          positionsEqual={positionsEqual}
-          surpriseTiles={surpriseTiles}
-          defenseTiles={defenseTiles}
-          aiPendingTarget={aiModalState ? aiModalState.targetTile : null}
-        />
-        <GameBoardWinnerOverlay
-          winner={winner}
-          humanPoints={humanPoints}
-          aiPoints={aiPoints}
-          t={t}
-          onRestart={handleRestart}
-        />
-      </div>
-      {/* Question modals */}
-      <GameBoardModals
-        moveState={moveState}
-        isModalOpen={isModalOpen}
-        aiModalState={aiModalState}
-        winner={winner}
-        questionTime={questionTime}
-        onHumanSubmit={moveState?.resolve}
-        onAISubmit={handleAIModalSubmit}
-      />
-      <GameBoardTurnInfo
-        winner={winner}
-        turn={turn}
-        language={language}
-        t={t}
-      />
-      {/* Settings modal with required difficulty props */}
-      <GameSettingsModal
-        open={settingsOpen}
-        onOpenChange={setSettingsOpen}
-        soundEnabled={soundEnabled}
-        onSoundChange={setSoundEnabled}
-        boardSize={boardSize}
-        onBoardSizeChange={v => setBoardSize(Math.max(5, Math.min(12, v || DEFAULT_BOARD_SIZE)))}
-        questionTime={questionTime}
-        onQuestionTimeChange={v => setQuestionTime(Math.max(6, Math.min(40, v || DEFAULT_QUESTION_TIME)))}
-        surpriseCount={numSurprises}
-        onSurpriseCountChange={setNumSurprises}
-        numDefenses={numDefenses}
-        onNumDefensesChange={setNumDefenses}
-        difficulty={difficulty}
-        onDifficultyChange={setDifficulty}
-      />
-    </div>
+    <GameBoardArea
+      language={language}
+      t={t}
+      sound={sound}
+      turn={turn}
+      winner={winner}
+      difficulty={difficulty}
+      humanPoints={humanPoints}
+      aiPoints={aiPoints}
+      numDefenses={numDefenses}
+      defensesUsed={defensesUsed}
+      onPlaceDefense={handlePlaceDefenseButton}
+      defenseMode={defenseMode}
+      boardSize={BOARD_SIZE}
+      boardPoints={boardPoints}
+      positions={positions}
+      humanTarget={humanTarget}
+      aiTarget={aiTarget}
+      disableInput={disableInput}
+      handleTileClick={handleTileClick}
+      getValidMoves={(pos) =>
+        getValidMoves(
+          pos,
+          BOARD_SIZE,
+          defenseTiles,
+          pos === positions.human ? positions.ai : positions.human
+        )
+      }
+      positionsEqual={positionsEqual}
+      surpriseTiles={surpriseTiles}
+      defenseTiles={defenseTiles}
+      aiPendingTarget={aiModalState ? aiModalState.targetTile : null}
+      moveState={moveState}
+      isModalOpen={isModalOpen}
+      aiModalState={aiModalState}
+      questionTime={questionTime}
+      onHumanSubmit={moveState?.resolve}
+      onAISubmit={handleAIModalSubmit}
+      onRestart={handleRestart}
+      settingsOpen={settingsOpen}
+      setSettingsOpen={setSettingsOpen}
+      soundEnabled={soundEnabled}
+      setSoundEnabled={setSoundEnabled}
+      onBoardSizeChange={v => setBoardSize(Math.max(5, Math.min(12, v || DEFAULT_BOARD_SIZE)))}
+      onQuestionTimeChange={v => setQuestionTime(Math.max(6, Math.min(40, v || DEFAULT_QUESTION_TIME)))}
+      onSurpriseCountChange={setNumSurprises}
+      onNumDefensesChange={setNumDefenses}
+      onDifficultyChange={setDifficulty}
+      surpriseCount={numSurprises}
+    />
   );
 };
 
 export default GameBoard;
-
-// NOTE: This file was refactored to split out overlays and turn display for easier maintainability.

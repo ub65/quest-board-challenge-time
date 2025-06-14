@@ -1,6 +1,6 @@
+
 import React, { useEffect, useState } from "react";
 import { useLocalization } from "@/contexts/LocalizationContext";
-import { Slider } from "@/components/ui/slider";
 
 type Question = {
   prompt: string;
@@ -79,7 +79,7 @@ const TranslateQuestionModal = ({
       style={{ pointerEvents: isOpen ? "auto" : "none" }}
     >
       <div className="w-full max-w-lg bg-white rounded-lg shadow-lg p-6 animate-scale-in flex flex-col">
-        {/* Time Remaining - show only as text */}
+        {/* Time Remaining - show only once as text */}
         <div className="flex flex-col gap-2 mb-5">
           <label className="font-semibold flex items-center justify-between select-none">
             <span>{t('question.timeLeft') || "Time left"}</span>
@@ -118,16 +118,7 @@ const TranslateQuestionModal = ({
             </button>
           ))}
         </div>
-        <div className="flex items-center mt-5">
-          <div className="flex-1" />
-          <div className="text-base font-semibold">
-            {t('question.timeLeft')}{" "}
-            <span className={time <= 4 ? "text-red-500 animate-pulse" : ""}>
-              {time}
-            </span>
-            s
-          </div>
-        </div>
+        {/* Removed duplicate second time counter here */}
         {answered && (
           <div className="mt-4 text-center text-lg font-bold">
             {selected !== null && shuffled[selected].idx === question.correct
@@ -141,3 +132,4 @@ const TranslateQuestionModal = ({
 };
 
 export default TranslateQuestionModal;
+

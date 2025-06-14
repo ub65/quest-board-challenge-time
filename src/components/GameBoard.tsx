@@ -1,7 +1,6 @@
 import React, { useEffect, useState, useRef } from "react";
 import TranslateQuestionModal from "./TranslateQuestionModal";
 import SoundManager from "./SoundManager";
-import { getRandomQuestionByDifficulty } from "@/lib/questions";
 import GameSettingsModal from "./GameSettingsModal";
 import AITranslateQuestionModal from "./AITranslateQuestionModal";
 import GameHeader from "./GameHeader";
@@ -11,142 +10,30 @@ import { useLocalization } from "@/contexts/LocalizationContext";
 import { Gift, Shield } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
 
-export type PlayerType = "human" | "ai";
-
-const DEFAULT_BOARD_SIZE = 7;
-const DEFAULT_QUESTION_TIME = 14;
-const DEFAULT_DEFENSES = 1;
-const SURPRISE_TYPES = [
-  "double",
-  "lose",
-  "free",
-  "steal",
-  "extra",
-] as const;
-type SurpriseType = typeof SURPRISE_TYPES[number];
-
-type Tile = { x: number; y: number };
-type SurpriseTile = Tile & { type: SurpriseType; used: boolean };
-type DefenseOwner = "human" | "ai";
-type DefenseTile = Tile & { owner: DefenseOwner };
-
-function positionsEqual(a: Tile, b: Tile) {
-  return a.x === b.x && a.y === b.y;
-}
-
-function getValidMoves(
-  pos: Tile,
-  BOARD_SIZE: number,
-  defenseTiles: DefenseTile[] = [],
-  otherPlayerPos?: Tile // add optional param for the other player
-) {
-  const moves: Tile[] = [];
-  // Can't move to defense tiles or onto the other player
-  function isBlocked(x: number, y: number) {
-    if (defenseTiles.some((t) => t.x === x && t.y === y)) return true;
-    if (otherPlayerPos && otherPlayerPos.x === x && otherPlayerPos.y === y) return true;
-    return false;
-  }
-  if (pos.x > 0 && !isBlocked(pos.x - 1, pos.y)) moves.push({ x: pos.x - 1, y: pos.y });
-  if (pos.x < BOARD_SIZE - 1 && !isBlocked(pos.x + 1, pos.y)) moves.push({ x: pos.x + 1, y: pos.y });
-  if (pos.y > 0 && !isBlocked(pos.x, pos.y - 1)) moves.push({ x: pos.x, y: pos.y - 1 });
-  if (pos.y < BOARD_SIZE - 1 && !isBlocked(pos.x, pos.y + 1)) moves.push({ x: pos.x, y: pos.y + 1 });
-  return moves;
-}
-
-function getRandomQuestion(difficulty: "easy" | "medium" | "hard") {
-  return getRandomQuestionByDifficulty(difficulty);
-}
-
-function getDistance(a: Tile, b: Tile) {
-  return Math.abs(a.x - b.x) + Math.abs(a.y - b.y);
-}
-
-function getAIMove(pos: Tile, target: Tile, BOARD_SIZE: number, defenseTiles: DefenseTile[]) {
-  const moves = getValidMoves(pos, BOARD_SIZE, defenseTiles);
-  let best = moves[0] || pos; // fallback to current pos
-  let bestDist = getDistance(best, target);
-  for (const move of moves) {
-    const d = getDistance(move, target);
-    if (d < bestDist) {
-      bestDist = d;
-      best = move;
-    }
-  }
-  return best;
-}
-
-function generateRandomPoints(boardSize: number) {
-  return Array.from({ length: boardSize }, () =>
-    Array.from({ length: boardSize }, () => Math.floor(Math.random() * 100) + 1)
-  );
-}
-
-function getRandomSurpriseTiles(boardSize: number, count: number): SurpriseTile[] {
-  const chosen: SurpriseTile[] = [];
-  for (let i = 0; i < count; i++) {
-    let attempt = 0;
-    while (attempt++ < 30) {
-      const x = Math.floor(Math.random() * boardSize);
-      const y = Math.floor(Math.random() * boardSize);
-      if (
-        (x === 0 && y === 0) ||
-        (x === boardSize - 1 && y === boardSize - 1) ||
-        chosen.some((t) => t.x === x && t.y === y)
-      ) continue;
-      const t: SurpriseTile = {
-        x, y,
-        type: SURPRISE_TYPES[Math.floor(Math.random() * SURPRISE_TYPES.length)],
-        used: false,
-      };
-      chosen.push(t);
-      break;
-    }
-  }
-  return chosen;
-}
-
-// New: Best tile for AI to block (closest to straight path, not occupied)
-function getAIDefenseTile(options: {humanPos: Tile, humanTarget: Tile, boardSize: number, defenseTiles: DefenseTile[], positions: {human: Tile, ai: Tile}, surpriseTiles: SurpriseTile[]}): Tile | null {
-  const { humanPos, humanTarget, boardSize, defenseTiles, positions, surpriseTiles } = options;
-  // Build a list of shortest path tiles
-  const dx = Math.sign(humanTarget.x - humanPos.x);
-  const dy = Math.sign(humanTarget.y - humanPos.y);
-  let candidates: Tile[] = [];
-  let px = humanPos.x, py = humanPos.y;
-  // Try main diagonal path first
-  for (let i = 1; i < boardSize - 1; i++) {
-    let tx = px + i * dx;
-    let ty = py + i * dy;
-    if (tx < 0 || ty < 0 || tx >= boardSize || ty >= boardSize) continue;
-    candidates.push({ x: tx, y: ty });
-  }
-  // Add 2 neighbors from current human pos as fallback
-  candidates.push(
-    ...[
-      {x: humanPos.x+1, y: humanPos.y},
-      {x: humanPos.x-1, y: humanPos.y},
-      {x: humanPos.x, y: humanPos.y+1},
-      {x: humanPos.x, y: humanPos.y-1}
-    ].filter(
-      t=> t.x >=0 && t.x < boardSize && t.y >=0 && t.y < boardSize
-    )
-  );
-  // filter: must not be occupied, must not be already blocked/defense, must not be surprise, not start/end, not on top of human/AI
-  for (const c of candidates) {
-    if (
-      (c.x === 0 && c.y === 0) ||
-      (c.x === boardSize - 1 && c.y === boardSize - 1) ||
-      (positionsEqual(positions.human, c)) ||
-      (positionsEqual(positions.ai, c)) ||
-      defenseTiles.some(dt => dt.x === c.x && dt.y === c.y) ||
-      surpriseTiles.some(st => st.x === c.x && st.y === c.y && !st.used)
-    ) continue;
-    return c;
-  }
-  // If no candidate, return null:
-  return null;
-}
+// Refactored logic
+import {
+  PlayerType,
+  DEFAULT_BOARD_SIZE,
+  DEFAULT_QUESTION_TIME,
+  DEFAULT_DEFENSES,
+  SurpriseType,
+  Tile,
+  SurpriseTile,
+  DefenseTile,
+  DefenseOwner,
+  SURPRISE_TYPES,
+} from "./GameBoard/types";
+import {
+  getValidMoves,
+  positionsEqual,
+  generateRandomPoints,
+  getRandomSurpriseTiles,
+  getAIDefenseTile,
+  getDistance,
+  getAIMove,
+  getRandomQuestion,
+} from "./GameBoard/utils";
+import { useAITurn } from "./GameBoard/aiHooks";
 
 const GameBoard = ({
   difficulty,
@@ -250,72 +137,10 @@ const GameBoard = ({
   }, [positions, humanTarget.x, humanTarget.y, aiTarget.x, aiTarget.y]);
 
   // AI turn, including defense! (before question)
-  useEffect(() => {
-    console.log("AI useEffect called", {
-      turn,
-      winner,
-      aiModalState,
-      aiMoving: aiMovingRef.current,
-      disableInput,
-      positions: { ...positions },
-      defensesUsed,
-      defenseTiles,
-      surpriseTiles,
-    });
-
-    if (winner) {
-      aiMovingRef.current = false;
-      return;
-    }
-    if (turn === "ai" && !aiModalState && !aiMovingRef.current) {
-      aiMovingRef.current = true;
-      setDisableInput(true);
-
-      // AI: place defense if allowed
-      if (defensesUsed.ai < numDefenses) {
-        // AI will try to block player if possible before moving!
-        const aiDefense = getAIDefenseTile({
-          humanPos: positions.human,
-          humanTarget,
-          boardSize: BOARD_SIZE,
-          defenseTiles,
-          positions,
-          surpriseTiles,
-        });
-        if (aiDefense) {
-          setDefenseTiles(prev => [...prev, { ...aiDefense, owner: "ai" }]);
-          setDefensesUsed(d => ({ ...d, ai: d.ai + 1 }));
-          toast({
-            title: t("game.defense_ai_placed") || "AI placed a defense!",
-            description: t("game.defense_ai_msg") || "AI blocked your path!",
-            duration: 1400,
-          });
-          setTimeout(() => {
-            aiMovingRef.current = false;
-            setTurn("human");
-            setDisableInput(false);
-          }, 900);
-          return;
-        }
-      }
-      // No more defenses or no good place: AI moves as normal
-      const move = getValidMoves(positions.ai, BOARD_SIZE, defenseTiles).filter(
-        tile => tile.x >= 0 && tile.y >= 0 && tile.x < BOARD_SIZE && tile.y < BOARD_SIZE
-      );
-      const nextTile = move.length > 0 ? getAIMove(positions.ai, aiTarget, BOARD_SIZE, defenseTiles) : positions.ai;
-      const question = getRandomQuestion(difficulty);
-      setTimeout(() => {
-        if (!winner) {
-          console.log("AI is ready to show AI modal", { nextTile, question });
-          setAIModalState({ question, targetTile: nextTile });
-        }
-      }, 650);
-    }
-    if (turn === "human" || winner) {
-      aiMovingRef.current = false;
-    }
-    // eslint-disable-next-line
-  }, [turn, winner, positions.ai, aiModalState, BOARD_SIZE, difficulty, defenseTiles, defensesUsed.ai, numDefenses, positions, humanTarget, surpriseTiles, t]);
+  useAITurn({
+    turn, winner, aiModalState, disableInput, positions, defensesUsed, defenseTiles, surpriseTiles, numDefenses, difficulty, BOARD_SIZE,
+    aiTarget, humanTarget, t, setDisableInput, setDefenseTiles, setDefensesUsed, toast, setTurn, setAIModalState, aiMovingRef,
+  });
 
   function handleSurprise(tile: Tile, player: PlayerType) {
     // Find surprise

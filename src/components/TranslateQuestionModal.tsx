@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { useLocalization } from "@/contexts/LocalizationContext";
 import { Slider } from "@/components/ui/slider";
@@ -80,25 +79,12 @@ const TranslateQuestionModal = ({
       style={{ pointerEvents: isOpen ? "auto" : "none" }}
     >
       <div className="w-full max-w-lg bg-white rounded-lg shadow-lg p-6 animate-scale-in flex flex-col">
-        {/* Time Remaining Slider - readonly, just shows current time left */}
+        {/* Time Remaining - show only as text */}
         <div className="flex flex-col gap-2 mb-5">
           <label className="font-semibold flex items-center justify-between select-none">
             <span>{t('question.timeLeft') || "Time left"}</span>
             <span className="ml-2 text-primary">{time}s</span>
           </label>
-          <Slider
-            min={MIN_TIME}
-            max={MAX_TIME}
-            step={1}
-            value={[time]}
-            disabled
-            hideThumb
-            className="w-full"
-          />
-          <div className="flex justify-between text-xs text-gray-400 mt-1">
-            <span>{MIN_TIME}s</span>
-            <span>{MAX_TIME}s</span>
-          </div>
         </div>
         {/* Question prompt */}
         <div className="mb-2 text-lg font-bold">{t('question.translateTo')}</div>

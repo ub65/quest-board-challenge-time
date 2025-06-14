@@ -102,13 +102,6 @@ const GameBoard = ({
   const aiTarget = { x: 0, y: 0 };
   const humanTarget = { x: BOARD_SIZE - 1, y: BOARD_SIZE - 1 };
 
-  // Removed duplicate state initializations below (these caused the double definition error)
-  // const [positions, setPositions] = useState(() => getInitialPositions(DEFAULT_BOARD_SIZE));
-  // const [boardPoints, setBoardPoints] = useState<number[][]>(getInitialPoints);
-  // const [surpriseTiles, setSurpriseTiles] = useState(getInitialSurprises);
-  // const [defenseTiles, setDefenseTiles] = useState(getInitialDefenses);
-  // const [defensesUsed, setDefensesUsed] = useState(getInitialDefensesUsed);
-
   // On game reset (board size/settings change)
   useEffect(() => {
     setPositions({

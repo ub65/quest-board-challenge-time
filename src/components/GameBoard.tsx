@@ -103,6 +103,17 @@ const GameBoard = ({
     setTurn("human");
   }, [BOARD_SIZE]);
 
+  // When a winner is set, immediately finish the game (clear all modals and block moves).
+  useEffect(() => {
+    if (winner) {
+      setMoveState(null);
+      setAIModalState(null);
+      setIsModalOpen(false);
+      setDisableInput(true);
+      aiMovingRef.current = false;
+    }
+  }, [winner]);
+
   // Check for victory
   useEffect(() => {
     if (positions.human.x === humanTarget.x && positions.human.y === humanTarget.y) {
@@ -114,9 +125,13 @@ const GameBoard = ({
     }
   }, [positions, humanTarget.x, humanTarget.y, aiTarget.x, aiTarget.y]);
 
-  // Reworked AI turn: trigger question modal before moving
+  // AI turn: only run if no winner and no modal already up.
   useEffect(() => {
-    if (turn === "ai" && !winner && !aiModalState && !aiMovingRef.current) {
+    if (winner) {
+      aiMovingRef.current = false;
+      return;
+    }
+    if (turn === "ai" && !aiModalState && !aiMovingRef.current) {
       aiMovingRef.current = true;
       setDisableInput(true);
 
@@ -124,13 +139,13 @@ const GameBoard = ({
       const move = getValidMoves(positions.ai).filter(
         tile => tile.x >= 0 && tile.y >= 0 && tile.x < BOARD_SIZE && tile.y < BOARD_SIZE
       );
-      // AI moves closer to target
       const nextTile = move.length > 0 ? getAIMove(positions.ai, aiTarget) : positions.ai;
 
       const question = getRandomQuestion(difficulty);
       setTimeout(() => {
-        setAIModalState({ question, targetTile: nextTile });
-      }, 650); // thinking delay before showing
+        // STOP if winner determined in a race condition
+        if (!winner) setAIModalState({ question, targetTile: nextTile });
+      }, 650);
     }
     if (turn === "human" || winner) {
       aiMovingRef.current = false;
@@ -138,20 +153,20 @@ const GameBoard = ({
     // eslint-disable-next-line
   }, [turn, winner, positions.ai, aiModalState, BOARD_SIZE, difficulty]);
 
-  // When AI finishes answering, move it and return turn to player
   const handleAIModalSubmit = () => {
-    if (!aiModalState) return;
+    if (!aiModalState || winner) return;
     setSound("move");
     setPositions((p) => ({ ...p, ai: aiModalState.targetTile }));
     setAIModalState(null);
     setTimeout(() => {
-      setTurn("human");
-      setDisableInput(false);
-      aiMovingRef.current = false;
+      if (!winner) {
+        setTurn("human");
+        setDisableInput(false);
+        aiMovingRef.current = false;
+      }
     }, 600);
   };
 
-  // Human move: pick tile -> answer question
   const handleTileClick = async (tile: any) => {
     if (turn !== "human" || winner || disableInput) return;
     const validMoves = getValidMoves(positions.human).filter(
@@ -165,6 +180,7 @@ const GameBoard = ({
     });
     setIsModalOpen(false);
     setMoveState(null);
+    if (winner) return; // abort moves after winning
     if (ok) {
       setPositions((p) => ({ ...p, human: tile }));
       setSound("move");
@@ -176,6 +192,7 @@ const GameBoard = ({
   };
 
   const renderTile = (x: number, y: number) => {
+    // winner disables all highlight/click logic
     const isHuman = positions.human.x === x && positions.human.y === y;
     const isAI = positions.ai.x === x && positions.ai.y === y;
     const isHumanTarget = x === humanTarget.x && y === humanTarget.y;
@@ -199,12 +216,12 @@ const GameBoard = ({
       content = "";
     }
     const highlight =
+      !winner &&
       turn === "human" &&
       getValidMoves(positions.human)
         .filter(t => t.x >= 0 && t.y >= 0 && t.x < BOARD_SIZE && t.y < BOARD_SIZE)
         .some((t) => t.x === x && t.y === y) &&
-      !isHuman && !isAI &&
-      !winner;
+      !isHuman && !isAI;
 
     return (
       <button
@@ -220,7 +237,7 @@ const GameBoard = ({
           outline: isHumanTarget || isAITarget ? "2px dashed #6ee7b7" : undefined,
           zIndex: isHuman || isAI ? 2 : 1,
         }}
-        disabled={!highlight || disableInput}
+        disabled={!highlight || disableInput || !!winner}
         onClick={() => handleTileClick({ x, y })}
         aria-label={
           isHuman
@@ -324,7 +341,7 @@ const GameBoard = ({
         )}
       </div>
       {/* Human question modal */}
-      {moveState && (
+      {moveState && !winner && (
         <TranslateQuestionModal
           isOpen={isModalOpen}
           question={moveState.question}
@@ -334,7 +351,7 @@ const GameBoard = ({
         />
       )}
       {/* AI question modal */}
-      {aiModalState && (
+      {aiModalState && !winner && (
         <AITranslateQuestionModal
           isOpen={true}
           question={aiModalState.question}

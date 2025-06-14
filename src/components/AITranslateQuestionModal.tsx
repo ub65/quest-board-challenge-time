@@ -1,6 +1,7 @@
 
 import React, { useEffect, useState } from "react";
 import type { Question } from "@/lib/questions";
+import { useLocalization } from "@/contexts/LocalizationContext";
 
 const THINK_DELAY = 1000;
 const FEEDBACK_DELAY = 800;
@@ -24,6 +25,7 @@ function shuffle<T>(arr: T[]): T[] {
 }
 
 const AITranslateQuestionModal: React.FC<AITranslateQuestionModalProps> = ({ isOpen, question, onSubmit }) => {
+  const { t } = useLocalization();
   const [shuffled, setShuffled] = useState<ShuffledAnswer[]>([]);
   const [aiChoice, setAIChoice] = useState<number | null>(null);
   const [showFeedback, setShowFeedback] = useState(false);
@@ -66,7 +68,7 @@ const AITranslateQuestionModal: React.FC<AITranslateQuestionModalProps> = ({ isO
     >
       <div className="w-full max-w-lg bg-white rounded-lg shadow-lg p-6 animate-scale-in flex flex-col items-center">
         <div className="mb-2 text-lg font-bold flex items-center gap-2">
-          <span>AI is answering...</span>
+          <span>{t('ai.answering')}</span>
         </div>
         <div className="mb-6 text-2xl text-primary font-semibold select-none">
           {question.prompt}
@@ -97,12 +99,12 @@ const AITranslateQuestionModal: React.FC<AITranslateQuestionModalProps> = ({ isO
         <div className="flex items-center mt-5 min-h-[2rem]">
           {aiChoice === null ? (
             <span className="text-base text-blue-700 font-medium animate-pulse">
-              Thinking...
+              {t('ai.thinking')}
             </span>
           ) : showFeedback ? (
-            <span className="text-green-700 text-lg font-bold">Correct!</span>
+            <span className="text-green-700 text-lg font-bold">{t('ai.correct')}</span>
           ) : (
-            <span className="text-base text-gray-700 font-medium">Picked answer...</span>
+            <span className="text-base text-gray-700 font-medium">{t('ai.pickedAnswer')}</span>
           )}
         </div>
       </div>

@@ -1,5 +1,6 @@
 
 import React, { useEffect, useState } from "react";
+import { useLocalization } from "@/contexts/LocalizationContext";
 
 type Question = {
   prompt: string;
@@ -28,6 +29,7 @@ const TranslateQuestionModal = ({
   onSubmit: (isCorrect: boolean) => void;
   timeLimit?: number;
 }) => {
+  const { t } = useLocalization();
   const [selected, setSelected] = useState<number | null>(null);
   const [shuffled, setShuffled] = useState<{ answer: string; idx: number }[]>([]);
   const [time, setTime] = useState(timeLimit);
@@ -74,7 +76,7 @@ const TranslateQuestionModal = ({
       style={{ pointerEvents: isOpen ? "auto" : "none" }}
     >
       <div className="w-full max-w-lg bg-white rounded-lg shadow-lg p-6 animate-scale-in flex flex-col">
-        <div className="mb-2 text-lg font-bold">Translate to Hebrew:</div>
+        <div className="mb-2 text-lg font-bold">{t('question.translateTo')}</div>
         <div className="mb-6 text-2xl text-primary font-semibold select-none">
           {question.prompt}
         </div>
@@ -108,7 +110,7 @@ const TranslateQuestionModal = ({
         <div className="flex items-center mt-5">
           <div className="flex-1" />
           <div className="text-base font-semibold">
-            Time left:{" "}
+            {t('question.timeLeft')}{" "}
             <span className={time <= 4 ? "text-red-500 animate-pulse" : ""}>
               {time}
             </span>
@@ -118,8 +120,8 @@ const TranslateQuestionModal = ({
         {answered && (
           <div className="mt-4 text-center text-lg font-bold">
             {selected !== null && shuffled[selected].idx === question.correct
-              ? "Correct!"
-              : "Wrong"}
+              ? t('question.correct')
+              : t('question.wrong')}
           </div>
         )}
       </div>
@@ -128,4 +130,3 @@ const TranslateQuestionModal = ({
 };
 
 export default TranslateQuestionModal;
-

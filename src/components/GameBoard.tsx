@@ -1,10 +1,11 @@
-
 import React, { useEffect, useState, useRef } from "react";
 import TranslateQuestionModal from "./TranslateQuestionModal";
 import SoundManager from "./SoundManager";
 import { questionsByDifficulty } from "@/lib/questions";
 import GameSettingsModal from "./GameSettingsModal";
 import AITranslateQuestionModal from "./AITranslateQuestionModal";
+import LanguageSelector from "./LanguageSelector";
+import { useLocalization } from "@/contexts/LocalizationContext";
 
 export type PlayerType = "human" | "ai";
 
@@ -72,6 +73,8 @@ const GameBoard = ({
   difficulty: "easy" | "medium" | "hard";
   onRestart: () => void;
 }) => {
+  const { t } = useLocalization();
+  
   // Settings state
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [soundEnabled, setSoundEnabled] = useState(true);
@@ -358,28 +361,28 @@ const GameBoard = ({
           onClick={() => setSettingsOpen(true)}
           className="px-3 py-2 rounded-md bg-gray-100 hover:bg-blue-200 text-blue-700 font-medium shadow transition-colors text-base"
         >
-          ⚙️ Settings
+          {t('game.settings')}
         </button>
         <div className="flex flex-col">
-          <span className="font-semibold">Difficulty:</span>
-          <span className="capitalize">{difficulty}</span>
+          <span className="font-semibold">{t('game.difficulty')}:</span>
+          <span className="capitalize">{t(`difficulty.${difficulty}`)}</span>
         </div>
         <button
           onClick={handleRestart}
           className="px-4 py-2 rounded-md bg-gray-200 shadow hover:bg-blue-200 font-bold transition-colors"
         >
-          Restart
+          {t('game.restart')}
         </button>
       </div>
       {/* POINTS DISPLAY - top of board */}
       <div className="flex flex-row gap-8 mb-2 w-full justify-center text-lg font-semibold">
         <div className="flex flex-row items-center gap-2">
           <span className="w-7 rounded bg-blue-600 text-white flex items-center justify-center font-bold shadow-md">YOU</span>
-          <span className="text-blue-900 ml-2">Points: {humanPoints}</span>
+          <span className="text-blue-900 ml-2">{t('game.points')}: {humanPoints}</span>
         </div>
         <div className="flex flex-row items-center gap-2">
           <span className="w-7 rounded bg-red-600 text-white flex items-center justify-center font-bold shadow-md">AI</span>
-          <span className="text-red-800 ml-2">Points: {aiPoints}</span>
+          <span className="text-red-800 ml-2">{t('game.points')}: {aiPoints}</span>
         </div>
       </div>
       <GameSettingsModal
@@ -391,6 +394,7 @@ const GameBoard = ({
         onBoardSizeChange={v => setBoardSize(Math.max(5, Math.min(12, v || DEFAULT_BOARD_SIZE)))}
         questionTime={questionTime}
         onQuestionTimeChange={v => setQuestionTime(Math.max(6, Math.min(40, v || DEFAULT_QUESTION_TIME)))}
+        languageSelector={<LanguageSelector />}
       />
       <div className="relative my-3">
         <div
@@ -407,21 +411,21 @@ const GameBoard = ({
         {winner && (
           <div className="absolute inset-0 bg-black/70 flex flex-col items-center justify-center rounded-lg animate-fade-in z-10">
             <div className="text-3xl font-bold text-white mb-3 drop-shadow-2xl">
-              {winner === "human" ? "🎉 You Win!" : "😔 AI Wins"}
+              {winner === "human" ? t('game.youWin') : t('game.aiWins')}
             </div>
             <div className="flex flex-col gap-1 text-lg text-white font-semibold mb-2">
               <div>
-                Your Points: <span className="text-amber-200 font-bold">{humanPoints}</span>
+                {t('game.yourPoints')}: <span className="text-amber-200 font-bold">{humanPoints}</span>
               </div>
               <div>
-                AI Points: <span className="text-amber-200 font-bold">{aiPoints}</span>
+                {t('game.aiPoints')}: <span className="text-amber-200 font-bold">{aiPoints}</span>
               </div>
             </div>
             <button
               onClick={handleRestart}
               className="bg-green-400 shadow px-5 py-2 rounded-lg text-xl font-bold text-white hover:bg-green-500 hover:scale-105 transition-all mt-2"
             >
-              Play Again
+              {t('game.playAgain')}
             </button>
           </div>
         )}
@@ -448,13 +452,13 @@ const GameBoard = ({
       {!winner && (
         <div className="w-full mt-4 flex justify-between items-center">
           <div className="font-medium">
-            Your Target: <span className="font-bold">Bottom-right</span>
+            {t('game.yourTarget')}
           </div>
           <div className={`font-medium text-right`}>
             {turn === "human" ? (
-              <span className="text-blue-700 animate-pulse">Your turn</span>
+              <span className="text-blue-700 animate-pulse">{t('game.yourTurn')}</span>
             ) : (
-              <span className="text-red-700">AI is thinking...</span>
+              <span className="text-red-700">{t('game.aiThinking')}</span>
             )}
           </div>
         </div>
@@ -466,4 +470,3 @@ const GameBoard = ({
 export default GameBoard;
 
 // NOTE: This file is now quite long. Consider refactoring for maintainability!
-

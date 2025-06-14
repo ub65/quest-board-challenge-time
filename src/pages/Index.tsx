@@ -2,8 +2,10 @@
 import React, { useState } from "react";
 import GameBoard from "@/components/GameBoard";
 import DifficultySelector from "@/components/DifficultySelector";
+import { useLocalization } from "@/contexts/LocalizationContext";
 
 const Index = () => {
+  const { t } = useLocalization();
   const [difficulty, setDifficulty] = useState<"easy" | "medium" | "hard" | null>(null);
   const [gameKey, setGameKey] = useState(0);
 
@@ -16,7 +18,7 @@ const Index = () => {
     <div className="min-h-screen bg-gradient-to-br from-sky-100 via-blue-200 to-violet-100 flex flex-col items-center justify-center px-6">
       <div className="w-full max-w-5xl mt-6">
         <h1 className="text-4xl font-extrabold mb-4 text-center tracking-tight text-primary drop-shadow-sm">
-          Translate Race
+          {t('game.title')}
         </h1>
       </div>
       {!difficulty ? (

@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 
 export type Language = 'en' | 'he';
@@ -108,8 +107,8 @@ const translations = {
   },
 };
 
-export const LocalizationProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [language, setLanguage] = useState<Language>('en');
+export const LocalizationProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [language, setLanguage] = useState<Language>("en");
 
   const t = (key: string): string => {
     return translations[language][key as keyof typeof translations[typeof language]] || key;
@@ -117,9 +116,7 @@ export const LocalizationProvider: React.FC<{ children: ReactNode }> = ({ childr
 
   return (
     <LocalizationContext.Provider value={{ language, setLanguage, t }}>
-      <div dir={language === 'he' ? 'rtl' : 'ltr'} className={language === 'he' ? 'font-hebrew' : ''}>
-        {children}
-      </div>
+      {children}
     </LocalizationContext.Provider>
   );
 };

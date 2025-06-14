@@ -47,11 +47,8 @@ const GameBoardGrid: React.FC<GameBoardGridProps> = ({
     const isAI = positions.ai.x === x && positions.ai.y === y;
     const isHumanTarget = x === humanTarget.x && y === humanTarget.y;
 
-    // Only highlight AI target tile if: not in aiPendingTarget (i.e., don't show "AI Target" if AI is thinking)
     let isAITarget =
-      !aiPendingTarget // Only highlight true AI target if not making a pending move
-      && x === aiTarget.x
-      && y === aiTarget.y;
+      !aiPendingTarget && x === aiTarget.x && y === aiTarget.y;
 
     let bg = "bg-gray-200";
     let border = "";
@@ -92,7 +89,10 @@ const GameBoardGrid: React.FC<GameBoardGridProps> = ({
         data-tile-x={x}
         data-tile-y={y}
         className={`
-          relative w-16 h-16 md:w-20 md:h-20 text-sm md:text-lg font-bold flex items-center justify-center rounded-lg shadow
+          relative 
+          w-[10vw] h-[10vw] min-w-[42px] min-h-[42px]
+          md:w-16 md:h-16 lg:w-20 lg:h-20
+          text-sm md:text-lg font-bold flex items-center justify-center rounded-lg shadow
           transition-all duration-200
           ${bg} ${border}
           ${highlight ? "hover:scale-110 ring-4 ring-primary/50 cursor-pointer animate-pulse" : "cursor-default"}
@@ -101,6 +101,9 @@ const GameBoardGrid: React.FC<GameBoardGridProps> = ({
         style={{
           outline: isHumanTarget || isAITarget ? "2px dashed #6ee7b7" : undefined,
           zIndex: isHuman || isAI ? 2 : 1,
+          aspectRatio: "1 / 1",
+          maxWidth: "64px",
+          maxHeight: "64px",
         }}
         disabled={disableInput || !!winner}
         onClick={() => onTileClick({ x, y })}
@@ -163,17 +166,26 @@ const GameBoardGrid: React.FC<GameBoardGridProps> = ({
 
   return (
     <div
-      className="grid gap-1"
+      className="w-full overflow-x-auto md:overflow-visible flex justify-center"
       style={{
-        gridTemplateRows: `repeat(${BOARD_SIZE}, minmax(0, 1fr))`,
-        gridTemplateColumns: `repeat(${BOARD_SIZE}, minmax(0, 1fr))`,
+        WebkitOverflowScrolling: "touch"
       }}
     >
-      {Array.from({ length: BOARD_SIZE }).map((_, y) =>
-        Array.from({ length: BOARD_SIZE }).map((_, x) => renderTile(x, y))
-      )}
+      <div
+        className="grid gap-1"
+        style={{
+          gridTemplateRows: `repeat(${BOARD_SIZE}, minmax(0, 1fr))`,
+          gridTemplateColumns: `repeat(${BOARD_SIZE}, minmax(0, 1fr))`,
+          maxWidth: "95vw",
+        }}
+      >
+        {Array.from({ length: BOARD_SIZE }).map((_, y) =>
+          Array.from({ length: BOARD_SIZE }).map((_, x) => renderTile(x, y))
+        )}
+      </div>
     </div>
   );
 };
 
 export default GameBoardGrid;
+

@@ -37,6 +37,10 @@ import { useAITurn } from "./GameBoard/aiHooks";
 import { useHumanMoveHandler } from "./GameBoard/humanHooks";
 import GameBoardHud from "./GameBoard/GameBoardHud";
 import GameBoardModals from "./GameBoard/GameBoardModals";
+import { useSurprise } from "./GameBoard/useSurprise";
+import { useGameRestart } from "./GameBoard/useGameRestart";
+import { getInitialPositions, getInitialPoints, getInitialSurprises, getInitialDefenses, getInitialDefensesUsed } from "./GameBoard/gameBoardDefaults";
+import { canPlaceDefenseHere } from "./GameBoard/defenseHelpers";
 
 const GameBoard = ({
   difficulty,
@@ -97,12 +101,16 @@ const GameBoard = ({
   const aiTarget = { x: 0, y: 0 };
   const humanTarget = { x: BOARD_SIZE - 1, y: BOARD_SIZE - 1 };
 
-  // On game reset
+  // State initialization now uses extracted helpers
+  const [positions, setPositions] = useState(() => getInitialPositions(DEFAULT_BOARD_SIZE));
+  const [boardPoints, setBoardPoints] = useState<number[][]>(getInitialPoints);
+  const [surpriseTiles, setSurpriseTiles] = useState(getInitialSurprises);
+  const [defenseTiles, setDefenseTiles] = useState(getInitialDefenses);
+  const [defensesUsed, setDefensesUsed] = useState(getInitialDefensesUsed);
+
+  // On game reset (board size/settings change)
   useEffect(() => {
-    setPositions({
-      human: { x: 0, y: 0 },
-      ai: { x: boardSize - 1, y: boardSize - 1 }
-    });
+    setPositions(getInitialPositions(boardSize));
     setWinner(null);
     setTurn("human");
     setHumanPoints(0);
@@ -110,7 +118,7 @@ const GameBoard = ({
     setBoardPoints(generateRandomPoints(boardSize));
     setSurpriseTiles(getRandomSurpriseTiles(boardSize, numSurprises));
     setDefenseTiles([]);
-    setDefensesUsed({human: 0, ai: 0});
+    setDefensesUsed({ human: 0, ai: 0 });
     setDefenseMode(false);
   }, [boardSize, numSurprises, numDefenses]);
 
@@ -141,74 +149,18 @@ const GameBoard = ({
     aiTarget, humanTarget, t, setDisableInput, setDefenseTiles, setDefensesUsed, toast, setTurn, setAIModalState, aiMovingRef,
   });
 
-  function handleSurprise(tile: Tile, player: PlayerType) {
-    // Find surprise
-    const sIdx = surpriseTiles.findIndex(st => st.x === tile.x && st.y === tile.y && !st.used);
-    if (sIdx === -1) return; // no active surprise here
-    const s = surpriseTiles[sIdx];
-    let message = "";
-    let pointsChange = 0;
-    let doFreeMove = false;
-    let update: Partial<{ human: number; ai: number }> = {};
-    // Get tile points for this move (already 0 if collected!)
-    const tilePoints = boardPoints[tile.y]?.[tile.x] || 0;
-    // Surprise event logic
-    switch (s.type) {
-      case "double":
-        if (tilePoints > 0) {
-          pointsChange = tilePoints;
-          if (player === "human") { setHumanPoints(v => v + tilePoints); }
-          else { setAIPoints(v => v + tilePoints); }
-        }
-        message = player === "human" ? t("surprise.double.self") : t("surprise.double.ai");
-        break;
-      case "lose":
-        pointsChange = -Math.ceil((player === "human" ? humanPoints : aiPoints) * 0.2);
-        if (player === "human") setHumanPoints(v => Math.max(0, v + pointsChange));
-        else setAIPoints(v => Math.max(0, v + pointsChange));
-        message = player === "human" ? t("surprise.lose.self") : t("surprise.lose.ai");
-        break;
-      case "free":
-        doFreeMove = true;
-        message = player === "human" ? t("surprise.free.self") : t("surprise.free.ai");
-        break;
-      case "steal":
-        const take = 15 + Math.floor(Math.random() * 15);
-        if (player === "human") {
-          setAIPoints(aiv => Math.max(0, aiv - take));
-          setHumanPoints(hv => hv + take);
-        } else {
-          setHumanPoints(hv => Math.max(0, hv - take));
-          setAIPoints(aiv => aiv + take);
-        }
-        message = player === "human"
-          ? t("surprise.steal.self", { n: take })
-          : t("surprise.steal.ai", { n: take });
-        break;
-      case "extra":
-        pointsChange = 15 + Math.floor(Math.random() * 15);
-        if (player === "human") setHumanPoints(v => v + pointsChange);
-        else setAIPoints(v => v + pointsChange);
-        message = player === "human"
-          ? t("surprise.extra.self", { n: pointsChange })
-          : t("surprise.extra.ai", { n: pointsChange });
-        break;
-    }
-    // Mark surprise as used
-    setSurpriseTiles(prev => prev.map((s, i) => i === sIdx ? { ...s, used: true } : s));
-    // Show a toast
-    toast({
-      title: t("surprise.title"),
-      description: (
-        <span className="flex items-center gap-2">
-          <Gift className="inline-block text-pink-500" size={24} />
-          {message}
-        </span>
-      ),
-      duration: 3000, // updated to 3 seconds
-    });
-    return doFreeMove;
-  }
+  // Extracted: surprise logic
+  const surpriseHandler = useSurprise({
+    boardPoints,
+    surpriseTiles,
+    setSurpriseTiles,
+    setHumanPoints,
+    setAIPoints,
+    humanPoints,
+    aiPoints,
+    t,
+    toast,
+  });
 
   // Refactored: HUD Actions
   function handlePlaceDefenseButton() {
@@ -234,7 +186,7 @@ const GameBoard = ({
     }, 100);
   }
 
-  // Refactor: human move handler
+  // Refactored: human move handler now receives surpriseHandler
   const { handleTileClick } = useHumanMoveHandler({
     winner,
     disableInput,
@@ -252,7 +204,7 @@ const GameBoard = ({
     setMoveState,
     setTurn,
     setHumanPoints,
-    handleSurprise,
+    handleSurprise: surpriseHandler,
   });
 
   // AI move handler (after answering modal)
@@ -276,7 +228,7 @@ const GameBoard = ({
       return { ...p, ai: { x, y } };
     });
     setTimeout(() => {
-      handleSurprise(aiModalState.targetTile, "ai");
+      surpriseHandler(aiModalState.targetTile, "ai");
       setAIModalState(null);
       setTimeout(() => {
         if (!winner) {
@@ -288,17 +240,18 @@ const GameBoard = ({
     }, 100);
   };
 
-  // Defense placement handler (unchanged)
-  function canPlaceDefenseHere(tile: Tile): string | null {
-    if (defensesUsed.human >= numDefenses) return t("game.defense_already_used") || "No more defenses";
-    if ((tile.x === 0 && tile.y === 0) || (tile.x === BOARD_SIZE - 1 && tile.y === BOARD_SIZE - 1)) return t("game.defense_no_corner") || "Can't place on start/end";
-    if ((positions.human.x === tile.x && positions.human.y === tile.y) || (positions.ai.x === tile.x && positions.ai.y === tile.y)) return t("game.defense_no_player") || "Can't place on pieces";
-    if (defenseTiles.some(d => d.x === tile.x && d.y === tile.y)) return t("game.defense_already_here") || "Already a defense";
-    if (surpriseTiles.some(s => s.x === tile.x && s.y === tile.y && !s.used)) return t("game.defense_no_surprise") || "Can't place on a surprise";
-    return null;
-  }
+  // Defense placement handler
   function handleDefenseClick(tile: Tile) {
-    const problem = canPlaceDefenseHere(tile);
+    const problem = canPlaceDefenseHere({
+      tile,
+      BOARD_SIZE,
+      numDefenses,
+      positions,
+      defenseTiles,
+      surpriseTiles,
+      defensesUsed,
+      t,
+    });
     if (problem) {
       toast({
         title: t("game.defense_fail") || "Invalid defense placement",
@@ -307,8 +260,8 @@ const GameBoard = ({
       });
       return;
     }
-    setDefenseTiles(prev => [...prev, { ...tile, owner: "human" }]);
-    setDefensesUsed(d => ({ ...d, human: d.human + 1 }));
+    setDefenseTiles((prev) => [...prev, { ...tile, owner: "human" }]);
+    setDefensesUsed((d) => ({ ...d, human: d.human + 1 }));
     setDefenseMode(false);
     toast({
       title: t("game.defense_placed") || "Defense Placed",
@@ -317,26 +270,25 @@ const GameBoard = ({
     });
   }
 
-  // Reset game
-  const handleRestart = () => {
-    setPositions({
-      human: { x: 0, y: 0 },
-      ai: { x: boardSize - 1, y: boardSize - 1 }
-    });
-    setWinner(null);
-    setTurn("human");
-    setIsModalOpen(false);
-    setMoveState(null);
-    setAIModalState(null);
-    setDisableInput(false);
-    setHumanPoints(0);
-    setAIPoints(0);
-    setBoardPoints(generateRandomPoints(boardSize));
-    setSurpriseTiles(getRandomSurpriseTiles(boardSize, numSurprises));
-    setDefenseTiles([]);
-    setDefensesUsed({human: 0, ai: 0});
-    setDefenseMode(false);
-  };
+  // Reset game using extracted hook
+  const handleRestart = useGameRestart({
+    boardSize,
+    numSurprises,
+    setPositions,
+    setWinner,
+    setTurn,
+    setIsModalOpen,
+    setMoveState,
+    setAIModalState,
+    setDisableInput,
+    setHumanPoints,
+    setAIPoints,
+    setBoardPoints,
+    setSurpriseTiles,
+    setDefenseTiles,
+    setDefensesUsed,
+    setDefenseMode,
+  });
 
   // Debug: log turns to help trace
   useEffect(() => {

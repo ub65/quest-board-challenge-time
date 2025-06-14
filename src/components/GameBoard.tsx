@@ -1,8 +1,9 @@
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import TranslateQuestionModal from "./TranslateQuestionModal";
 import SoundManager from "./SoundManager";
 import { questionsByDifficulty } from "@/lib/questions";
+import GameSettingsModal from "./GameSettingsModal";
 
 export type PlayerType = "human" | "ai";
 
@@ -69,6 +70,12 @@ const GameBoard = ({
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [sound, setSound] = useState<"move" | "wrong" | "win" | null>(null);
   const [disableInput, setDisableInput] = useState(false);
+  
+  // Settings modal state
+  const [settingsOpen, setSettingsOpen] = useState(false);
+
+  // AI is pending a move? We use this flag to prevent multiple AI triggers
+  const aiMovingRef = useRef(false);
 
   const aiTarget = { x: 0, y: 0 };
   const humanTarget = { x: BOARD_SIZE - 1, y: BOARD_SIZE - 1 };
@@ -86,17 +93,24 @@ const GameBoard = ({
 
   // AI turn: "think", then move
   useEffect(() => {
-    if (turn === "ai" && !winner) {
+    if (turn === "ai" && !winner && !aiMovingRef.current) {
+      aiMovingRef.current = true;
       setDisableInput(true);
       setTimeout(() => {
         const move = getAIMove(positions.ai, aiTarget);
         setSound("move");
         setPositions((p) => ({ ...p, ai: move }));
         setTimeout(() => {
+          // Only set human turn and enable input if winner not decided after move
           setTurn("human");
           setDisableInput(false);
+          aiMovingRef.current = false;
         }, 600);
       }, 800 + Math.random() * 500);
+    }
+    // If player's turn or winner, always reset the flag
+    if (turn === "human" || winner) {
+      aiMovingRef.current = false;
     }
   }, [turn, winner, positions.ai]);
 
@@ -197,7 +211,14 @@ const GameBoard = ({
   return (
     <div className="flex flex-col items-center">
       <SoundManager trigger={sound} />
-      <div className="flex justify-between items-center w-full mb-4">
+      {/* Settings button and modal */}
+      <div className="flex flex-row justify-between items-center w-full mb-4 gap-2">
+        <button
+          onClick={() => setSettingsOpen(true)}
+          className="px-3 py-2 rounded-md bg-gray-100 hover:bg-blue-200 text-blue-700 font-medium shadow transition-colors text-base"
+        >
+          ⚙️ Settings
+        </button>
         <div className="flex flex-col">
           <span className="font-semibold">Difficulty:</span>
           <span className="capitalize">{difficulty}</span>
@@ -209,6 +230,7 @@ const GameBoard = ({
           Restart
         </button>
       </div>
+      <GameSettingsModal open={settingsOpen} onOpenChange={setSettingsOpen} />
       <div className="relative my-3">
         <div
           className="grid gap-1"

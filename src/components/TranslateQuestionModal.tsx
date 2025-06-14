@@ -1,0 +1,130 @@
+
+import React, { useEffect, useState } from "react";
+
+const TIME_LIMIT = 14; // seconds
+
+type Question = {
+  prompt: string;
+  answers: string[];
+  correct: number;
+};
+
+const shuffle = (arr: any[]) => {
+  // Fisher-Yates
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+};
+
+const TranslateQuestionModal = ({
+  isOpen,
+  question,
+  onSubmit,
+}: {
+  isOpen: boolean;
+  question: Question;
+  onSubmit: (isCorrect: boolean) => void;
+}) => {
+  const [selected, setSelected] = useState<number | null>(null);
+  const [shuffled, setShuffled] = useState<{ answer: string; idx: number }[]>([]);
+  const [time, setTime] = useState(TIME_LIMIT);
+  const [answered, setAnswered] = useState<boolean>(false);
+
+  useEffect(() => {
+    if (question) {
+      const arr = question.answers.map((answer: string, idx: number) => ({
+        answer,
+        idx,
+      }));
+      setShuffled(shuffle(arr));
+      setSelected(null);
+      setTime(TIME_LIMIT);
+      setAnswered(false);
+    }
+  }, [question]);
+
+  useEffect(() => {
+    if (!isOpen || answered) return;
+    if (time <= 0) {
+      setAnswered(true);
+      setTimeout(() => onSubmit(false), 800);
+      return;
+    }
+    const t = setTimeout(() => setTime((s) => s - 1), 1000);
+    return () => clearTimeout(t);
+  }, [time, isOpen, answered, onSubmit]);
+
+  const handlePick = (pickedIdx: number) => {
+    if (answered) return;
+    setSelected(pickedIdx);
+    const originalIdx = shuffled[pickedIdx].idx;
+    const correct = originalIdx === question.correct;
+    setAnswered(true);
+    setTimeout(() => onSubmit(correct), 800);
+  };
+
+  return (
+    <div
+      className={`
+      fixed inset-0 z-[100] flex items-center justify-center bg-black/60 animate-fade-in
+    `}
+      style={{ pointerEvents: isOpen ? "auto" : "none" }}
+    >
+      <div className="w-full max-w-lg bg-white rounded-lg shadow-lg p-6 animate-scale-in flex flex-col">
+        <div className="mb-2 text-lg font-bold">Translate to Hebrew:</div>
+        <div className="mb-6 text-2xl text-primary font-semibold select-none">
+          {question.prompt}
+        </div>
+        <div className="flex flex-col gap-4">
+          {shuffled.map(({ answer }, i) => (
+            <button
+              key={i}
+              className={`
+                border px-5 py-3 rounded-lg text-lg text-left
+                transition-all duration-150
+                ${
+                  answered
+                    ? shuffled[i].idx === question.correct
+                      ? "bg-green-200 border-green-600"
+                      : selected === i
+                      ? "bg-red-200 border-red-400"
+                      : "bg-gray-100 border-gray-300"
+                    : selected === i
+                    ? "border-blue-400 bg-blue-100"
+                    : "bg-gray-50 border-gray-200 hover:bg-blue-200 hover:border-blue-500"
+                }
+                ${answered ? "opacity-75" : ""}
+              `}
+              disabled={answered}
+              onClick={() => handlePick(i)}
+            >
+              {answer}
+            </button>
+          ))}
+        </div>
+        <div className="flex items-center mt-5">
+          <div className="flex-1" />
+          <div className="text-base font-semibold">
+            Time left:{" "}
+            <span className={time <= 4 ? "text-red-500 animate-pulse" : ""}>
+              {time}
+            </span>
+            s
+          </div>
+        </div>
+        {answered && (
+          <div className="mt-4 text-center text-lg font-bold">
+            {selected !== null && shuffled[selected].idx === question.correct
+              ? "Correct!"
+              : "Wrong"}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default TranslateQuestionModal;

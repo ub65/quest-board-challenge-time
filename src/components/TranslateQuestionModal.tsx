@@ -1,6 +1,7 @@
 
 import React, { useEffect, useState } from "react";
 import { useLocalization } from "@/contexts/LocalizationContext";
+import { Slider } from "@/components/ui/slider";
 
 type Question = {
   prompt: string;
@@ -85,6 +86,14 @@ const TranslateQuestionModal = ({
             <span>{t('question.timeLeft') || "Time left"}</span>
             <span className="ml-2 text-primary">{time}s</span>
           </label>
+          <Slider
+            min={0}
+            max={timeLimit}
+            value={[time]}
+            hideThumb
+            className="mt-1"
+            aria-label={t('question.timeLeft')}
+          />
         </div>
         {/* Question prompt */}
         <div className="mb-2 text-lg font-bold">{t('question.translateTo')}</div>

@@ -1,6 +1,7 @@
 
 import React, { useEffect, useState } from "react";
 import { useLocalization } from "@/contexts/LocalizationContext";
+import { Slider } from "@/components/ui/slider";
 
 type Question = {
   prompt: string;
@@ -18,6 +19,9 @@ const shuffle = (arr: any[]) => {
   return a;
 };
 
+const MIN_TIME = 6;
+const MAX_TIME = 40;
+
 const TranslateQuestionModal = ({
   isOpen,
   question,
@@ -32,6 +36,7 @@ const TranslateQuestionModal = ({
   const { t } = useLocalization();
   const [selected, setSelected] = useState<number | null>(null);
   const [shuffled, setShuffled] = useState<{ answer: string; idx: number }[]>([]);
+  const [localTimeLimit, setLocalTimeLimit] = useState(timeLimit);
   const [time, setTime] = useState(timeLimit);
   const [answered, setAnswered] = useState<boolean>(false);
 
@@ -43,6 +48,7 @@ const TranslateQuestionModal = ({
       }));
       setShuffled(shuffle(arr));
       setSelected(null);
+      setLocalTimeLimit(timeLimit);
       setTime(timeLimit);
       setAnswered(false);
     }
@@ -55,9 +61,15 @@ const TranslateQuestionModal = ({
       setTimeout(() => onSubmit(false), 800);
       return;
     }
-    const t = setTimeout(() => setTime((s) => s - 1), 1000);
-    return () => clearTimeout(t);
+    const tmo = setTimeout(() => setTime((s) => s - 1), 1000);
+    return () => clearTimeout(tmo);
   }, [time, isOpen, answered, onSubmit]);
+
+  // Handle slider change
+  const handleSliderChange = ([val]: number[]) => {
+    setLocalTimeLimit(val);
+    setTime(val);
+  };
 
   const handlePick = (pickedIdx: number) => {
     if (answered) return;
@@ -76,6 +88,27 @@ const TranslateQuestionModal = ({
       style={{ pointerEvents: isOpen ? "auto" : "none" }}
     >
       <div className="w-full max-w-lg bg-white rounded-lg shadow-lg p-6 animate-scale-in flex flex-col">
+        {/* New Time Slider */}
+        <div className="flex flex-col gap-2 mb-5">
+          <label className="font-semibold flex items-center justify-between select-none">
+            <span>{t('question.timeLimit') || "Time limit"}</span>
+            <span className="ml-2 text-primary">{localTimeLimit}s</span>
+          </label>
+          <Slider
+            min={MIN_TIME}
+            max={MAX_TIME}
+            step={1}
+            value={[localTimeLimit]}
+            onValueChange={handleSliderChange}
+            disabled={answered}
+            className="w-full"
+          />
+          <div className="flex justify-between text-xs text-gray-400 mt-1">
+            <span>{MIN_TIME}s</span>
+            <span>{MAX_TIME}s</span>
+          </div>
+        </div>
+        {/* Question prompt */}
         <div className="mb-2 text-lg font-bold">{t('question.translateTo')}</div>
         <div className="mb-6 text-2xl text-primary font-semibold select-none">
           {question.prompt}

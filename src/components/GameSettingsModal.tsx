@@ -25,6 +25,9 @@ type GameSettingsModalProps = {
   onBoardSizeChange: (v: number) => void;
   questionTime: number;
   onQuestionTimeChange: (v: number) => void;
+  // Add surpriseTiles
+  surpriseCount: number;
+  onSurpriseCountChange: (v: number) => void;
 };
 
 const GameSettingsModal = ({
@@ -36,6 +39,8 @@ const GameSettingsModal = ({
   onBoardSizeChange,
   questionTime,
   onQuestionTimeChange,
+  surpriseCount,
+  onSurpriseCountChange,
 }: GameSettingsModalProps) => {
   const { t } = useLocalization();
 
@@ -107,6 +112,26 @@ const GameSettingsModal = ({
             <div className="flex justify-between text-xs text-gray-400 mt-1">
               <span>6s</span>
               <span>40s</span>
+            </div>
+          </div>
+          {/* Surprise Count Slider */}
+          <div className="flex flex-col gap-1">
+            <Label htmlFor="surprise-count-slider" className="text-base font-semibold mb-1 select-none flex justify-between">
+              <span>Surprise Tiles</span>
+              <span className="text-primary">{surpriseCount}</span>
+            </Label>
+            <Slider
+              id="surprise-count-slider"
+              min={1}
+              max={8}
+              step={1}
+              value={[surpriseCount]}
+              onValueChange={([val]) => onSurpriseCountChange(val)}
+              className="w-full"
+            />
+            <div className="flex justify-between text-xs text-gray-400 mt-1">
+              <span>1</span>
+              <span>8</span>
             </div>
           </div>
         </div>

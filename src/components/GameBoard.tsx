@@ -15,7 +15,6 @@ export type PlayerType = "human" | "ai";
 
 const DEFAULT_BOARD_SIZE = 7;
 const DEFAULT_QUESTION_TIME = 14;
-const NUM_SURPRISES = 4;
 const SURPRISE_TYPES = [
   "double", // double points
   "lose",   // lose points
@@ -115,6 +114,9 @@ const GameBoard = ({
   const [questionTime, setQuestionTime] = useState<number>(DEFAULT_QUESTION_TIME);
   const [boardSize, setBoardSize] = useState<number>(DEFAULT_BOARD_SIZE);
 
+  // ---- NEW: Surprise count setting ----
+  const [numSurprises, setNumSurprises] = useState<number>(4);
+
   // Points board state: NxN grid, each cell: points remaining (0 if collected)
   const [boardPoints, setBoardPoints] = useState<number[][]>(
     () => generateRandomPoints(DEFAULT_BOARD_SIZE)
@@ -125,7 +127,7 @@ const GameBoard = ({
 
   // Surprise tile state
   const [surpriseTiles, setSurpriseTiles] = useState<SurpriseTile[]>(
-    () => getRandomSurpriseTiles(DEFAULT_BOARD_SIZE, NUM_SURPRISES)
+    () => getRandomSurpriseTiles(DEFAULT_BOARD_SIZE, numSurprises)
   );
 
   // Gameplay state
@@ -149,7 +151,7 @@ const GameBoard = ({
   const aiTarget = { x: 0, y: 0 };
   const humanTarget = { x: BOARD_SIZE - 1, y: BOARD_SIZE - 1 };
 
-  // Reset game when board size changes
+  // Reset game when board size OR numSurprises changes
   useEffect(() => {
     setPositions({
       human: { x: 0, y: 0 },
@@ -160,8 +162,8 @@ const GameBoard = ({
     setHumanPoints(0);
     setAIPoints(0);
     setBoardPoints(generateRandomPoints(BOARD_SIZE));
-    setSurpriseTiles(getRandomSurpriseTiles(BOARD_SIZE, NUM_SURPRISES));
-  }, [BOARD_SIZE]);
+    setSurpriseTiles(getRandomSurpriseTiles(BOARD_SIZE, numSurprises));
+  }, [BOARD_SIZE, numSurprises]);
 
   useEffect(() => {
     if (winner) {
@@ -369,7 +371,7 @@ const GameBoard = ({
     setHumanPoints(0);
     setAIPoints(0);
     setBoardPoints(generateRandomPoints(BOARD_SIZE));
-    setSurpriseTiles(getRandomSurpriseTiles(BOARD_SIZE, NUM_SURPRISES));
+    setSurpriseTiles(getRandomSurpriseTiles(BOARD_SIZE, numSurprises));
     onRestart();
   };
 
@@ -394,6 +396,9 @@ const GameBoard = ({
         onBoardSizeChange={v => setBoardSize(Math.max(5, Math.min(12, v || DEFAULT_BOARD_SIZE)))}
         questionTime={questionTime}
         onQuestionTimeChange={v => setQuestionTime(Math.max(6, Math.min(40, v || DEFAULT_QUESTION_TIME)))}
+        // NEW:
+        surpriseCount={numSurprises}
+        onSurpriseCountChange={setNumSurprises}
       />
       <div className="relative my-3">
         <GameBoardGrid

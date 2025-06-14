@@ -207,22 +207,26 @@ const GameBoard = ({
   const aiTarget = { x: 0, y: 0 };
   const humanTarget = { x: BOARD_SIZE - 1, y: BOARD_SIZE - 1 };
 
+  // Track human moves this round (NEW LOGIC)
+  const [humanMovesThisRound, setHumanMovesThisRound] = useState(0);
+
   // On game reset
   useEffect(() => {
     setPositions({
       human: { x: 0, y: 0 },
-      ai: { x: BOARD_SIZE - 1, y: BOARD_SIZE - 1 }
+      ai: { x: boardSize - 1, y: boardSize - 1 }
     });
     setWinner(null);
     setTurn("human");
     setHumanPoints(0);
     setAIPoints(0);
-    setBoardPoints(generateRandomPoints(BOARD_SIZE));
-    setSurpriseTiles(getRandomSurpriseTiles(BOARD_SIZE, numSurprises));
+    setBoardPoints(generateRandomPoints(boardSize));
+    setSurpriseTiles(getRandomSurpriseTiles(boardSize, numSurprises));
     setDefenseTiles([]);
     setDefensesUsed({human: 0, ai: 0});
     setDefenseMode(false);
-  }, [BOARD_SIZE, numSurprises, numDefenses]);
+    setHumanMovesThisRound(0); // RESET on new game
+  }, [boardSize, numSurprises, numDefenses]);
 
   useEffect(() => {
     if (winner) {
@@ -382,7 +386,7 @@ const GameBoard = ({
     return doFreeMove;
   }
 
-  // HUMAN MOVE HANDLER (updated)
+  // HUMAN MOVE HANDLER (modified for two moves per round)
   const handleTileClick = async (tile: any) => {
     if (winner || disableInput) return;
 
@@ -395,7 +399,7 @@ const GameBoard = ({
 
     // NOT DEFENSE MODE: regular move
     if (turn !== "human") return;
-    const validMoves = getValidMoves(positions.human, BOARD_SIZE, defenseTiles).filter(
+    const validMoves = getValidMoves(positions.human, BOARD_SIZE, defenseTiles, positions.ai).filter(
       t => t.x >= 0 && t.y >= 0 && t.x < BOARD_SIZE && t.y < BOARD_SIZE
     );
     if (!validMoves.some((t) => positionsEqual(t, tile))) return;
@@ -422,16 +426,25 @@ const GameBoard = ({
         return { ...p, human: { x, y } };
       });
       setSound("move");
+
       setTimeout(() => {
         const doFreeMove = handleSurprise(tile, "human");
         if (!doFreeMove) {
-          console.log("Human completed move and hands turn to AI");
-          setTurn("ai");
+          // Modified logic: only switch to AI after 2 moves
+          setHumanMovesThisRound((prev) => {
+            const newMoves = prev + 1;
+            if (newMoves >= 2) {
+              setTurn("ai");
+              return 0; // reset counter for next round
+            }
+            // Otherwise, stay on human turn to allow next move
+            return newMoves;
+          });
         }
       }, 100);
     } else {
       setSound("wrong");
-      console.log("Human answered wrong; turn handed to AI");
+      // On wrong answer, pass the turn logic unchanged (you may decide if you want to allow retry or just set to AI)
       setTurn("ai");
     }
   };
@@ -494,11 +507,11 @@ const GameBoard = ({
     });
   }
 
-  // Reset game
+  // Reset game - also reset humanMovesThisRound
   const handleRestart = () => {
     setPositions({
       human: { x: 0, y: 0 },
-      ai: { x: BOARD_SIZE - 1, y: BOARD_SIZE - 1 }
+      ai: { x: boardSize - 1, y: boardSize - 1 }
     });
     setWinner(null);
     setTurn("human");
@@ -508,11 +521,12 @@ const GameBoard = ({
     setDisableInput(false);
     setHumanPoints(0);
     setAIPoints(0);
-    setBoardPoints(generateRandomPoints(BOARD_SIZE));
-    setSurpriseTiles(getRandomSurpriseTiles(BOARD_SIZE, numSurprises));
+    setBoardPoints(generateRandomPoints(boardSize));
+    setSurpriseTiles(getRandomSurpriseTiles(boardSize, numSurprises));
     setDefenseTiles([]);
     setDefensesUsed({human: 0, ai: 0});
     setDefenseMode(false);
+    setHumanMovesThisRound(0);
     onRestart();
   };
 

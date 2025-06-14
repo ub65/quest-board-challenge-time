@@ -13,6 +13,8 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { SlidersHorizontal } from "lucide-react";
+import LanguageSelector from "./LanguageSelector";
+import { useLocalization } from "@/contexts/LocalizationContext";
 
 type GameSettingsModalProps = {
   open: boolean;
@@ -35,6 +37,8 @@ const GameSettingsModal = ({
   questionTime,
   onQuestionTimeChange,
 }: GameSettingsModalProps) => {
+  const { t } = useLocalization();
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="bg-gradient-to-br from-background to-secondary p-8 shadow-2xl rounded-2xl border-0 max-w-[420px]">
@@ -42,7 +46,7 @@ const GameSettingsModal = ({
           <div className="flex flex-col items-center gap-1 mb-2">
             <SlidersHorizontal size={32} className="text-primary" />
             <DialogTitle className="text-2xl font-bold tracking-tight">
-              Game Settings
+              {t('settings.title')}
             </DialogTitle>
             <DialogDescription className="mb-0 text-center">
               Adjust your preferences for sound, board size, and timer.
@@ -50,10 +54,13 @@ const GameSettingsModal = ({
           </div>
         </DialogHeader>
         <div className="py-2 flex flex-col gap-7">
+          {/* Language Selector */}
+          <LanguageSelector />
+          
           {/* Sound Toggle */}
           <div className="flex items-center justify-between gap-4 px-1">
             <Label htmlFor="sound-toggle" className="text-base cursor-pointer select-none">
-              Sound Effects
+              {t('settings.sound')}
             </Label>
             <Switch
               id="sound-toggle"
@@ -65,7 +72,7 @@ const GameSettingsModal = ({
           {/* Board Size Slider */}
           <div className="flex flex-col gap-1">
             <Label htmlFor="board-size-slider" className="text-base font-semibold mb-1 select-none flex justify-between">
-              <span>Board Size</span>
+              <span>{t('settings.boardSize')}</span>
               <span className="text-primary">{boardSize}x{boardSize}</span>
             </Label>
             <Slider
@@ -85,7 +92,7 @@ const GameSettingsModal = ({
           {/* Question Time Slider */}
           <div className="flex flex-col gap-1">
             <Label htmlFor="question-time-slider" className="text-base font-semibold mb-1 select-none flex justify-between">
-              <span>Question Time</span>
+              <span>{t('settings.questionTime')}</span>
               <span className="text-primary">{questionTime} s</span>
             </Label>
             <Slider
@@ -106,7 +113,7 @@ const GameSettingsModal = ({
         <DialogFooter className="pt-2">
           <DialogClose asChild>
             <button className="rounded-lg bg-primary px-4 py-2 text-primary-foreground hover:bg-primary/90 font-semibold text-base transition-colors w-full shadow">
-              Close
+              {t('settings.close')}
             </button>
           </DialogClose>
         </DialogFooter>

@@ -394,7 +394,6 @@ const GameBoard = ({
         onBoardSizeChange={v => setBoardSize(Math.max(5, Math.min(12, v || DEFAULT_BOARD_SIZE)))}
         questionTime={questionTime}
         onQuestionTimeChange={v => setQuestionTime(Math.max(6, Math.min(40, v || DEFAULT_QUESTION_TIME)))}
-        languageSelector={<LanguageSelector />}
       />
       <div className="relative my-3">
         <div

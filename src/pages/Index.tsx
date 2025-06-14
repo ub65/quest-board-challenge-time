@@ -55,6 +55,13 @@ const Index = () => {
     setStep("game");
   };
 
+  // Callback for OnlineLobby: play vs AI after lobby creation/join
+  const handleOnlineVsAISolo = () => {
+    setOnlineGame(null);
+    setMode("ai");
+    setStep("welcome");
+  };
+
   // Mode selection screen
   if (step === "mode") {
     return (
@@ -76,6 +83,7 @@ const Index = () => {
             setStep("mode");
           }}
           onGameStart={handleOnlineGameStart}
+          onVsAISolo={handleOnlineVsAISolo}
         />
       );
     }

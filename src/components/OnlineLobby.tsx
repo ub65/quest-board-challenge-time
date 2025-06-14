@@ -1,24 +1,30 @@
 
 import React, { useState } from "react";
-import { Button } from "@/components/ui/button"; // Using shadcn/ui button for improved UI
+import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/use-toast";
 
 /**
- * Online lobby supporting game creation/joining flows (Supabase real-time to be added).
+ * Online lobby supporting game creation/joining flows, now allows playing vs AI after joining.
  */
 const OnlineLobby: React.FC<{
   onBack?: () => void;
   t: (k: string, params?: any) => string;
   onGameStart: (gameCode: string, role: "host" | "guest") => void;
+  onVsAISolo?: () => void;
 }> = ({
   onBack,
   t,
   onGameStart,
+  onVsAISolo,
 }) => {
-  const [step, setStep] = useState<"menu" | "create" | "join" | "wait" | "error">("menu");
+  const [step, setStep] = useState<
+    "menu" | "create" | "join" | "wait" | "error" | "choose-opponent"
+  >("menu");
   const [gameCode, setGameCode] = useState<string>("");
   const [isCreating, setIsCreating] = useState(false);
   const [isJoining, setIsJoining] = useState(false);
+  // Track if the user is host or guest for the vs friend option
+  const [currentRole, setCurrentRole] = useState<"host" | "guest" | null>(null);
 
   function generateCode() {
     return Math.random().toString(36).substring(2, 8).toUpperCase();
@@ -30,13 +36,13 @@ const OnlineLobby: React.FC<{
     setTimeout(() => {
       const newCode = generateCode();
       setGameCode(newCode);
+      setCurrentRole("host");
       setIsCreating(false);
       toast({
         title: t("online.lobbyGameCreated") || "Game Created",
         description: `${t("online.lobbyShareCode") || "Share this code:"} ${newCode}`,
       });
-      // Call parent to start the game in "host" mode
-      onGameStart(newCode, "host");
+      setStep("choose-opponent");
     }, 700);
   };
 
@@ -60,23 +66,37 @@ const OnlineLobby: React.FC<{
     setIsJoining(true);
     setTimeout(() => {
       setIsJoining(false);
+      setCurrentRole("guest");
       toast({
         title: t("online.lobbyJoined") || "Joined game!",
         description: t("online.lobbyJoinedDesc") || "Waiting for the host...",
       });
-      // Call parent to start the game in "guest" mode
-      onGameStart(gameCode.toUpperCase(), "guest");
+      setStep("choose-opponent");
     }, 800);
   };
 
-  // Handler: Reset to menu
+  // Handler: Back to menu
   const handleBackToMenu = () => {
     setStep("menu");
     setGameCode("");
     setIsCreating(false);
     setIsJoining(false);
+    setCurrentRole(null);
   };
 
+  // Handler: Play vs AI (from lobby)
+  const handleVsAI = () => {
+    if (onVsAISolo) onVsAISolo();
+  };
+
+  // Handler: Play vs Friend
+  const handleVsFriend = () => {
+    if (gameCode && currentRole) {
+      onGameStart(gameCode, currentRole);
+    }
+  };
+
+  // Lobby/menu screens
   return (
     <div className="flex flex-col items-center justify-center min-h-screen w-full bg-gradient-to-br from-sky-100 via-blue-200 to-violet-100 px-4">
       <div className="w-full max-w-sm mx-auto bg-white/95 shadow-xl rounded-3xl p-7 flex flex-col gap-8 mt-10 animate-fade-in">
@@ -97,11 +117,13 @@ const OnlineLobby: React.FC<{
             </Button>
           </>
         )}
+
         {step === "create" && (
           <>
             <p>{t("online.lobbyCreating") || "Creating game..."}</p>
           </>
         )}
+
         {step === "join" && (
           <form onSubmit={handleSubmitJoin} className="flex flex-col gap-5">
             <label className="font-medium text-center">
@@ -124,6 +146,26 @@ const OnlineLobby: React.FC<{
               {t("general.back") || "Back"}
             </Button>
           </form>
+        )}
+
+        {/* CHOOSE OPPONENT STEP */}
+        {step === "choose-opponent" && (
+          <>
+            <p className="text-center text-gray-500">
+              {t("online.lobbyChooseOpponent") || "Do you want to play against AI or a friend?"}
+            </p>
+            <div className="flex flex-col gap-4">
+              <Button className="w-full" onClick={handleVsAI}>
+                🤖 {t("online.lobbyVsAI") || "Play vs AI"}
+              </Button>
+              <Button className="w-full" onClick={handleVsFriend}>
+                🧑‍🤝‍🧑 {t("online.lobbyVsFriend") || "Play vs Friend"}
+              </Button>
+            </div>
+            <Button className="w-full mt-3" variant="ghost" onClick={handleBackToMenu}>
+              {t("general.back") || "Back"}
+            </Button>
+          </>
         )}
       </div>
     </div>

@@ -30,10 +30,12 @@ import GameBoardArea from "./GameBoard/GameBoardArea";
 
 const GameBoard = ({
   difficulty: initialDifficulty,
-  onRestart
+  onRestart,
+  playerName
 }: {
   difficulty: "easy" | "medium" | "hard";
   onRestart: () => void;
+  playerName?: string;
 }) => {
   const { t, language } = useLocalization();
 
@@ -329,6 +331,7 @@ const GameBoard = ({
       onNumDefensesChange={setNumDefenses}
       onDifficultyChange={setDifficulty}
       surpriseCount={numSurprises}
+      playerName={playerName}
     />
   );
 };

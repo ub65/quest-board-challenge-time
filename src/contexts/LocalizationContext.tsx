@@ -107,6 +107,9 @@ const translations = {
     'welcome.playerNamePlaceholder': 'Enter your name',
     'welcome.settings': 'Settings',
     'welcome.back': 'Back',
+    
+    // New: support fallbacks for {n} interpolation
+    'game.youLabel': 'You',
   },
   he: {
     // Game titles and UI
@@ -204,6 +207,9 @@ const translations = {
     'welcome.playerNamePlaceholder': 'הכנס את שמך',
     'welcome.settings': 'הגדרות',
     'welcome.back': 'חזרה',
+    
+    // New: support fallbacks for {n} interpolation
+    'game.youLabel': 'אתה',
   },
 };
 

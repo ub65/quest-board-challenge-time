@@ -1,4 +1,3 @@
-
 import React from "react";
 import GameScoreboard from "../GameScoreboard";
 import { Shield } from "lucide-react";
@@ -14,6 +13,7 @@ type GameBoardHudProps = {
   turn: PlayerType;
   onPlaceDefense: () => void;
   defenseMode: boolean;
+  playerName?: string;
 };
 
 const GameBoardHud: React.FC<GameBoardHudProps> = ({
@@ -26,10 +26,11 @@ const GameBoardHud: React.FC<GameBoardHudProps> = ({
   turn,
   onPlaceDefense,
   defenseMode,
+  playerName,
 }) => {
   return (
     <div className="w-full flex flex-col items-center">
-      <GameScoreboard humanPoints={humanPoints} aiPoints={aiPoints} />
+      <GameScoreboard humanPoints={humanPoints} aiPoints={aiPoints} playerName={playerName} />
       <div className="flex items-center gap-4 mt-1">
         <div className="flex items-center gap-2">
           <Shield size={18} className="text-primary" />

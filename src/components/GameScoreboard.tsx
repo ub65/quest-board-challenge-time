@@ -5,9 +5,10 @@ import { useLocalization } from "@/contexts/LocalizationContext";
 type GameScoreboardProps = {
   humanPoints: number;
   aiPoints: number;
+  playerName?: string;
 };
 
-const GameScoreboard: React.FC<GameScoreboardProps> = ({ humanPoints, aiPoints }) => {
+const GameScoreboard: React.FC<GameScoreboardProps> = ({ humanPoints, aiPoints, playerName }) => {
   const { t, language } = useLocalization();
   return (
     <div
@@ -19,7 +20,7 @@ const GameScoreboard: React.FC<GameScoreboardProps> = ({ humanPoints, aiPoints }
     >
       <div className="flex flex-row items-center gap-2">
         <span className="w-7 rounded bg-blue-600 text-white flex items-center justify-center font-bold shadow-md">
-          YOU
+          {playerName?.trim() || t("game.youLabel")}
         </span>
         <span className="text-blue-900 ml-2">{t("game.points")}: {humanPoints}</span>
       </div>

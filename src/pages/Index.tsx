@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import GameBoard from "@/components/GameBoard";
 import { useLocalization } from "@/contexts/LocalizationContext";
@@ -54,7 +53,6 @@ const Index = () => {
           playerName={playerName}
           setPlayerName={setPlayerName}
           t={t}
-          // Start now goes straight to the game
           onStart={() => setStep("game")}
           onSettings={() => setSettingsOpen(true)}
         />
@@ -65,6 +63,7 @@ const Index = () => {
             key={gameKey}
             difficulty={difficulty}
             onRestart={handleRestart}
+            playerName={playerName}
           />
         </div>
       )}
@@ -73,4 +72,3 @@ const Index = () => {
 };
 
 export default Index;
-

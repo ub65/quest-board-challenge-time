@@ -1,4 +1,3 @@
-
 import React, { RefObject } from "react";
 import GameHeader from "../GameHeader";
 import GameBoardHud from "./GameBoardHud";
@@ -51,6 +50,7 @@ type GameBoardAreaProps = {
   onNumDefensesChange: (n: number) => void;
   onDifficultyChange: (d: "easy" | "medium" | "hard") => void;
   surpriseCount: number;
+  playerName?: string;
 };
 
 const GameBoardArea: React.FC<GameBoardAreaProps> = ({
@@ -60,6 +60,7 @@ const GameBoardArea: React.FC<GameBoardAreaProps> = ({
   moveState, isModalOpen, aiModalState, questionTime, onHumanSubmit, onAISubmit, onRestart,
   settingsOpen, setSettingsOpen, soundEnabled, setSoundEnabled,
   onBoardSizeChange, onQuestionTimeChange, onSurpriseCountChange, onNumDefensesChange, onDifficultyChange, surpriseCount,
+  playerName
 }) => {
   return (
     <div
@@ -82,6 +83,7 @@ const GameBoardArea: React.FC<GameBoardAreaProps> = ({
         turn={turn}
         onPlaceDefense={onPlaceDefense}
         defenseMode={defenseMode}
+        playerName={playerName}
       />
       <div className="relative my-3">
         <GameBoardGrid

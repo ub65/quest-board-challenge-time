@@ -34,6 +34,9 @@ import {
   getRandomQuestion,
 } from "./GameBoard/utils";
 import { useAITurn } from "./GameBoard/aiHooks";
+import { useHumanMoveHandler } from "./GameBoard/humanHooks";
+import GameBoardHud from "./GameBoard/GameBoardHud";
+import GameBoardModals from "./GameBoard/GameBoardModals";
 
 const GameBoard = ({
   difficulty,

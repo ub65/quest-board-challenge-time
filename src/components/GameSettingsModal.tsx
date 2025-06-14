@@ -2,7 +2,6 @@
 import React from "react";
 import {
   Dialog,
-  DialogTrigger,
   DialogContent,
   DialogHeader,
   DialogTitle,
@@ -10,26 +9,43 @@ import {
   DialogClose,
   DialogFooter,
 } from "@/components/ui/dialog";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+
+type GameSettingsModalProps = {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  soundEnabled: boolean;
+  onSoundChange: (value: boolean) => void;
+};
 
 const GameSettingsModal = ({
   open,
   onOpenChange,
-}: {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-}) => {
+  soundEnabled,
+  onSoundChange,
+}: GameSettingsModalProps) => {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Game Settings</DialogTitle>
           <DialogDescription>
-            Adjust game settings below. (This is a placeholder, ask for more controls if you want!)
+            Adjust game settings below.
           </DialogDescription>
         </DialogHeader>
         {/* Settings controls go here */}
-        <div className="py-6 flex flex-col gap-4 text-center text-gray-600">
-          <span className="italic">Settings coming soon!</span>
+        <div className="py-6 flex flex-col gap-6 text-center text-gray-600">
+          <div className="flex items-center justify-center gap-4">
+            <Label htmlFor="sound-toggle" className="text-base cursor-pointer">
+              Sound Effects
+            </Label>
+            <Switch
+              id="sound-toggle"
+              checked={soundEnabled}
+              onCheckedChange={onSoundChange}
+            />
+          </div>
         </div>
         <DialogFooter>
           <DialogClose asChild>

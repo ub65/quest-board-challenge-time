@@ -74,6 +74,9 @@ const GameBoard = ({
   // Settings modal state
   const [settingsOpen, setSettingsOpen] = useState(false);
 
+  // NEW: Sound setting state
+  const [soundEnabled, setSoundEnabled] = useState(true);
+
   // AI is pending a move? We use this flag to prevent multiple AI triggers
   const aiMovingRef = useRef(false);
 
@@ -223,7 +226,8 @@ const GameBoard = ({
 
   return (
     <div className="flex flex-col items-center">
-      <SoundManager trigger={sound} />
+      {/* Respect sound setting: pass soundEnabled to SoundManager */}
+      <SoundManager trigger={sound} disabled={!soundEnabled} />
       {/* Settings button and modal */}
       <div className="flex flex-row justify-between items-center w-full mb-4 gap-2">
         <button
@@ -243,7 +247,12 @@ const GameBoard = ({
           Restart
         </button>
       </div>
-      <GameSettingsModal open={settingsOpen} onOpenChange={setSettingsOpen} />
+      <GameSettingsModal
+        open={settingsOpen}
+        onOpenChange={setSettingsOpen}
+        soundEnabled={soundEnabled}
+        onSoundChange={setSoundEnabled}
+      />
       <div className="relative my-3">
         <div
           className="grid gap-1"

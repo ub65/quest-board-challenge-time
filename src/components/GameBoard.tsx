@@ -255,7 +255,7 @@ const GameBoard = ({
     handleSurprise,
   });
 
-  // AI move handler (after answering modal) - FIXED: Only zero out the correct tile's points
+  // AI move handler (after answering modal)
   const handleAIModalSubmit = () => {
     if (!aiModalState || winner) return;
     setSound("move");
@@ -267,7 +267,8 @@ const GameBoard = ({
         // Only collect the tile if it's not a corner and has points
         if (!((x === 0 && y === 0) || (x === BOARD_SIZE - 1 && y === BOARD_SIZE - 1))) {
           setAIPoints((cur) => cur + newBoard[y][x]);
-          newBoard[y][x] = 0;
+          // DO NOT clear the points! Commented out:
+          // newBoard[y][x] = 0;
         }
         console.log("AI finished move; updated board (should only change [y][x]):", newBoard);
         return newBoard;

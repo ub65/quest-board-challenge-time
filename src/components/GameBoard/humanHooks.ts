@@ -90,9 +90,11 @@ export function useHumanMoveHandler({
             )
               return prev;
             setHumanPoints((cur) => cur + prev[y][x]);
-            const next = prev.map((row) => [...row]);
-            next[y][x] = 0;
-            return next;
+            // DO NOT clear the points! Commented out:
+            // const next = prev.map((row) => [...row]);
+            // next[y][x] = 0;
+            // return next;
+            return prev;
           });
           return { ...p, human: { x, y } };
         });
@@ -133,3 +135,4 @@ export function useHumanMoveHandler({
 
   return { handleTileClick };
 }
+

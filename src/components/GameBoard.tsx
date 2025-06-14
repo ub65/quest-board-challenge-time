@@ -237,6 +237,18 @@ const GameBoard = ({
 
   // AI turn, including defense! (before question)
   useEffect(() => {
+    console.log("AI useEffect called", {
+      turn,
+      winner,
+      aiModalState,
+      aiMoving: aiMovingRef.current,
+      disableInput,
+      positions: { ...positions },
+      defensesUsed,
+      defenseTiles,
+      surpriseTiles,
+    });
+
     if (winner) {
       aiMovingRef.current = false;
       return;
@@ -279,7 +291,10 @@ const GameBoard = ({
       const nextTile = move.length > 0 ? getAIMove(positions.ai, aiTarget, BOARD_SIZE, defenseTiles) : positions.ai;
       const question = getRandomQuestion(difficulty);
       setTimeout(() => {
-        if (!winner) setAIModalState({ question, targetTile: nextTile });
+        if (!winner) {
+          console.log("AI is ready to show AI modal", { nextTile, question });
+          setAIModalState({ question, targetTile: nextTile });
+        }
       }, 650);
     }
     if (turn === "human" || winner) {
@@ -400,11 +415,13 @@ const GameBoard = ({
       setTimeout(() => {
         const doFreeMove = handleSurprise(tile, "human");
         if (!doFreeMove) {
+          console.log("Human completed move and hands turn to AI");
           setTurn("ai");
         }
       }, 100);
     } else {
       setSound("wrong");
+      console.log("Human answered wrong; turn handed to AI");
       setTurn("ai");
     }
   };

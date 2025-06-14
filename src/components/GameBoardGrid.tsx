@@ -22,6 +22,7 @@ type GameBoardGridProps = {
   positionsEqual: (a: Tile, b: Tile) => boolean;
   surpriseTiles: SurpriseTile[];
   defenseTiles?: DefenseTile[];
+  // Optionally: defenseMode?: boolean;
 };
 
 const GameBoardGrid: React.FC<GameBoardGridProps> = ({
@@ -38,7 +39,11 @@ const GameBoardGrid: React.FC<GameBoardGridProps> = ({
   positionsEqual,
   surpriseTiles,
   defenseTiles = [],
+  // defenseMode = false,
 }) => {
+  // We can expose defenseMode as a prop if more customized highlighting is needed
+  // For now, only tiles are disabled if disableInput or winner.
+
   const renderTile = (x: number, y: number) => {
     const isHuman = positions.human.x === x && positions.human.y === y;
     const isAI = positions.ai.x === x && positions.ai.y === y;
@@ -71,6 +76,9 @@ const GameBoardGrid: React.FC<GameBoardGridProps> = ({
     // Defense tile
     const defense = defenseTiles?.find(dt => dt.x === x && dt.y === y);
 
+    // If this is not a player, not AI, not defense, not surprise, not start/end, allow defense placement
+    // Allow highlighting for valid moves on human turn unless defenseMode is active.
+    // We'll let tile enabling/disable be determined by `disableInput` and `winner` only.
     const highlight =
       !winner &&
       turn === "human" &&
@@ -95,7 +103,8 @@ const GameBoardGrid: React.FC<GameBoardGridProps> = ({
           outline: isHumanTarget || isAITarget ? "2px dashed #6ee7b7" : undefined,
           zIndex: isHuman || isAI ? 2 : 1,
         }}
-        disabled={!highlight || disableInput || !!winner}
+        // NEW: Only disable if disableInput (e.g., modal/win), NOT in defenseMode
+        disabled={disableInput || !!winner}
         onClick={() => onTileClick({ x, y })}
         aria-label={
           isHuman
@@ -170,3 +179,4 @@ const GameBoardGrid: React.FC<GameBoardGridProps> = ({
 };
 
 export default GameBoardGrid;
+

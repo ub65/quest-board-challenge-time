@@ -357,10 +357,19 @@ const GameBoard = ({
     return doFreeMove;
   }
 
-  // HUMAN MOVE HANDLER
+  // HUMAN MOVE HANDLER (updated)
   const handleTileClick = async (tile: any) => {
-    if (turn !== "human" || winner || disableInput || defenseMode) return;
-    // Now use defenseTiles in validMoves check!
+    if (winner || disableInput) return;
+
+    // In defense mode, clicks should place a defense instead of moving
+    if (defenseMode) {
+      handleDefenseClick(tile);
+      setDefenseMode(false); // immediately exit defense mode after placement
+      return;
+    }
+
+    // NOT DEFENSE MODE: regular move
+    if (turn !== "human") return;
     const validMoves = getValidMoves(positions.human, BOARD_SIZE, defenseTiles).filter(
       t => t.x >= 0 && t.y >= 0 && t.x < BOARD_SIZE && t.y < BOARD_SIZE
     );
@@ -429,7 +438,7 @@ const GameBoard = ({
     }, 100);
   };
 
-  // Defense placement handler (for player)
+  // Defense placement handler (unchanged)
   function canPlaceDefenseHere(tile: Tile): string | null {
     if (defensesUsed.human >= numDefenses) return t("game.defense_already_used") || "No more defenses";
     if ((tile.x === 0 && tile.y === 0) || (tile.x === BOARD_SIZE - 1 && tile.y === BOARD_SIZE - 1)) return t("game.defense_no_corner") || "Can't place on start/end";
@@ -557,7 +566,8 @@ const GameBoard = ({
           aiTarget={aiTarget}
           winner={winner}
           turn={turn}
-          disableInput={disableInput || defenseMode}
+          // IMPORTANT: We want to disable input for modal/win, but not for defense mode.
+          disableInput={disableInput}
           onTileClick={handleTileClick}
           getValidMoves={(pos) => getValidMoves(pos, BOARD_SIZE, defenseTiles)}
           positionsEqual={positionsEqual}

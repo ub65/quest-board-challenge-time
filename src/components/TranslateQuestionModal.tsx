@@ -92,6 +92,7 @@ const TranslateQuestionModal = ({
             step={1}
             value={[time]}
             disabled
+            hideThumb
             className="w-full"
           />
           <div className="flex justify-between text-xs text-gray-400 mt-1">
@@ -154,4 +155,3 @@ const TranslateQuestionModal = ({
 };
 
 export default TranslateQuestionModal;
-

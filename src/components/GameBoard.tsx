@@ -94,9 +94,6 @@ const GameBoard = ({
   const aiTarget = { x: 0, y: 0 };
   const humanTarget = { x: BOARD_SIZE - 1, y: BOARD_SIZE - 1 };
 
-  // Track human moves this round (NEW LOGIC)
-  const [humanMovesThisRound, setHumanMovesThisRound] = useState(0);
-
   // On game reset
   useEffect(() => {
     setPositions({
@@ -112,7 +109,6 @@ const GameBoard = ({
     setDefenseTiles([]);
     setDefensesUsed({human: 0, ai: 0});
     setDefenseMode(false);
-    setHumanMovesThisRound(0); // RESET on new game
   }, [boardSize, numSurprises, numDefenses]);
 
   useEffect(() => {
@@ -211,7 +207,7 @@ const GameBoard = ({
     return doFreeMove;
   }
 
-  // HUMAN MOVE HANDLER (modified for two moves per round)
+  // HUMAN MOVE HANDLER (now: turn switches after every successful move)
   const handleTileClick = async (tile: any) => {
     if (winner || disableInput) return;
 
@@ -255,21 +251,14 @@ const GameBoard = ({
       setTimeout(() => {
         const doFreeMove = handleSurprise(tile, "human");
         if (!doFreeMove) {
-          // Modified logic: only switch to AI after 2 moves
-          setHumanMovesThisRound((prev) => {
-            const newMoves = prev + 1;
-            if (newMoves >= 2) {
-              setTurn("ai");
-              return 0; // reset counter for next round
-            }
-            // Otherwise, stay on human turn to allow next move
-            return newMoves;
-          });
+          // Now: Always switch to AI turn after one move (remove humanMovesThisRound logic)
+          setTurn("ai");
         }
+        // If doFreeMove: stay on human (extra move).
       }, 100);
     } else {
       setSound("wrong");
-      // On wrong answer, pass the turn logic unchanged (you may decide if you want to allow retry or just set to AI)
+      // On wrong answer, pass the turn logic unchanged
       setTurn("ai");
     }
   };
@@ -335,7 +324,7 @@ const GameBoard = ({
     });
   }
 
-  // Reset game - also reset humanMovesThisRound
+  // Reset game
   const handleRestart = () => {
     setPositions({
       human: { x: 0, y: 0 },
@@ -354,8 +343,6 @@ const GameBoard = ({
     setDefenseTiles([]);
     setDefensesUsed({human: 0, ai: 0});
     setDefenseMode(false);
-    setHumanMovesThisRound(0);
-    onRestart();
   };
 
   return (

@@ -45,13 +45,16 @@ import { getInitialPositions, getInitialPoints, getInitialSurprises, getInitialD
 import { canPlaceDefenseHere } from "./GameBoard/defenseHelpers";
 
 const GameBoard = ({
-  difficulty,
+  difficulty: initialDifficulty,
   onRestart
 }: {
   difficulty: "easy" | "medium" | "hard";
   onRestart: () => void;
 }) => {
   const { t, language } = useLocalization();
+
+  // ADD: Difficulty state to allow changing difficulty from modal/settings
+  const [difficulty, setDifficulty] = useState<"easy" | "medium" | "hard">(initialDifficulty);
 
   // Settings state
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -363,7 +366,7 @@ const GameBoard = ({
         language={language}
         t={t}
       />
-      {/* Settings modal with new prop */}
+      {/* Settings modal with required difficulty props */}
       <GameSettingsModal
         open={settingsOpen}
         onOpenChange={setSettingsOpen}
@@ -377,6 +380,8 @@ const GameBoard = ({
         onSurpriseCountChange={setNumSurprises}
         numDefenses={numDefenses}
         onNumDefensesChange={setNumDefenses}
+        difficulty={difficulty}
+        onDifficultyChange={setDifficulty}
       />
     </div>
   );

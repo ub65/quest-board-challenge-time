@@ -1,8 +1,6 @@
 
 import React, { useEffect, useState } from "react";
 
-const TIME_LIMIT = 14; // seconds
-
 type Question = {
   prompt: string;
   answers: string[];
@@ -23,14 +21,16 @@ const TranslateQuestionModal = ({
   isOpen,
   question,
   onSubmit,
+  timeLimit = 14,
 }: {
   isOpen: boolean;
   question: Question;
   onSubmit: (isCorrect: boolean) => void;
+  timeLimit?: number;
 }) => {
   const [selected, setSelected] = useState<number | null>(null);
   const [shuffled, setShuffled] = useState<{ answer: string; idx: number }[]>([]);
-  const [time, setTime] = useState(TIME_LIMIT);
+  const [time, setTime] = useState(timeLimit);
   const [answered, setAnswered] = useState<boolean>(false);
 
   useEffect(() => {
@@ -41,10 +41,10 @@ const TranslateQuestionModal = ({
       }));
       setShuffled(shuffle(arr));
       setSelected(null);
-      setTime(TIME_LIMIT);
+      setTime(timeLimit);
       setAnswered(false);
     }
-  }, [question]);
+  }, [question, timeLimit]);
 
   useEffect(() => {
     if (!isOpen || answered) return;
@@ -128,3 +128,4 @@ const TranslateQuestionModal = ({
 };
 
 export default TranslateQuestionModal;
+

@@ -7,11 +7,12 @@ import AITranslateQuestionModal from "./AITranslateQuestionModal";
 
 export type PlayerType = "human" | "ai";
 
-const BOARD_SIZE = 7;
+const DEFAULT_BOARD_SIZE = 7;
+const DEFAULT_QUESTION_TIME = 14;
 
 const initialPositions = {
   human: { x: 0, y: 0 },
-  ai: { x: BOARD_SIZE - 1, y: BOARD_SIZE - 1 }
+  ai: { x: DEFAULT_BOARD_SIZE - 1, y: DEFAULT_BOARD_SIZE - 1 }
 };
 
 type Tile = { x: number; y: number };
@@ -24,9 +25,9 @@ function positionsEqual(a: Tile, b: Tile) {
 function getValidMoves(pos: Tile): Tile[] {
   const moves: Tile[] = [];
   if (pos.x > 0) moves.push({ x: pos.x - 1, y: pos.y });
-  if (pos.x < BOARD_SIZE - 1) moves.push({ x: pos.x + 1, y: pos.y });
+  if (pos.x < DEFAULT_BOARD_SIZE - 1) moves.push({ x: pos.x + 1, y: pos.y });
   if (pos.y > 0) moves.push({ x: pos.x, y: pos.y - 1 });
-  if (pos.y < BOARD_SIZE - 1) moves.push({ x: pos.x, y: pos.y + 1 });
+  if (pos.y < DEFAULT_BOARD_SIZE - 1) moves.push({ x: pos.x, y: pos.y + 1 });
   return moves;
 }
 
@@ -63,28 +64,44 @@ const GameBoard = ({
   difficulty: "easy" | "medium" | "hard";
   onRestart: () => void;
 }) => {
-  const [positions, setPositions] = useState({ ...initialPositions });
+  // Settings state
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [soundEnabled, setSoundEnabled] = useState(true);
+
+  // New settings: question time and board size
+  const [questionTime, setQuestionTime] = useState<number>(DEFAULT_QUESTION_TIME);
+  const [boardSize, setBoardSize] = useState<number>(DEFAULT_BOARD_SIZE);
+
+  // Gameplay state
+  const [positions, setPositions] = useState(() => ({
+    human: { x: 0, y: 0 },
+    ai: { x: boardSize - 1, y: boardSize - 1 }
+  }));
   const [turn, setTurn] = useState<PlayerType>("human");
   const [moveState, setMoveState] = useState<null | { tile: any; question: any; resolve: (ok: boolean) => void }>(null);
   const [winner, setWinner] = useState<null | PlayerType>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [sound, setSound] = useState<"move" | "wrong" | "win" | null>(null);
   const [disableInput, setDisableInput] = useState(false);
-  
-  // Settings modal state
-  const [settingsOpen, setSettingsOpen] = useState(false);
 
-  // NEW: Sound setting state
-  const [soundEnabled, setSoundEnabled] = useState(true);
-
-  // AI is pending a move? We use this flag to prevent multiple AI triggers
+  // AI state
   const aiMovingRef = useRef(false);
-
-  // --- New: AI question modal state ---
   const [aiModalState, setAIModalState] = useState<null | { question: any; targetTile: any }>(null);
 
+  // Adjusted for dynamic board size
+  const BOARD_SIZE = boardSize;
   const aiTarget = { x: 0, y: 0 };
   const humanTarget = { x: BOARD_SIZE - 1, y: BOARD_SIZE - 1 };
+
+  // When board size changes, reset positions and winner
+  useEffect(() => {
+    setPositions({
+      human: { x: 0, y: 0 },
+      ai: { x: BOARD_SIZE - 1, y: BOARD_SIZE - 1 }
+    });
+    setWinner(null);
+    setTurn("human");
+  }, [BOARD_SIZE]);
 
   // Check for victory
   useEffect(() => {
@@ -95,27 +112,31 @@ const GameBoard = ({
       setWinner("ai");
       setSound("win");
     }
-  }, [positions]);
+  }, [positions, humanTarget.x, humanTarget.y, aiTarget.x, aiTarget.y]);
 
-  // --- Reworked AI turn: trigger question modal before moving ---
+  // Reworked AI turn: trigger question modal before moving
   useEffect(() => {
     if (turn === "ai" && !winner && !aiModalState && !aiMovingRef.current) {
       aiMovingRef.current = true;
       setDisableInput(true);
 
       // Prepare to ask a question before allowing AI to move
-      const move = getAIMove(positions.ai, aiTarget);
+      const move = getValidMoves(positions.ai).filter(
+        tile => tile.x >= 0 && tile.y >= 0 && tile.x < BOARD_SIZE && tile.y < BOARD_SIZE
+      );
+      // AI moves closer to target
+      const nextTile = move.length > 0 ? getAIMove(positions.ai, aiTarget) : positions.ai;
+
       const question = getRandomQuestion(difficulty);
       setTimeout(() => {
-        setAIModalState({ question, targetTile: move });
-      }, 650); // small "thinking" delay before showing
+        setAIModalState({ question, targetTile: nextTile });
+      }, 650); // thinking delay before showing
     }
-    // If player's turn or winner, always reset the flag
     if (turn === "human" || winner) {
       aiMovingRef.current = false;
     }
     // eslint-disable-next-line
-  }, [turn, winner, positions.ai, aiModalState]);
+  }, [turn, winner, positions.ai, aiModalState, BOARD_SIZE, difficulty]);
 
   // When AI finishes answering, move it and return turn to player
   const handleAIModalSubmit = () => {
@@ -133,7 +154,9 @@ const GameBoard = ({
   // Human move: pick tile -> answer question
   const handleTileClick = async (tile: any) => {
     if (turn !== "human" || winner || disableInput) return;
-    const validMoves = getValidMoves(positions.human);
+    const validMoves = getValidMoves(positions.human).filter(
+      t => t.x >= 0 && t.y >= 0 && t.x < BOARD_SIZE && t.y < BOARD_SIZE
+    );
     if (!validMoves.some((t) => positionsEqual(t, tile))) return;
     const question = getRandomQuestion(difficulty);
     const ok = await new Promise<boolean>((resolve) => {
@@ -177,7 +200,9 @@ const GameBoard = ({
     }
     const highlight =
       turn === "human" &&
-      getValidMoves(positions.human).some((t) => t.x === x && t.y === y) &&
+      getValidMoves(positions.human)
+        .filter(t => t.x >= 0 && t.y >= 0 && t.x < BOARD_SIZE && t.y < BOARD_SIZE)
+        .some((t) => t.x === x && t.y === y) &&
       !isHuman && !isAI &&
       !winner;
 
@@ -224,10 +249,25 @@ const GameBoard = ({
     );
   };
 
+  // On restart, preserve settings but reset game
+  const handleRestart = () => {
+    setPositions({
+      human: { x: 0, y: 0 },
+      ai: { x: BOARD_SIZE - 1, y: BOARD_SIZE - 1 }
+    });
+    setWinner(null);
+    setTurn("human");
+    setIsModalOpen(false);
+    setMoveState(null);
+    setAIModalState(null);
+    setDisableInput(false);
+    onRestart();
+  };
+
   return (
     <div className="flex flex-col items-center">
       {/* Respect sound setting: pass soundEnabled to SoundManager */}
-      <SoundManager trigger={sound} disabled={!soundEnabled} />
+      <SoundManager trigger={sound} />
       {/* Settings button and modal */}
       <div className="flex flex-row justify-between items-center w-full mb-4 gap-2">
         <button
@@ -241,7 +281,7 @@ const GameBoard = ({
           <span className="capitalize">{difficulty}</span>
         </div>
         <button
-          onClick={onRestart}
+          onClick={handleRestart}
           className="px-4 py-2 rounded-md bg-gray-200 shadow hover:bg-blue-200 font-bold transition-colors"
         >
           Restart
@@ -252,6 +292,10 @@ const GameBoard = ({
         onOpenChange={setSettingsOpen}
         soundEnabled={soundEnabled}
         onSoundChange={setSoundEnabled}
+        boardSize={boardSize}
+        onBoardSizeChange={v => setBoardSize(Math.max(5, Math.min(12, v || DEFAULT_BOARD_SIZE)))}
+        questionTime={questionTime}
+        onQuestionTimeChange={v => setQuestionTime(Math.max(6, Math.min(40, v || DEFAULT_QUESTION_TIME)))}
       />
       <div className="relative my-3">
         <div
@@ -271,7 +315,7 @@ const GameBoard = ({
               {winner === "human" ? "🎉 You Win!" : "😔 AI Wins"}
             </div>
             <button
-              onClick={onRestart}
+              onClick={handleRestart}
               className="bg-green-400 shadow px-5 py-2 rounded-lg text-xl font-bold text-white hover:bg-green-500 hover:scale-105 transition-all mt-2"
             >
               Play Again
@@ -284,6 +328,7 @@ const GameBoard = ({
         <TranslateQuestionModal
           isOpen={isModalOpen}
           question={moveState.question}
+          timeLimit={questionTime}
           key={moveState.tile.x + "-" + moveState.tile.y + "-human"}
           onSubmit={moveState.resolve}
         />
@@ -316,3 +361,5 @@ const GameBoard = ({
 };
 
 export default GameBoard;
+
+// NOTE: This file is now quite long. Consider refactoring for maintainability!

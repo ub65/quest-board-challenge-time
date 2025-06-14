@@ -5,9 +5,9 @@ import { Gift, Shield } from "lucide-react";
 type Tile = { x: number; y: number };
 type PlayerPositions = { human: Tile; ai: Tile };
 type SurpriseTile = Tile & { type: string; used: boolean };
-// DefenseTile now tracks owner!
 type DefenseTile = Tile & { owner: "human" | "ai" };
 
+// NEW: add optional AI target preview prop (when AI is thinking)
 type GameBoardGridProps = {
   BOARD_SIZE: number;
   boardPoints: number[][];
@@ -22,7 +22,7 @@ type GameBoardGridProps = {
   positionsEqual: (a: Tile, b: Tile) => boolean;
   surpriseTiles: SurpriseTile[];
   defenseTiles?: DefenseTile[];
-  // Optionally: defenseMode?: boolean;
+  aiPendingTarget?: Tile | null; // new prop!
 };
 
 const GameBoardGrid: React.FC<GameBoardGridProps> = ({
@@ -39,20 +39,24 @@ const GameBoardGrid: React.FC<GameBoardGridProps> = ({
   positionsEqual,
   surpriseTiles,
   defenseTiles = [],
-  // defenseMode = false,
+  aiPendingTarget = null, // NEW
 }) => {
-  // We can expose defenseMode as a prop if more customized highlighting is needed
-  // For now, only tiles are disabled if disableInput or winner.
 
   const renderTile = (x: number, y: number) => {
     const isHuman = positions.human.x === x && positions.human.y === y;
     const isAI = positions.ai.x === x && positions.ai.y === y;
     const isHumanTarget = x === humanTarget.x && y === humanTarget.y;
-    const isAITarget = x === aiTarget.x && y === aiTarget.y;
+
+    // Only highlight AI target tile if: not in aiPendingTarget (i.e., don't show "AI Target" if AI is thinking)
+    let isAITarget =
+      !aiPendingTarget // Only highlight true AI target if not making a pending move
+      && x === aiTarget.x
+      && y === aiTarget.y;
 
     let bg = "bg-gray-200";
     let border = "";
     let content = "";
+
     if (isHuman) {
       bg = "bg-blue-600";
       border = "border-4 border-blue-400";
@@ -69,16 +73,11 @@ const GameBoardGrid: React.FC<GameBoardGridProps> = ({
       content = "";
     }
 
-    // Surprise tile
     const surprise =
       surpriseTiles?.find(st => st.x === x && st.y === y && !st.used);
 
-    // Defense tile
     const defense = defenseTiles?.find(dt => dt.x === x && dt.y === y);
 
-    // If this is not a player, not AI, not defense, not surprise, not start/end, allow defense placement
-    // Allow highlighting for valid moves on human turn unless defenseMode is active.
-    // We'll let tile enabling/disable be determined by `disableInput` and `winner` only.
     const highlight =
       !winner &&
       turn === "human" &&
@@ -103,7 +102,6 @@ const GameBoardGrid: React.FC<GameBoardGridProps> = ({
           outline: isHumanTarget || isAITarget ? "2px dashed #6ee7b7" : undefined,
           zIndex: isHuman || isAI ? 2 : 1,
         }}
-        // NEW: Only disable if disableInput (e.g., modal/win), NOT in defenseMode
         disabled={disableInput || !!winner}
         onClick={() => onTileClick({ x, y })}
         aria-label={
@@ -133,7 +131,7 @@ const GameBoardGrid: React.FC<GameBoardGridProps> = ({
             <span className="absolute bottom-1 right-2 text-xs text-amber-700 font-medium bg-white/80 px-1 py-0.5 rounded shadow">
               {boardPoints[y][x]}
             </span>
-          )}
+        )}
         {/* Surprise tile */}
         {surprise && !isHuman && !isAI && !isHumanTarget && !isAITarget && !defense && (
           <span className="absolute top-1 left-1">
@@ -179,4 +177,3 @@ const GameBoardGrid: React.FC<GameBoardGridProps> = ({
 };
 
 export default GameBoardGrid;
-

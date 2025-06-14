@@ -590,6 +590,7 @@ const GameBoard = ({
           positionsEqual={positionsEqual}
           surpriseTiles={surpriseTiles}
           defenseTiles={defenseTiles}
+          aiPendingTarget={aiModalState ? aiModalState.targetTile : null} // Pass AI's preview target
         />
         {winner && (
           <div className="absolute inset-0 bg-black/70 flex flex-col items-center justify-center rounded-lg animate-fade-in z-10">

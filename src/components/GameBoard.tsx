@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState, useRef } from "react";
 import TranslateQuestionModal from "./TranslateQuestionModal";
 import SoundManager from "./SoundManager";
@@ -38,6 +37,8 @@ import { useAITurn } from "./GameBoard/aiHooks";
 import { useHumanMoveHandler } from "./GameBoard/humanHooks";
 import GameBoardHud from "./GameBoard/GameBoardHud";
 import GameBoardModals from "./GameBoard/GameBoardModals";
+import GameBoardWinnerOverlay from "./GameBoard/GameBoardWinnerOverlay";
+import GameBoardTurnInfo from "./GameBoard/GameBoardTurnInfo";
 import { useSurprise } from "./GameBoard/useSurprise";
 import { useGameRestart } from "./GameBoard/useGameRestart";
 import { getInitialPositions, getInitialPoints, getInitialSurprises, getInitialDefenses, getInitialDefensesUsed } from "./GameBoard/gameBoardDefaults";
@@ -338,27 +339,13 @@ const GameBoard = ({
           defenseTiles={defenseTiles}
           aiPendingTarget={aiModalState ? aiModalState.targetTile : null}
         />
-        {winner && (
-          <div className="absolute inset-0 bg-black/70 flex flex-col items-center justify-center rounded-lg animate-fade-in z-10">
-            <div className="text-3xl font-bold text-white mb-3 drop-shadow-2xl">
-              {winner === "human" ? t("game.youWin") : t("game.aiWins")}
-            </div>
-            <div className="flex flex-col gap-1 text-lg text-white font-semibold mb-2">
-              <div>
-                {t("game.yourPoints")}: <span className="text-amber-200 font-bold">{humanPoints}</span>
-              </div>
-              <div>
-                {t("game.aiPoints")}: <span className="text-amber-200 font-bold">{aiPoints}</span>
-              </div>
-            </div>
-            <button
-              onClick={handleRestart}
-              className="bg-green-400 shadow px-5 py-2 rounded-lg text-xl font-bold text-white hover:bg-green-500 hover:scale-105 transition-all mt-2"
-            >
-              {t("game.playAgain")}
-            </button>
-          </div>
-        )}
+        <GameBoardWinnerOverlay
+          winner={winner}
+          humanPoints={humanPoints}
+          aiPoints={aiPoints}
+          t={t}
+          onRestart={handleRestart}
+        />
       </div>
       {/* Question modals */}
       <GameBoardModals
@@ -370,24 +357,12 @@ const GameBoard = ({
         onHumanSubmit={moveState?.resolve}
         onAISubmit={handleAIModalSubmit}
       />
-      {/* Turn info */}
-      {!winner && (
-        <div
-          className={`w-full mt-4 flex justify-between items-center`}
-          dir={language === "he" ? "rtl" : "ltr"}
-        >
-          <div className="font-medium">
-            {t("game.yourTarget")}
-          </div>
-          <div className="font-medium text-right">
-            {turn === "human" ? (
-              <span className="text-blue-700 animate-pulse">{t("game.yourTurn")}</span>
-            ) : (
-              <span className="text-red-700">{t("game.aiThinking")}</span>
-            )}
-          </div>
-        </div>
-      )}
+      <GameBoardTurnInfo
+        winner={winner}
+        turn={turn}
+        language={language}
+        t={t}
+      />
       {/* Settings modal with new prop */}
       <GameSettingsModal
         open={settingsOpen}
@@ -409,5 +384,4 @@ const GameBoard = ({
 
 export default GameBoard;
 
-// NOTE: This file was refactored to split out GameBoardHud, GameBoardModals, and move handlers/hook logic for maintainability.
-
+// NOTE: This file was refactored to split out overlays and turn display for easier maintainability.

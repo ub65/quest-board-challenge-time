@@ -86,58 +86,14 @@ const GameBoard = ({
     disableInput, setDisableInput,
   } = useGameBoardState(boardSize, numSurprises, numDefenses);
 
-  // ADD: Difficulty state to allow changing difficulty from modal/settings
-  // const [difficulty, setDifficulty] = useState<"easy" | "medium" | "hard">(initialDifficulty);
+  // Restore missing variables: 
+  const BOARD_SIZE = boardSize;
+  const aiTarget = { x: 0, y: 0 };
+  const humanTarget = { x: BOARD_SIZE - 1, y: BOARD_SIZE - 1 };
 
-  // Settings state
-  // const [settingsOpen, setSettingsOpen] = useState(false);
-  // const [soundEnabled, setSoundEnabled] = useState(true);
-  // const [questionTime, setQuestionTime] = useState<number>(DEFAULT_QUESTION_TIME);
-  // const [boardSize, setBoardSize] = useState<number>(DEFAULT_BOARD_SIZE);
-
-  // Surprise count setting
-  // const [numSurprises, setNumSurprises] = useState<number>(4);
-
-  // Defense counts (NEW): user-configurable, both players use same max
-  // const [numDefenses, setNumDefenses] = useState(DEFAULT_DEFENSES);
-
-  // Points and trackers
-  // const [boardPoints, setBoardPoints] = useState<number[][]>(
-  //   () => generateRandomPoints(DEFAULT_BOARD_SIZE)
-  // );
-  // const [humanPoints, setHumanPoints] = useState(0);
-  // const [aiPoints, setAIPoints] = useState(0);
-
-  // const [surpriseTiles, setSurpriseTiles] = useState<SurpriseTile[]>(
-  //   () => getRandomSurpriseTiles(DEFAULT_BOARD_SIZE, numSurprises)
-  // );
-
-  // Defense state: multiple per owner
-  // const [defenseTiles, setDefenseTiles] = useState<DefenseTile[]>([]);
-  // // Track defenses used
-  // const [defensesUsed, setDefensesUsed] = useState<{human: number; ai: number}>({human: 0, ai: 0});
-  // // Are we in defense placement mode for human?
-  // const [defenseMode, setDefenseMode] = useState(false);
-
-  // Gameplay state
-  // const [positions, setPositions] = useState(() => ({
-  //   human: { x: 0, y: 0 },
-  //   ai: { x: boardSize - 1, y: boardSize - 1 }
-  // }));
-  // const [turn, setTurn] = useState<PlayerType>("human");
-  // const [moveState, setMoveState] = useState<null | { tile: any; question: any; resolve: (ok: boolean) => void }>(null);
-  // const [winner, setWinner] = useState<null | PlayerType>(null);
-  // const [isModalOpen, setIsModalOpen] = useState(false);
-  // const [sound, setSound] = useState<"move" | "wrong" | "win" | null>(null);
-  // const [disableInput, setDisableInput] = useState(false);
-
-  // AI state
-  // const aiMovingRef = useRef(false);
-  // const [aiModalState, setAIModalState] = useState<null | { question: any; targetTile: any }>(null);
-
-  // const BOARD_SIZE = boardSize;
-  // const aiTarget = { x: 0, y: 0 };
-  // const humanTarget = { x: BOARD_SIZE - 1, y: BOARD_SIZE - 1 };
+  // State for AI modal and ref for AI moving (needed by AITurn hook)
+  const [aiModalState, setAIModalState] = useState<null | { question: any; targetTile: any }>(null);
+  const aiMovingRef = useRef(false);
 
   // On game reset (board size/settings change)
   useEffect(() => {
@@ -179,8 +135,27 @@ const GameBoard = ({
 
   // AI turn, including defense! (before question)
   useAITurn({
-    turn, winner, aiModalState, disableInput, positions, defensesUsed, defenseTiles, surpriseTiles, numDefenses, difficulty, BOARD_SIZE,
-    aiTarget, humanTarget, t, setDisableInput, setDefenseTiles, setDefensesUsed, toast, setTurn, setAIModalState, aiMovingRef,
+    turn,
+    winner,
+    aiModalState,
+    disableInput,
+    positions,
+    defensesUsed,
+    defenseTiles,
+    surpriseTiles,
+    numDefenses,
+    difficulty,
+    BOARD_SIZE,
+    aiTarget,
+    humanTarget,
+    t,
+    setDisableInput,
+    setDefenseTiles,
+    setDefensesUsed,
+    toast,
+    setTurn,
+    setAIModalState,
+    aiMovingRef,
   });
 
   // Extracted: surprise logic

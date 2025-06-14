@@ -1,5 +1,4 @@
 
-
 import React from "react";
 import {
   Dialog,
@@ -17,6 +16,7 @@ import { SlidersHorizontal } from "lucide-react";
 import LanguageSelector from "./LanguageSelector";
 import { useLocalization } from "@/contexts/LocalizationContext";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { cn } from "@/lib/utils";
 
 type GameSettingsModalProps = {
   open: boolean;
@@ -31,7 +31,15 @@ type GameSettingsModalProps = {
   onSurpriseCountChange: (v: number) => void;
   numDefenses: number;
   onNumDefensesChange: (v: number) => void;
+  difficulty: "easy" | "medium" | "hard";
+  onDifficultyChange: (d: "easy" | "medium" | "hard") => void;
 };
+
+const difficulties = [
+  { labelKey: "difficulty.easy", value: "easy", color: "bg-green-200" },
+  { labelKey: "difficulty.medium", value: "medium", color: "bg-yellow-200" },
+  { labelKey: "difficulty.hard", value: "hard", color: "bg-red-200" },
+];
 
 const GameSettingsModal = ({
   open,
@@ -46,6 +54,8 @@ const GameSettingsModal = ({
   onSurpriseCountChange,
   numDefenses,
   onNumDefensesChange,
+  difficulty,
+  onDifficultyChange,
 }: GameSettingsModalProps) => {
   const { t } = useLocalization();
 
@@ -65,7 +75,32 @@ const GameSettingsModal = ({
             </div>
           </DialogHeader>
           <div className="py-2 flex flex-col gap-7">
+
             <LanguageSelector />
+
+            {/* Difficulty Setting */}
+            <div>
+              <Label className="text-base font-semibold mb-2 block">{t("game.difficulty")}</Label>
+              <div className="flex gap-4">
+                {difficulties.map((d) => (
+                  <button
+                    key={d.value}
+                    type="button"
+                    onClick={() => onDifficultyChange(d.value as "easy" | "medium" | "hard")}
+                    className={cn(
+                      "px-5 py-2 rounded-lg font-bold shadow ring-primary transition-all text-base flex-1 border",
+                      d.color,
+                      difficulty === d.value
+                        ? "ring-2 ring-offset-2 scale-105"
+                        : "hover:scale-105"
+                    )}
+                  >
+                    {t(d.labelKey)}
+                  </button>
+                ))}
+              </div>
+            </div>
+
             {/* Sound Toggle */}
             <div className="flex items-center justify-between gap-4 px-1">
               <Label htmlFor="sound-toggle" className="text-base cursor-pointer select-none">
@@ -173,3 +208,4 @@ const GameSettingsModal = ({
 };
 
 export default GameSettingsModal;
+

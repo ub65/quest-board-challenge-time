@@ -1,16 +1,15 @@
 
 import React, { useState } from "react";
 import GameBoard from "@/components/GameBoard";
-import DifficultySelector from "@/components/DifficultySelector";
 import { useLocalization } from "@/contexts/LocalizationContext";
 import WelcomeScreen from "@/components/WelcomeScreen";
 import GameSettingsModal from "@/components/GameSettingsModal";
 
 const Index = () => {
   const { t, language } = useLocalization();
-  const [difficulty, setDifficulty] = useState<"easy" | "medium" | "hard" | null>(null);
+  const [difficulty, setDifficulty] = useState<"easy" | "medium" | "hard">("easy");
   const [gameKey, setGameKey] = useState(0);
-  const [step, setStep] = useState<"welcome" | "difficulty" | "game">("welcome");
+  const [step, setStep] = useState<"welcome" | "game">("welcome");
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [playerName, setPlayerName] = useState("");
 
@@ -23,7 +22,6 @@ const Index = () => {
 
   const handleRestart = () => {
     setGameKey((k) => k + 1);
-    setDifficulty(null);
     setStep("welcome");
   };
 
@@ -47,6 +45,8 @@ const Index = () => {
         onSurpriseCountChange={setNumSurprises}
         numDefenses={numDefenses}
         onNumDefensesChange={setNumDefenses}
+        difficulty={difficulty}
+        onDifficultyChange={setDifficulty}
       />
       {step === "welcome" && (
         <WelcomeScreen
@@ -54,25 +54,18 @@ const Index = () => {
           playerName={playerName}
           setPlayerName={setPlayerName}
           t={t}
-          onStart={() => setStep("difficulty")}
+          // Start now goes straight to the game
+          onStart={() => setStep("game")}
           onSettings={() => setSettingsOpen(true)}
         />
       )}
-      {step === "difficulty" && (
-        <div className="w-full max-w-md mx-auto mt-10 animate-fade-in">
-          <h2 className="text-2xl font-bold text-center mb-4">{t("game.selectDifficulty")}</h2>
-          <DifficultySelector onSelect={level => { setDifficulty(level); setStep("game"); }} />
-          <button
-            onClick={() => setStep("welcome")}
-            className="mt-5 text-blue-600 text-base font-medium hover:underline transition"
-          >
-            &larr; {t("welcome.back")}
-          </button>
-        </div>
-      )}
-      {step === "game" && !!difficulty && (
+      {step === "game" && (
         <div className="w-full max-w-3xl animate-fade-in">
-          <GameBoard key={gameKey} difficulty={difficulty} onRestart={handleRestart} />
+          <GameBoard
+            key={gameKey}
+            difficulty={difficulty}
+            onRestart={handleRestart}
+          />
         </div>
       )}
     </div>
@@ -80,3 +73,4 @@ const Index = () => {
 };
 
 export default Index;
+

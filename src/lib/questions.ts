@@ -1,3 +1,4 @@
+
 export type Question = {
   prompt: string;
   answers: string[];
@@ -146,23 +147,45 @@ function getRandomSample<T>(arr: T[], n: number): T[] {
   return shuffle(arr).slice(0, n);
 }
 
+// ------------------------
+// Track used word IDs
+const usedWordIds: Record<"easy" | "medium" | "hard", Set<string>> = {
+  easy: new Set(),
+  medium: new Set(),
+  hard: new Set(),
+};
+
 /**
  * Generate a question for "Translate English to Hebrew" with multiple-choice answers,
  * using random distractors and ONE correct answer.
+ * Ensures that the same word is not selected again until all are used (after which it resets).
  */
 export function getRandomQuestionByDifficulty(
   difficulty: "easy" | "medium" | "hard"
 ): Question {
   // Filter words by difficulty
   const words = WORDS.filter((w) => w.difficulty === difficulty);
-  // Select a prompt word
-  const [promptWord] = getRandomSample(words, 1);
-  // Use promptWord.english as prompt, promptWord.hebrew as correct
+
+  // Exclude used words
+  const availableWords = words.filter(w => !usedWordIds[difficulty].has(w.id));
+  let promptWord: WordEntry;
+
+  // If all words used, reset list
+  if (availableWords.length === 0) {
+    usedWordIds[difficulty].clear();
+    // After clearing, use all words
+    promptWord = getRandomSample(words, 1)[0];
+  } else {
+    promptWord = getRandomSample(availableWords, 1)[0];
+  }
+  usedWordIds[difficulty].add(promptWord.id);
+
   // Select distractors: sample 3 other words (not the correct one)
   const distractors = getRandomSample(
     words.filter((w) => w.id !== promptWord.id),
     3
   );
+
   // Compose answers, randomize order
   const options = shuffle([
     { txt: promptWord.hebrew, isCorrect: true },
@@ -183,3 +206,4 @@ export const questionsByDifficulty: Record<"easy" | "medium" | "hard", Question[
   medium: [getRandomQuestionByDifficulty("medium")],
   hard: [getRandomQuestionByDifficulty("hard")],
 };
+

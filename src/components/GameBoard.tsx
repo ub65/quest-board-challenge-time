@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState, useRef } from "react";
 import TranslateQuestionModal from "./TranslateQuestionModal";
 import SoundManager from "./SoundManager";
@@ -220,6 +221,7 @@ const GameBoard = ({
 
     // NOT DEFENSE MODE: regular move
     if (turn !== "human") return;
+
     const validMoves = getValidMoves(positions.human, BOARD_SIZE, defenseTiles, positions.ai).filter(
       t => t.x >= 0 && t.y >= 0 && t.x < BOARD_SIZE && t.y < BOARD_SIZE
     );
@@ -251,14 +253,14 @@ const GameBoard = ({
       setTimeout(() => {
         const doFreeMove = handleSurprise(tile, "human");
         if (!doFreeMove) {
-          // Now: Always switch to AI turn after one move (remove humanMovesThisRound logic)
+          // Switch to AI turn after a single successful move and no free move
           setTurn("ai");
         }
-        // If doFreeMove: stay on human (extra move).
+        // If doFreeMove: stay on human (player gets another move)
       }, 100);
     } else {
       setSound("wrong");
-      // On wrong answer, pass the turn logic unchanged
+      // On wrong answer, pass the turn to the AI
       setTurn("ai");
     }
   };

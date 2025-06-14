@@ -25,9 +25,10 @@ type GameSettingsModalProps = {
   onBoardSizeChange: (v: number) => void;
   questionTime: number;
   onQuestionTimeChange: (v: number) => void;
-  // Add surpriseTiles
   surpriseCount: number;
   onSurpriseCountChange: (v: number) => void;
+  numDefenses: number;
+  onNumDefensesChange: (v: number) => void;
 };
 
 const GameSettingsModal = ({
@@ -41,6 +42,8 @@ const GameSettingsModal = ({
   onQuestionTimeChange,
   surpriseCount,
   onSurpriseCountChange,
+  numDefenses,
+  onNumDefensesChange,
 }: GameSettingsModalProps) => {
   const { t } = useLocalization();
 
@@ -59,9 +62,7 @@ const GameSettingsModal = ({
           </div>
         </DialogHeader>
         <div className="py-2 flex flex-col gap-7">
-          {/* Language Selector */}
           <LanguageSelector />
-          
           {/* Sound Toggle */}
           <div className="flex items-center justify-between gap-4 px-1">
             <Label htmlFor="sound-toggle" className="text-base cursor-pointer select-none">
@@ -132,6 +133,26 @@ const GameSettingsModal = ({
             <div className="flex justify-between text-xs text-gray-400 mt-1">
               <span>1</span>
               <span>8</span>
+            </div>
+          </div>
+          {/* Defense Count Slider */}
+          <div className="flex flex-col gap-1">
+            <Label htmlFor="defense-count-slider" className="text-base font-semibold mb-1 select-none flex justify-between">
+              <span>{t('settings.defenseCount') || "Number of Defenses"}</span>
+              <span className="text-primary">{numDefenses}</span>
+            </Label>
+            <Slider
+              id="defense-count-slider"
+              min={1}
+              max={4}
+              step={1}
+              value={[numDefenses]}
+              onValueChange={([val]) => onNumDefensesChange(val)}
+              className="w-full"
+            />
+            <div className="flex justify-between text-xs text-gray-400 mt-1">
+              <span>1</span>
+              <span>4</span>
             </div>
           </div>
         </div>

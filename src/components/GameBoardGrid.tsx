@@ -5,7 +5,8 @@ import { Gift, Shield } from "lucide-react";
 type Tile = { x: number; y: number };
 type PlayerPositions = { human: Tile; ai: Tile };
 type SurpriseTile = Tile & { type: string; used: boolean };
-type DefenseTile = Tile;
+// DefenseTile now tracks owner!
+type DefenseTile = Tile & { owner: "human" | "ai" };
 
 type GameBoardGridProps = {
   BOARD_SIZE: number;
@@ -20,7 +21,6 @@ type GameBoardGridProps = {
   getValidMoves: (pos: Tile) => Tile[];
   positionsEqual: (a: Tile, b: Tile) => boolean;
   surpriseTiles: SurpriseTile[];
-  // NEW
   defenseTiles?: DefenseTile[];
 };
 
@@ -68,9 +68,8 @@ const GameBoardGrid: React.FC<GameBoardGridProps> = ({
     const surprise =
       surpriseTiles?.find(st => st.x === x && st.y === y && !st.used);
 
-    // NEW: Defense tile
-    const defense =
-      defenseTiles?.find(dt => dt.x === x && dt.y === y);
+    // Defense tile
+    const defense = defenseTiles?.find(dt => dt.x === x && dt.y === y);
 
     const highlight =
       !winner &&
@@ -108,12 +107,11 @@ const GameBoardGrid: React.FC<GameBoardGridProps> = ({
             : isAITarget
             ? "AI Target"
             : defense
-            ? "Defense"
+            ? defense.owner === "human" ? "Human Defense" : "AI Defense"
             : "Empty"
         }
       >
         <span>{content}</span>
-        {/* Uncollected points */}
         {(content === "" &&
           !isHuman &&
           !isAI &&
@@ -135,8 +133,11 @@ const GameBoardGrid: React.FC<GameBoardGridProps> = ({
         )}
         {/* Defense tile */}
         {defense && !isHuman && !isAI && (
-          <span className="absolute top-1 right-1 z-10">
-            <Shield size={22} className="text-blue-900 drop-shadow" />
+          <span className={`absolute top-1 right-1 z-10 ${defense.owner === "human" ? "" : ""}`}>
+            <Shield
+              size={22}
+              className={defense.owner === "human" ? "text-blue-900 drop-shadow" : "text-red-800 drop-shadow"}
+            />
           </span>
         )}
         {isHumanTarget && (
@@ -169,4 +170,3 @@ const GameBoardGrid: React.FC<GameBoardGridProps> = ({
 };
 
 export default GameBoardGrid;
-

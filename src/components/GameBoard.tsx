@@ -8,14 +8,14 @@ import GameHeader from "./GameHeader";
 import GameScoreboard from "./GameScoreboard";
 import GameBoardGrid from "./GameBoardGrid";
 import { useLocalization } from "@/contexts/LocalizationContext";
-import { Gift } from "lucide-react";
+import { Gift, Shield } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
-import { Shield } from "lucide-react"; // Defense icon
 
 export type PlayerType = "human" | "ai";
 
 const DEFAULT_BOARD_SIZE = 7;
 const DEFAULT_QUESTION_TIME = 14;
+const DEFAULT_DEFENSES = 1;
 const SURPRISE_TYPES = [
   "double",
   "lose",
@@ -27,9 +27,8 @@ type SurpriseType = typeof SURPRISE_TYPES[number];
 
 type Tile = { x: number; y: number };
 type SurpriseTile = Tile & { type: SurpriseType; used: boolean };
-
-// New: Defense type
-type DefenseTile = Tile; // Only one allowed for now
+type DefenseOwner = "human" | "ai";
+type DefenseTile = Tile & { owner: DefenseOwner };
 
 function positionsEqual(a: Tile, b: Tile) {
   return a.x === b.x && a.y === b.y;
@@ -37,7 +36,7 @@ function positionsEqual(a: Tile, b: Tile) {
 
 function getValidMoves(pos: Tile, BOARD_SIZE: number, defenseTiles: DefenseTile[] = []) {
   const moves: Tile[] = [];
-  // Filter out moves that have a defense tile
+  // Can't move to defense tiles
   if (pos.x > 0 && !defenseTiles.some(t => t.x === pos.x - 1 && t.y === pos.y)) moves.push({ x: pos.x - 1, y: pos.y });
   if (pos.x < BOARD_SIZE - 1 && !defenseTiles.some(t => t.x === pos.x + 1 && t.y === pos.y)) moves.push({ x: pos.x + 1, y: pos.y });
   if (pos.y > 0 && !defenseTiles.some(t => t.x === pos.x && t.y === pos.y - 1)) moves.push({ x: pos.x, y: pos.y - 1 });
@@ -97,6 +96,48 @@ function getRandomSurpriseTiles(boardSize: number, count: number): SurpriseTile[
   return chosen;
 }
 
+// New: Best tile for AI to block (closest to straight path, not occupied)
+function getAIDefenseTile(options: {humanPos: Tile, humanTarget: Tile, boardSize: number, defenseTiles: DefenseTile[], positions: {human: Tile, ai: Tile}, surpriseTiles: SurpriseTile[]}): Tile | null {
+  const { humanPos, humanTarget, boardSize, defenseTiles, positions, surpriseTiles } = options;
+  // Build a list of shortest path tiles
+  const dx = Math.sign(humanTarget.x - humanPos.x);
+  const dy = Math.sign(humanTarget.y - humanPos.y);
+  let candidates: Tile[] = [];
+  let px = humanPos.x, py = humanPos.y;
+  // Try main diagonal path first
+  for (let i = 1; i < boardSize - 1; i++) {
+    let tx = px + i * dx;
+    let ty = py + i * dy;
+    if (tx < 0 || ty < 0 || tx >= boardSize || ty >= boardSize) continue;
+    candidates.push({ x: tx, y: ty });
+  }
+  // Add 2 neighbors from current human pos as fallback
+  candidates.push(
+    ...[
+      {x: humanPos.x+1, y: humanPos.y},
+      {x: humanPos.x-1, y: humanPos.y},
+      {x: humanPos.x, y: humanPos.y+1},
+      {x: humanPos.x, y: humanPos.y-1}
+    ].filter(
+      t=> t.x >=0 && t.x < boardSize && t.y >=0 && t.y < boardSize
+    )
+  );
+  // filter: must not be occupied, must not be already blocked/defense, must not be surprise, not start/end, not on top of human/AI
+  for (const c of candidates) {
+    if (
+      (c.x === 0 && c.y === 0) ||
+      (c.x === boardSize - 1 && c.y === boardSize - 1) ||
+      (positionsEqual(positions.human, c)) ||
+      (positionsEqual(positions.ai, c)) ||
+      defenseTiles.some(dt => dt.x === c.x && dt.y === c.y) ||
+      surpriseTiles.some(st => st.x === c.x && st.y === c.y && !st.used)
+    ) continue;
+    return c;
+  }
+  // If no candidate, return null:
+  return null;
+}
+
 const GameBoard = ({
   difficulty,
   onRestart
@@ -115,6 +156,9 @@ const GameBoard = ({
   // Surprise count setting
   const [numSurprises, setNumSurprises] = useState<number>(4);
 
+  // Defense counts (NEW): user-configurable, both players use same max
+  const [numDefenses, setNumDefenses] = useState(DEFAULT_DEFENSES);
+
   // Points and trackers
   const [boardPoints, setBoardPoints] = useState<number[][]>(
     () => generateRandomPoints(DEFAULT_BOARD_SIZE)
@@ -126,10 +170,12 @@ const GameBoard = ({
     () => getRandomSurpriseTiles(DEFAULT_BOARD_SIZE, numSurprises)
   );
 
-  // Defense state: at most ONE tile, initial empty array
+  // Defense state: multiple per owner
   const [defenseTiles, setDefenseTiles] = useState<DefenseTile[]>([]);
-  // Flags for UI
-  const [defenseUsed, setDefenseUsed] = useState(false);
+  // Track defenses used
+  const [defensesUsed, setDefensesUsed] = useState<{human: number; ai: number}>({human: 0, ai: 0});
+  // Are we in defense placement mode for human?
+  const [defenseMode, setDefenseMode] = useState(false);
 
   // Gameplay state
   const [positions, setPositions] = useState(() => ({
@@ -163,9 +209,10 @@ const GameBoard = ({
     setAIPoints(0);
     setBoardPoints(generateRandomPoints(BOARD_SIZE));
     setSurpriseTiles(getRandomSurpriseTiles(BOARD_SIZE, numSurprises));
-    setDefenseTiles([]); // clear the defense
-    setDefenseUsed(false);
-  }, [BOARD_SIZE, numSurprises]);
+    setDefenseTiles([]);
+    setDefensesUsed({human: 0, ai: 0});
+    setDefenseMode(false);
+  }, [BOARD_SIZE, numSurprises, numDefenses]);
 
   useEffect(() => {
     if (winner) {
@@ -174,6 +221,7 @@ const GameBoard = ({
       setIsModalOpen(false);
       setDisableInput(true);
       aiMovingRef.current = false;
+      setDefenseMode(false);
     }
   }, [winner]);
 
@@ -187,6 +235,7 @@ const GameBoard = ({
     }
   }, [positions, humanTarget.x, humanTarget.y, aiTarget.x, aiTarget.y]);
 
+  // AI turn, including defense! (before question)
   useEffect(() => {
     if (winner) {
       aiMovingRef.current = false;
@@ -195,7 +244,35 @@ const GameBoard = ({
     if (turn === "ai" && !aiModalState && !aiMovingRef.current) {
       aiMovingRef.current = true;
       setDisableInput(true);
-      // Prepare to ask a question before allowing AI to move
+
+      // AI: place defense if allowed
+      if (defensesUsed.ai < numDefenses) {
+        // AI will try to block player if possible before moving!
+        const aiDefense = getAIDefenseTile({
+          humanPos: positions.human,
+          humanTarget,
+          boardSize: BOARD_SIZE,
+          defenseTiles,
+          positions,
+          surpriseTiles,
+        });
+        if (aiDefense) {
+          setDefenseTiles(prev => [...prev, { ...aiDefense, owner: "ai" }]);
+          setDefensesUsed(d => ({ ...d, ai: d.ai + 1 }));
+          toast({
+            title: t("game.defense_ai_placed") || "AI placed a defense!",
+            description: t("game.defense_ai_msg") || "AI blocked your path!",
+            duration: 1400,
+          });
+          setTimeout(() => {
+            aiMovingRef.current = false;
+            setTurn("human");
+            setDisableInput(false);
+          }, 900);
+          return;
+        }
+      }
+      // No more defenses or no good place: AI moves as normal
       const move = getValidMoves(positions.ai, BOARD_SIZE, defenseTiles).filter(
         tile => tile.x >= 0 && tile.y >= 0 && tile.x < BOARD_SIZE && tile.y < BOARD_SIZE
       );
@@ -209,7 +286,7 @@ const GameBoard = ({
       aiMovingRef.current = false;
     }
     // eslint-disable-next-line
-  }, [turn, winner, positions.ai, aiModalState, BOARD_SIZE, difficulty, defenseTiles]);
+  }, [turn, winner, positions.ai, aiModalState, BOARD_SIZE, difficulty, defenseTiles, defensesUsed.ai, numDefenses, positions, humanTarget, surpriseTiles, t]);
 
   function handleSurprise(tile: Tile, player: PlayerType) {
     // Find surprise
@@ -282,7 +359,7 @@ const GameBoard = ({
 
   // HUMAN MOVE HANDLER
   const handleTileClick = async (tile: any) => {
-    if (turn !== "human" || winner || disableInput) return;
+    if (turn !== "human" || winner || disableInput || defenseMode) return;
     // Now use defenseTiles in validMoves check!
     const validMoves = getValidMoves(positions.human, BOARD_SIZE, defenseTiles).filter(
       t => t.x >= 0 && t.y >= 0 && t.x < BOARD_SIZE && t.y < BOARD_SIZE
@@ -352,17 +429,12 @@ const GameBoard = ({
     }, 100);
   };
 
-  // Defense placement handler
+  // Defense placement handler (for player)
   function canPlaceDefenseHere(tile: Tile): string | null {
-    // Only on player's turn, only if not used
-    if (defenseUsed) return t("game.defense_already_used") || "Defense already used";
-    // Not on start/end
+    if (defensesUsed.human >= numDefenses) return t("game.defense_already_used") || "No more defenses";
     if ((tile.x === 0 && tile.y === 0) || (tile.x === BOARD_SIZE - 1 && tile.y === BOARD_SIZE - 1)) return t("game.defense_no_corner") || "Can't place on start/end";
-    // Not on player's or AI's position
     if ((positions.human.x === tile.x && positions.human.y === tile.y) || (positions.ai.x === tile.x && positions.ai.y === tile.y)) return t("game.defense_no_player") || "Can't place on pieces";
-    // Not on another defense
-    if (defenseTiles.some(d => d.x === tile.x && d.y === tile.y)) return t("game.defense_already_here") || "Defense already here";
-    // Not on a surprise tile
+    if (defenseTiles.some(d => d.x === tile.x && d.y === tile.y)) return t("game.defense_already_here") || "Already a defense";
     if (surpriseTiles.some(s => s.x === tile.x && s.y === tile.y && !s.used)) return t("game.defense_no_surprise") || "Can't place on a surprise";
     return null;
   }
@@ -376,8 +448,9 @@ const GameBoard = ({
       });
       return;
     }
-    setDefenseTiles([tile]);
-    setDefenseUsed(true);
+    setDefenseTiles(prev => [...prev, { ...tile, owner: "human" }]);
+    setDefensesUsed(d => ({ ...d, human: d.human + 1 }));
+    setDefenseMode(false);
     toast({
       title: t("game.defense_placed") || "Defense Placed",
       description: t("game.defense_success") || "AI cannot move to this tile!",
@@ -402,7 +475,8 @@ const GameBoard = ({
     setBoardPoints(generateRandomPoints(BOARD_SIZE));
     setSurpriseTiles(getRandomSurpriseTiles(BOARD_SIZE, numSurprises));
     setDefenseTiles([]);
-    setDefenseUsed(false);
+    setDefensesUsed({human: 0, ai: 0});
+    setDefenseMode(false);
     onRestart();
   };
 
@@ -417,19 +491,59 @@ const GameBoard = ({
         onRestart={handleRestart}
         difficulty={difficulty}
       />
-      <GameScoreboard humanPoints={humanPoints} aiPoints={aiPoints} />
-      <GameSettingsModal
-        open={settingsOpen}
-        onOpenChange={setSettingsOpen}
-        soundEnabled={soundEnabled}
-        onSoundChange={setSoundEnabled}
-        boardSize={boardSize}
-        onBoardSizeChange={v => setBoardSize(Math.max(5, Math.min(12, v || DEFAULT_BOARD_SIZE)))}
-        questionTime={questionTime}
-        onQuestionTimeChange={v => setQuestionTime(Math.max(6, Math.min(40, v || DEFAULT_QUESTION_TIME)))}
-        surpriseCount={numSurprises}
-        onSurpriseCountChange={setNumSurprises}
-      />
+      {/* Scoreboard + Defense Button (moved) */}
+      <div className="w-full flex flex-col items-center">
+        <GameScoreboard humanPoints={humanPoints} aiPoints={aiPoints} />
+        <div className="flex items-center gap-4 mt-1">
+          <div className="flex items-center gap-2">
+            <Shield size={18} className="text-primary" />
+            <span className="text-xs text-blue-700 font-semibold">{t("game.defenses_left") || "Your defenses left"}: {numDefenses - defensesUsed.human}</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <Shield size={18} className="text-red-700" />
+            <span className="text-xs text-red-700 font-semibold">{t("game.ai_defenses_left") || "AI defenses left"}: {numDefenses - defensesUsed.ai}</span>
+          </div>
+          {/* Place Defense Button */}
+          {!winner && turn === "human" && (numDefenses - defensesUsed.human > 0) && (
+            <button
+              onClick={() => {
+                setDefenseMode(true);
+                toast({
+                  title: t("game.defense_mode_on") || "Defense Mode",
+                  description: t("game.defense_mode_on_desc") || "Select a tile (not start/end, not occupied, not surprise) to block the AI.",
+                  duration: 2200,
+                });
+                // Next tile click will be for defense, add a handler…
+                const handler = (ev: MouseEvent) => {
+                  if (!(ev.target instanceof HTMLElement)) return;
+                  let tileDiv = ev.target.closest("button[data-tile-x]");
+                  if (!tileDiv) return;
+                  const x = parseInt(tileDiv.getAttribute("data-tile-x") || "-1");
+                  const y = parseInt(tileDiv.getAttribute("data-tile-y") || "-1");
+                  if (x < 0 || y < 0) return;
+                  handleDefenseClick({ x, y });
+                  document.removeEventListener("click", handler, true);
+                  setDefenseMode(false);
+                };
+                setTimeout(() => {
+                  document.addEventListener("click", handler, true);
+                }, 100);
+              }}
+              className="bg-blue-500 text-white font-semibold px-4 py-2 rounded-lg shadow hover:bg-blue-700 transition-all animate-pulse"
+            >
+              <Shield size={20} className="inline-block mr-1" />
+              {t("game.defense_place_btn") || "Place Defense"}
+            </button>
+          )}
+        </div>
+        <div className="w-full flex justify-center">
+          {defenseMode && (
+            <span className="text-sm text-blue-600 mt-2 animate-pulse">
+              {t("game.defense_mode_select") || "Select a tile to place your defense..."}
+            </span>
+          )}
+        </div>
+      </div>
       <div className="relative my-3">
         <GameBoardGrid
           BOARD_SIZE={BOARD_SIZE}
@@ -439,7 +553,7 @@ const GameBoard = ({
           aiTarget={aiTarget}
           winner={winner}
           turn={turn}
-          disableInput={disableInput}
+          disableInput={disableInput || defenseMode}
           onTileClick={handleTileClick}
           getValidMoves={(pos) => getValidMoves(pos, BOARD_SIZE, defenseTiles)}
           positionsEqual={positionsEqual}
@@ -486,45 +600,6 @@ const GameBoard = ({
           onSubmit={handleAIModalSubmit}
         />
       )}
-      {/* Defense placement button/instructions */}
-      {!winner && turn === "human" && !defenseUsed && (
-        <div className="mt-2 flex flex-col items-center gap-1">
-          <span className="text-md text-blue-700 flex items-center gap-2">
-            <Shield size={20} className="text-primary mr-1" />{t("game.defense_instructions") || "Click 'Place Defense' then select a tile to block the AI!"}
-          </span>
-          <button
-            onClick={() => {
-              toast({
-                title: t("game.defense_mode_on") || "Defense Mode",
-                description: t("game.defense_mode_on_desc") || "Select a tile (not start/end, not occupied, not surprise) to block the AI.",
-                duration: 2200,
-              });
-              // Next tile click will be for defense, add a handler…
-              const handler = (ev: MouseEvent) => {
-                if (!(ev.target instanceof HTMLElement)) return;
-                let tileDiv = ev.target.closest("button[data-tile-x]");
-                if (!tileDiv) return;
-                const x = parseInt(tileDiv.getAttribute("data-tile-x") || "-1");
-                const y = parseInt(tileDiv.getAttribute("data-tile-y") || "-1");
-                if (x < 0 || y < 0) return;
-                handleDefenseClick({ x, y });
-                document.removeEventListener("click", handler, true);
-              };
-              setTimeout(() => {
-                document.addEventListener("click", handler, true);
-              }, 100);
-              // Instruct user on how to exit if they don't want to place
-            }}
-            className="bg-blue-500 text-white font-semibold px-4 py-2 rounded-lg shadow hover:bg-blue-700 transition-all animate-pulse"
-          >
-            <Shield size={20} className="inline-block mr-1" />
-            {t("game.defense_place_btn") || "Place Defense"}
-          </button>
-          <div className="text-xs text-gray-500 mt-1">
-            {t("game.defense_hint") || "Blocks AI's path once per game. Placement is final!"}
-          </div>
-        </div>
-      )}
       {/* Turn/who info */}
       {!winner && (
         <div
@@ -543,6 +618,21 @@ const GameBoard = ({
           </div>
         </div>
       )}
+      {/* Settings modal with new prop */}
+      <GameSettingsModal
+        open={settingsOpen}
+        onOpenChange={setSettingsOpen}
+        soundEnabled={soundEnabled}
+        onSoundChange={setSoundEnabled}
+        boardSize={boardSize}
+        onBoardSizeChange={v => setBoardSize(Math.max(5, Math.min(12, v || DEFAULT_BOARD_SIZE)))}
+        questionTime={questionTime}
+        onQuestionTimeChange={v => setQuestionTime(Math.max(6, Math.min(40, v || DEFAULT_QUESTION_TIME)))}
+        surpriseCount={numSurprises}
+        onSurpriseCountChange={setNumSurprises}
+        numDefenses={numDefenses}
+        onNumDefensesChange={setNumDefenses}
+      />
     </div>
   );
 };

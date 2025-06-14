@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState, useRef } from "react";
 import TranslateQuestionModal from "./TranslateQuestionModal";
 import SoundManager from "./SoundManager";
@@ -57,6 +58,13 @@ function getAIMove(pos: Tile, target: Tile) {
   return best;
 }
 
+// Generate a 2D array of random ints [1,100] for points
+function generateRandomPoints(boardSize: number) {
+  return Array.from({ length: boardSize }, () =>
+    Array.from({ length: boardSize }, () => Math.floor(Math.random() * 100) + 1)
+  );
+}
+
 const GameBoard = ({
   difficulty,
   onRestart
@@ -71,6 +79,14 @@ const GameBoard = ({
   // New settings: question time and board size
   const [questionTime, setQuestionTime] = useState<number>(DEFAULT_QUESTION_TIME);
   const [boardSize, setBoardSize] = useState<number>(DEFAULT_BOARD_SIZE);
+
+  // Points board state: NxN grid, each cell: points remaining (0 if collected)
+  const [boardPoints, setBoardPoints] = useState<number[][]>(
+    () => generateRandomPoints(DEFAULT_BOARD_SIZE)
+  );
+  // Points tracker (collected points)
+  const [humanPoints, setHumanPoints] = useState(0);
+  const [aiPoints, setAIPoints] = useState(0);
 
   // Gameplay state
   const [positions, setPositions] = useState(() => ({
@@ -93,7 +109,7 @@ const GameBoard = ({
   const aiTarget = { x: 0, y: 0 };
   const humanTarget = { x: BOARD_SIZE - 1, y: BOARD_SIZE - 1 };
 
-  // When board size changes, reset positions and winner
+  // When board size changes, reset positions, winner, boardPoints, points
   useEffect(() => {
     setPositions({
       human: { x: 0, y: 0 },
@@ -101,6 +117,9 @@ const GameBoard = ({
     });
     setWinner(null);
     setTurn("human");
+    setHumanPoints(0);
+    setAIPoints(0);
+    setBoardPoints(generateRandomPoints(BOARD_SIZE));
   }, [BOARD_SIZE]);
 
   // When a winner is set, immediately finish the game (clear all modals and block moves).
@@ -153,10 +172,26 @@ const GameBoard = ({
     // eslint-disable-next-line
   }, [turn, winner, positions.ai, aiModalState, BOARD_SIZE, difficulty]);
 
+  // AI modal submit: collect points, move, update score
   const handleAIModalSubmit = () => {
     if (!aiModalState || winner) return;
     setSound("move");
-    setPositions((p) => ({ ...p, ai: aiModalState.targetTile }));
+    setPositions((p) => {
+      const { x, y } = aiModalState.targetTile;
+      // Collect points if not start tile and not already 0
+      setBoardPoints((prev) => {
+        if (prev[y][x] === 0) return prev;
+        // Don't collect on start (0,0) or human start (bottom right)
+        if ((x === 0 && y === 0) || (x === BOARD_SIZE - 1 && y === BOARD_SIZE - 1)) return prev;
+        // Add to AI score
+        setAIPoints((cur) => cur + prev[y][x]);
+        // Update points grid
+        const next = prev.map((row) => [...row]);
+        next[y][x] = 0;
+        return next;
+      });
+      return { ...p, ai: { x, y } };
+    });
     setAIModalState(null);
     setTimeout(() => {
       if (!winner) {
@@ -167,6 +202,7 @@ const GameBoard = ({
     }, 600);
   };
 
+  // Human move: pick tile -> answer question -> collect points
   const handleTileClick = async (tile: any) => {
     if (turn !== "human" || winner || disableInput) return;
     const validMoves = getValidMoves(positions.human).filter(
@@ -182,7 +218,21 @@ const GameBoard = ({
     setMoveState(null);
     if (winner) return; // abort moves after winning
     if (ok) {
-      setPositions((p) => ({ ...p, human: tile }));
+      setPositions((p) => {
+        const { x, y } = tile;
+        setBoardPoints((prev) => {
+          if (prev[y][x] === 0) return prev;
+          // Don't collect on start (0,0) or AI start (top left or bottom right depending on board)
+          if ((x === 0 && y === 0) || (x === BOARD_SIZE - 1 && y === BOARD_SIZE - 1)) return prev;
+          // Add to human score
+          setHumanPoints((cur) => cur + prev[y][x]);
+          // Update points grid
+          const next = prev.map((row) => [...row]);
+          next[y][x] = 0;
+          return next;
+        });
+        return { ...p, human: { x, y } };
+      });
       setSound("move");
       setTurn("ai");
     } else {
@@ -191,8 +241,8 @@ const GameBoard = ({
     }
   };
 
+  // RENDERING: show collected points on each tile (uncollected), hidden if start/end or player's on it
   const renderTile = (x: number, y: number) => {
-    // winner disables all highlight/click logic
     const isHuman = positions.human.x === x && positions.human.y === y;
     const isAI = positions.ai.x === x && positions.ai.y === y;
     const isHumanTarget = x === humanTarget.x && y === humanTarget.y;
@@ -251,7 +301,21 @@ const GameBoard = ({
             : "Empty"
         }
       >
-        {content}
+        <span>{content}</span>
+        {/* Show uncollected points if: not a start/end tile and not currently occupied */}
+        {(content === "" &&
+          !isHuman &&
+          !isAI &&
+          !(
+            (x === 0 && y === 0) ||
+            (x === BOARD_SIZE - 1 && y === BOARD_SIZE - 1)
+          ) &&
+          boardPoints[y] &&
+          boardPoints[y][x] > 0) && (
+            <span className="absolute bottom-1 right-2 text-xs text-amber-700 font-medium bg-white/80 px-1 py-0.5 rounded shadow">
+              {boardPoints[y][x]}
+            </span>
+          )}
         {isHumanTarget && (
           <span className="absolute inset-1 rounded bg-green-400/40 border border-green-600 pointer-events-none">
             <span className="sr-only">Your target</span>
@@ -266,7 +330,7 @@ const GameBoard = ({
     );
   };
 
-  // On restart, preserve settings but reset game
+  // On restart, preserve settings but reset game state, points and boardPoints
   const handleRestart = () => {
     setPositions({
       human: { x: 0, y: 0 },
@@ -278,6 +342,9 @@ const GameBoard = ({
     setMoveState(null);
     setAIModalState(null);
     setDisableInput(false);
+    setHumanPoints(0);
+    setAIPoints(0);
+    setBoardPoints(generateRandomPoints(BOARD_SIZE));
     onRestart();
   };
 
@@ -303,6 +370,17 @@ const GameBoard = ({
         >
           Restart
         </button>
+      </div>
+      {/* POINTS DISPLAY - top of board */}
+      <div className="flex flex-row gap-8 mb-2 w-full justify-center text-lg font-semibold">
+        <div className="flex flex-row items-center gap-2">
+          <span className="w-7 rounded bg-blue-600 text-white flex items-center justify-center font-bold shadow-md">YOU</span>
+          <span className="text-blue-900 ml-2">Points: {humanPoints}</span>
+        </div>
+        <div className="flex flex-row items-center gap-2">
+          <span className="w-7 rounded bg-red-600 text-white flex items-center justify-center font-bold shadow-md">AI</span>
+          <span className="text-red-800 ml-2">Points: {aiPoints}</span>
+        </div>
       </div>
       <GameSettingsModal
         open={settingsOpen}
@@ -330,6 +408,14 @@ const GameBoard = ({
           <div className="absolute inset-0 bg-black/70 flex flex-col items-center justify-center rounded-lg animate-fade-in z-10">
             <div className="text-3xl font-bold text-white mb-3 drop-shadow-2xl">
               {winner === "human" ? "🎉 You Win!" : "😔 AI Wins"}
+            </div>
+            <div className="flex flex-col gap-1 text-lg text-white font-semibold mb-2">
+              <div>
+                Your Points: <span className="text-amber-200 font-bold">{humanPoints}</span>
+              </div>
+              <div>
+                AI Points: <span className="text-amber-200 font-bold">{aiPoints}</span>
+              </div>
             </div>
             <button
               onClick={handleRestart}
@@ -380,3 +466,4 @@ const GameBoard = ({
 export default GameBoard;
 
 // NOTE: This file is now quite long. Consider refactoring for maintainability!
+

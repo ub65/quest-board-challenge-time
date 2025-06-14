@@ -1,7 +1,7 @@
-
 import React, { useEffect, useState } from "react";
 import { useLocalization } from "@/contexts/LocalizationContext";
 import { Slider } from "@/components/ui/slider";
+import TickSound from "@/components/TickSound";
 
 type Question = {
   prompt: string;
@@ -95,6 +95,8 @@ const TranslateQuestionModal = ({
       style={{ pointerEvents: isOpen ? "auto" : "none" }}
     >
       <div className="w-full max-w-lg bg-white rounded-lg shadow-lg p-6 animate-scale-in flex flex-col">
+        {/* Tick sound triggers on each time change while active */}
+        {isOpen && !answered && time > 0 && <TickSound tick={time} />}
         {/* Time Remaining - show only once as text */}
         <div className="flex flex-col gap-2 mb-5">
           <label className="font-semibold flex items-center justify-between select-none">

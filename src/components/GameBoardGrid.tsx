@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useMemo } from "react";
 import { Gift, Shield } from "lucide-react";
 
 type Tile = { x: number; y: number };
@@ -7,7 +7,6 @@ type PlayerPositions = { human: Tile; ai: Tile };
 type SurpriseTile = Tile & { type: string; used: boolean };
 type DefenseTile = Tile & { owner: "human" | "ai" };
 
-// NEW: add optional AI target preview prop (when AI is thinking)
 type GameBoardGridProps = {
   BOARD_SIZE: number;
   boardPoints: number[][];
@@ -22,7 +21,7 @@ type GameBoardGridProps = {
   positionsEqual: (a: Tile, b: Tile) => boolean;
   surpriseTiles: SurpriseTile[];
   defenseTiles?: DefenseTile[];
-  aiPendingTarget?: Tile | null; // new prop!
+  aiPendingTarget?: Tile | null;
 };
 
 const GameBoardGrid: React.FC<GameBoardGridProps> = ({
@@ -39,8 +38,24 @@ const GameBoardGrid: React.FC<GameBoardGridProps> = ({
   positionsEqual,
   surpriseTiles,
   defenseTiles = [],
-  aiPendingTarget = null, // NEW
+  aiPendingTarget = null,
 }) => {
+  // Memoize the valid moves set per turn unless related state changes
+  const validMovesSet = useMemo(() => {
+    if (winner || turn !== "human") return new Set<string>();
+    return new Set(
+      getValidMoves(positions.human)
+        .filter(
+          (t) =>
+            t.x >= 0 &&
+            t.y >= 0 &&
+            t.x < BOARD_SIZE &&
+            t.y < BOARD_SIZE
+        )
+        .map((t) => `${t.x},${t.y}`)
+    );
+    // Only recalculate when these change:
+  }, [positions.human.x, positions.human.y, defenseTiles, BOARD_SIZE, winner, turn, getValidMoves]);
 
   const renderTile = (x: number, y: number) => {
     const isHuman = positions.human.x === x && positions.human.y === y;
@@ -75,12 +90,11 @@ const GameBoardGrid: React.FC<GameBoardGridProps> = ({
 
     const defense = defenseTiles?.find(dt => dt.x === x && dt.y === y);
 
+    // Highlight only if tile is in validMovesSet and turn is human
     const highlight =
       !winner &&
       turn === "human" &&
-      getValidMoves(positions.human)
-        .filter(t => t.x >= 0 && t.y >= 0 && t.x < BOARD_SIZE && t.y < BOARD_SIZE)
-        .some((t) => t.x === x && t.y === y) &&
+      validMovesSet.has(`${x},${y}`) &&
       !isHuman && !isAI && !defense;
 
     return (

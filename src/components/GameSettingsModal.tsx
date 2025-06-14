@@ -1,4 +1,3 @@
-
 import React from "react";
 import {
   Dialog,
@@ -81,21 +80,28 @@ const GameSettingsModal = ({
             {/* Difficulty Setting */}
             <div>
               <Label className="text-base font-semibold mb-2 block">{t("game.difficulty")}</Label>
-              <div className="flex gap-4">
+              <div className="flex gap-3">
                 {difficulties.map((d) => (
                   <button
                     key={d.value}
                     type="button"
                     onClick={() => onDifficultyChange(d.value as "easy" | "medium" | "hard")}
                     className={cn(
-                      "px-5 py-2 rounded-lg font-bold shadow ring-primary transition-all text-base flex-1 border",
-                      d.color,
-                      difficulty === d.value
-                        ? "ring-2 ring-offset-2 scale-105"
-                        : "hover:scale-105"
+                      "flex-1 min-w-0 px-0 py-0 flex items-stretch",
+                      // container for button children
                     )}
                   >
-                    {t(d.labelKey)}
+                    <span
+                      className={cn(
+                        "w-full h-12 sm:h-14 rounded-lg font-bold shadow ring-primary transition-all text-base flex items-center justify-center border select-none",
+                        d.color,
+                        difficulty === d.value
+                          ? "ring-2 ring-offset-2 scale-105 bg-opacity-80"
+                          : "hover:scale-105 bg-opacity-80"
+                      )}
+                    >
+                      {t(d.labelKey)}
+                    </span>
                   </button>
                 ))}
               </div>
@@ -208,4 +214,3 @@ const GameSettingsModal = ({
 };
 
 export default GameSettingsModal;
-

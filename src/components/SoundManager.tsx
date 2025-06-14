@@ -25,17 +25,26 @@ const sounds: Record<string, (audio: AudioContext) => void> = {
     o.start();
     o.stop(ctx.currentTime + 0.24);
   },
+  // HAPPIER/JINGLY "WIN" SOUND
   win: (ctx) => {
-    const o = ctx.createOscillator();
-    o.type = "square";
-    o.frequency.value = 466;
-    const g = ctx.createGain();
-    g.gain.value = 0.09;
-    o.connect(g);
-    g.connect(ctx.destination);
-    o.start();
-    o.frequency.linearRampToValueAtTime(932, ctx.currentTime + 0.2);
-    o.stop(ctx.currentTime + 0.31);
+    // Simulate a short jingle: high - up - up - up
+    const notes = [
+      { freq: 523.25, time: 0 },      // C5
+      { freq: 659.25, time: 0.09 },   // E5
+      { freq: 783.99, time: 0.18 },   // G5
+      { freq: 1046.5, time: 0.24 },   // C6, higher
+    ];
+    notes.forEach(({ freq, time }, i) => {
+      const o = ctx.createOscillator();
+      o.type = i === notes.length - 1 ? "triangle" : "square";
+      o.frequency.value = freq;
+      const g = ctx.createGain();
+      g.gain.value = i === notes.length - 1 ? 0.13 : 0.1;
+      o.connect(g);
+      g.connect(ctx.destination);
+      o.start(ctx.currentTime + time);
+      o.stop(ctx.currentTime + time + 0.09);
+    });
   }
 };
 

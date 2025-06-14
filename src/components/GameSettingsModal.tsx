@@ -11,7 +11,8 @@ import {
 } from "@/components/ui/dialog";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
+import { Slider } from "@/components/ui/slider";
+import { SlidersHorizontal } from "lucide-react";
 
 type GameSettingsModalProps = {
   open: boolean;
@@ -36,58 +37,75 @@ const GameSettingsModal = ({
 }: GameSettingsModalProps) => {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent className="bg-gradient-to-br from-background to-secondary p-8 shadow-2xl rounded-2xl border-0 max-w-[420px]">
         <DialogHeader>
-          <DialogTitle>Game Settings</DialogTitle>
-          <DialogDescription>
-            Adjust game settings below.
-          </DialogDescription>
+          <div className="flex flex-col items-center gap-1 mb-2">
+            <SlidersHorizontal size={32} className="text-primary" />
+            <DialogTitle className="text-2xl font-bold tracking-tight">
+              Game Settings
+            </DialogTitle>
+            <DialogDescription className="mb-0 text-center">
+              Adjust your preferences for sound, board size, and timer.
+            </DialogDescription>
+          </div>
         </DialogHeader>
-        <div className="py-6 flex flex-col gap-6 text-center text-gray-600">
-          <div className="flex items-center justify-center gap-4">
-            <Label htmlFor="sound-toggle" className="text-base cursor-pointer">
+        <div className="py-2 flex flex-col gap-7">
+          {/* Sound Toggle */}
+          <div className="flex items-center justify-between gap-4 px-1">
+            <Label htmlFor="sound-toggle" className="text-base cursor-pointer select-none">
               Sound Effects
             </Label>
             <Switch
               id="sound-toggle"
               checked={soundEnabled}
               onCheckedChange={onSoundChange}
+              className="scale-110"
             />
           </div>
-          <div className="flex items-center justify-center gap-4">
-            <Label htmlFor="board-size" className="text-base cursor-pointer">
-              Board Size
+          {/* Board Size Slider */}
+          <div className="flex flex-col gap-1">
+            <Label htmlFor="board-size-slider" className="text-base font-semibold mb-1 select-none flex justify-between">
+              <span>Board Size</span>
+              <span className="text-primary">{boardSize}x{boardSize}</span>
             </Label>
-            <Input
-              id="board-size"
-              type="number"
+            <Slider
+              id="board-size-slider"
               min={5}
               max={12}
-              value={boardSize}
-              onChange={e => onBoardSizeChange(Number(e.target.value))}
-              className="w-20 text-center"
+              step={1}
+              value={[boardSize]}
+              onValueChange={([val]) => onBoardSizeChange(val)}
+              className="w-full"
             />
-            <span className="text-sm text-gray-400">(min 5, max 12)</span>
+            <div className="flex justify-between text-xs text-gray-400 mt-1">
+              <span>5x5</span>
+              <span>12x12</span>
+            </div>
           </div>
-          <div className="flex items-center justify-center gap-4">
-            <Label htmlFor="question-time" className="text-base cursor-pointer">
-              Question Time (seconds)
+          {/* Question Time Slider */}
+          <div className="flex flex-col gap-1">
+            <Label htmlFor="question-time-slider" className="text-base font-semibold mb-1 select-none flex justify-between">
+              <span>Question Time</span>
+              <span className="text-primary">{questionTime} s</span>
             </Label>
-            <Input
-              id="question-time"
-              type="number"
+            <Slider
+              id="question-time-slider"
               min={6}
               max={40}
-              value={questionTime}
-              onChange={e => onQuestionTimeChange(Number(e.target.value))}
-              className="w-20 text-center"
+              step={1}
+              value={[questionTime]}
+              onValueChange={([val]) => onQuestionTimeChange(val)}
+              className="w-full"
             />
-            <span className="text-sm text-gray-400">(6-40s)</span>
+            <div className="flex justify-between text-xs text-gray-400 mt-1">
+              <span>6s</span>
+              <span>40s</span>
+            </div>
           </div>
         </div>
-        <DialogFooter>
+        <DialogFooter className="pt-2">
           <DialogClose asChild>
-            <button className="bg-blue-500 rounded px-4 py-2 text-white hover:bg-blue-700 font-bold transition-colors">
+            <button className="rounded-lg bg-primary px-4 py-2 text-primary-foreground hover:bg-primary/90 font-semibold text-base transition-colors w-full shadow">
               Close
             </button>
           </DialogClose>
@@ -98,4 +116,3 @@ const GameSettingsModal = ({
 };
 
 export default GameSettingsModal;
-

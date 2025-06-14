@@ -1,7 +1,9 @@
+
 import React, { useEffect, useState } from "react";
 import { useLocalization } from "@/contexts/LocalizationContext";
 import { Slider } from "@/components/ui/slider";
 import TickSound from "@/components/TickSound";
+import SoundManager from "@/components/SoundManager";
 
 type Question = {
   prompt: string;
@@ -51,6 +53,7 @@ const TranslateQuestionModal = ({
   const [shuffled, setShuffled] = useState<{ answer: string; idx: number }[]>([]);
   const [time, setTime] = useState(timeLimit);
   const [answered, setAnswered] = useState<boolean>(false);
+  const [playWinSound, setPlayWinSound] = useState(false);
 
   useEffect(() => {
     if (question) {
@@ -62,6 +65,7 @@ const TranslateQuestionModal = ({
       setSelected(null);
       setTime(timeLimit);
       setAnswered(false);
+      setPlayWinSound(false);
     }
   }, [question, timeLimit]);
 
@@ -82,8 +86,18 @@ const TranslateQuestionModal = ({
     const originalIdx = shuffled[pickedIdx].idx;
     const correct = originalIdx === question.correct;
     setAnswered(true);
+    if (correct) setPlayWinSound(true);
     setTimeout(() => onSubmit(correct), 800);
   };
+
+  // Reset playWinSound after playing the sound
+  useEffect(() => {
+    if (playWinSound) {
+      // Reset after short delay to allow the sound to play
+      const t = setTimeout(() => setPlayWinSound(false), 400);
+      return () => clearTimeout(t);
+    }
+  }, [playWinSound]);
 
   const sliderColorClass = getTimeSliderColor(time, timeLimit);
 
@@ -94,6 +108,8 @@ const TranslateQuestionModal = ({
     `}
       style={{ pointerEvents: isOpen ? "auto" : "none" }}
     >
+      {/* Sound effect for correct answer */}
+      <SoundManager trigger={playWinSound ? "win" : null} />
       <div className="w-full max-w-lg bg-white rounded-lg shadow-lg p-6 animate-scale-in flex flex-col">
         {/* Tick sound triggers on each time change while active */}
         {isOpen && !answered && time > 0 && <TickSound tick={time} />}
@@ -159,3 +175,4 @@ const TranslateQuestionModal = ({
 };
 
 export default TranslateQuestionModal;
+

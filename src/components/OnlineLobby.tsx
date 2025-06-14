@@ -71,7 +71,11 @@ const OnlineLobby: React.FC<{
         title: t("online.lobbyJoined") || "Joined game!",
         description: t("online.lobbyJoinedDesc") || "Waiting for the host...",
       });
-      setStep("choose-opponent");
+      // Immediately call onGameStart after joining as guest (skip choose-opponent)
+      if (onGameStart) {
+        onGameStart(gameCode, "guest");
+      }
+      // Optionally, you could setStep("wait") if you want to show a waiting room.
     }, 800);
   };
 
@@ -149,7 +153,8 @@ const OnlineLobby: React.FC<{
         )}
 
         {/* CHOOSE OPPONENT STEP */}
-        {step === "choose-opponent" && (
+        {/* Only hosts see choose-opponent after creating, guests go straight to the board */}
+        {step === "choose-opponent" && currentRole === "host" && (
           <>
             <p className="text-center text-gray-500">
               {t("online.lobbyChooseOpponent") || "Do you want to play against AI or a friend?"}

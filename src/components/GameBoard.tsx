@@ -342,15 +342,11 @@ const GameBoard = ({
       setAIModalState(null);
       setTimeout(() => {
         if (!winner) {
-          if (!doFreeMove) {
-            setTurn("human");
-            setDisableInput(false);
-            aiMovingRef.current = false;
-          } else {
-            setDisableInput(true);
-            aiMovingRef.current = false;
-            setTimeout(() => setTurn("ai"), 700);
-          }
+          // --------- CHANGE HERE -----------
+          // No matter if doFreeMove is true, AI should NOT move again.
+          setTurn("human");
+          setDisableInput(false);
+          aiMovingRef.current = false;
         }
       }, 600);
     }, 100);

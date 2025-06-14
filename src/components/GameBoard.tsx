@@ -274,7 +274,7 @@ const GameBoard = ({
           {message}
         </span>
       ),
-      duration: 2600,
+      duration: 3000, // updated to 3 seconds
     });
     return doFreeMove;
   }

@@ -34,13 +34,23 @@ function positionsEqual(a: Tile, b: Tile) {
   return a.x === b.x && a.y === b.y;
 }
 
-function getValidMoves(pos: Tile, BOARD_SIZE: number, defenseTiles: DefenseTile[] = []) {
+function getValidMoves(
+  pos: Tile,
+  BOARD_SIZE: number,
+  defenseTiles: DefenseTile[] = [],
+  otherPlayerPos?: Tile // add optional param for the other player
+) {
   const moves: Tile[] = [];
-  // Can't move to defense tiles
-  if (pos.x > 0 && !defenseTiles.some(t => t.x === pos.x - 1 && t.y === pos.y)) moves.push({ x: pos.x - 1, y: pos.y });
-  if (pos.x < BOARD_SIZE - 1 && !defenseTiles.some(t => t.x === pos.x + 1 && t.y === pos.y)) moves.push({ x: pos.x + 1, y: pos.y });
-  if (pos.y > 0 && !defenseTiles.some(t => t.x === pos.x && t.y === pos.y - 1)) moves.push({ x: pos.x, y: pos.y - 1 });
-  if (pos.y < BOARD_SIZE - 1 && !defenseTiles.some(t => t.x === pos.x && t.y === pos.y + 1)) moves.push({ x: pos.x, y: pos.y + 1 });
+  // Can't move to defense tiles or onto the other player
+  function isBlocked(x: number, y: number) {
+    if (defenseTiles.some((t) => t.x === x && t.y === y)) return true;
+    if (otherPlayerPos && otherPlayerPos.x === x && otherPlayerPos.y === y) return true;
+    return false;
+  }
+  if (pos.x > 0 && !isBlocked(pos.x - 1, pos.y)) moves.push({ x: pos.x - 1, y: pos.y });
+  if (pos.x < BOARD_SIZE - 1 && !isBlocked(pos.x + 1, pos.y)) moves.push({ x: pos.x + 1, y: pos.y });
+  if (pos.y > 0 && !isBlocked(pos.x, pos.y - 1)) moves.push({ x: pos.x, y: pos.y - 1 });
+  if (pos.y < BOARD_SIZE - 1 && !isBlocked(pos.x, pos.y + 1)) moves.push({ x: pos.x, y: pos.y + 1 });
   return moves;
 }
 
@@ -586,7 +596,14 @@ const GameBoard = ({
           // IMPORTANT: We want to disable input for modal/win, but not for defense mode.
           disableInput={disableInput}
           onTileClick={handleTileClick}
-          getValidMoves={(pos) => getValidMoves(pos, BOARD_SIZE, defenseTiles)}
+          getValidMoves={(pos) =>
+            getValidMoves(
+              pos,
+              BOARD_SIZE,
+              defenseTiles,
+              pos === positions.human ? positions.ai : positions.human // Block other player
+            )
+          }
           positionsEqual={positionsEqual}
           surpriseTiles={surpriseTiles}
           defenseTiles={defenseTiles}

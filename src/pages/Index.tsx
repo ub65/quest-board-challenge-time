@@ -1,17 +1,20 @@
+
 import React, { useState } from "react";
 import GameBoard from "@/components/GameBoard";
 import { useLocalization } from "@/contexts/LocalizationContext";
 import WelcomeScreen from "@/components/WelcomeScreen";
 import GameSettingsModal from "@/components/GameSettingsModal";
+import GameModeSelector from "@/components/GameModeSelector";
+import OnlineLobby from "@/components/OnlineLobby";
 
 const Index = () => {
   const { t, language } = useLocalization();
   const [difficulty, setDifficulty] = useState<"easy" | "medium" | "hard">("easy");
   const [gameKey, setGameKey] = useState(0);
-  const [step, setStep] = useState<"welcome" | "game">("welcome");
+
+  const [step, setStep] = useState<"mode" | "welcome" | "game" | "online">("mode");
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [playerName, setPlayerName] = useState("");
-
   // Game settings state for initial modal - pass dummy handlers as non-restart game
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [questionTime, setQuestionTime] = useState(20);
@@ -19,11 +22,49 @@ const Index = () => {
   const [numSurprises, setNumSurprises] = useState(4);
   const [numDefenses, setNumDefenses] = useState(2);
 
+  // New: Track current mode ("ai" or "online")
+  const [mode, setMode] = useState<"ai" | "online" | null>(null);
+
   const handleRestart = () => {
     setGameKey((k) => k + 1);
-    setStep("welcome");
+    setStep("mode");
+    setMode(null);
   };
 
+  // Handle mode selection
+  const handleSelectMode = (selectedMode: "ai" | "online") => {
+    setMode(selectedMode);
+    if (selectedMode === "ai") {
+      setStep("welcome");
+    } else {
+      setStep("online");
+    }
+  };
+
+  // If mode selection, show that first
+  if (step === "mode") {
+    return (
+      <GameModeSelector
+        t={t}
+        onSelect={handleSelectMode}
+      />
+    );
+  }
+
+  // Online: show online lobby (placeholder)
+  if (mode === "online" && step === "online") {
+    return (
+      <OnlineLobby
+        t={t}
+        onBack={() => {
+          setMode(null);
+          setStep("mode");
+        }}
+      />
+    );
+  }
+
+  // AI: normal flow (welcome -> game)
   return (
     <div
       className={`

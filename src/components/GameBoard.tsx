@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from "react";
 import TranslateQuestionModal from "./TranslateQuestionModal";
 import SoundManager from "./SoundManager";
-import { questionsByDifficulty } from "@/lib/questions";
+import { getRandomQuestionByDifficulty } from "@/lib/questions";
 import GameSettingsModal from "./GameSettingsModal";
 import AITranslateQuestionModal from "./AITranslateQuestionModal";
 import GameHeader from "./GameHeader";
@@ -42,9 +42,7 @@ function getValidMoves(pos: Tile, BOARD_SIZE: number): Tile[] {
 }
 
 function getRandomQuestion(difficulty: "easy" | "medium" | "hard") {
-  const arr = questionsByDifficulty[difficulty];
-  if (!arr || arr.length === 0) return null;
-  return arr[Math.floor(Math.random() * arr.length)];
+  return getRandomQuestionByDifficulty(difficulty);
 }
 
 function getDistance(a: Tile, b: Tile) {

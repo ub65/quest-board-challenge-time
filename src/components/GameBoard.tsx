@@ -345,6 +345,11 @@ const GameBoard = ({
     setDefenseMode(false);
   };
 
+  // Debug: log turns to help trace
+  useEffect(() => {
+    console.log("[GAMEBOARD] Turn changed:", turn, "Winner:", winner);
+  }, [turn, winner]);
+
   return (
     <div
       className="flex flex-col items-center"

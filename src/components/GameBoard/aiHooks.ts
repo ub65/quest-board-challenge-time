@@ -32,13 +32,25 @@ export function useAITurn({
   aiTarget, humanTarget, t, setDisableInput, setDefenseTiles, setDefensesUsed, toast, setTurn, setAIModalState, aiMovingRef,
 }: AIMoveProps) {
   useEffect(() => {
-    if (winner) {
+    // DEBUG LOGS to track effect activations and blockers
+    console.log("[AI TURN HOOK] running", {turn, winner, aiModalState, aiMoving: aiMovingRef.current, disableInput});
+
+    // Always reset moving ref when human's turn or game over
+    if (winner || turn === "human") {
+      if (aiMovingRef.current) console.log("[AI TURN HOOK] Resetting aiMovingRef.current", {winner, turn});
       aiMovingRef.current = false;
       return;
     }
+
+    // AI turn begins
+    // Don't permit moving if already in modal, or marked as "moving"
     if (turn === "ai" && !aiModalState && !aiMovingRef.current) {
+      // Activate AI logic!
+      console.log("[AI TURN HOOK] AI is starting move!");
       aiMovingRef.current = true;
       setDisableInput(true);
+
+      // AI defense logic
       if (defensesUsed.ai < numDefenses) {
         const aiDefense = getAIDefenseTile({
           humanPos: positions.human,
@@ -64,20 +76,18 @@ export function useAITurn({
           return;
         }
       }
-      // AI move logic as normal
+      // AI move logic
       const move = getValidMoves(positions.ai, BOARD_SIZE, defenseTiles).filter(
         tile => tile.x >= 0 && tile.y >= 0 && tile.x < BOARD_SIZE && tile.y < BOARD_SIZE
       );
       const nextTile = move.length > 0 ? getAIMove(positions.ai, aiTarget, BOARD_SIZE, defenseTiles) : positions.ai;
       const question = getRandomQuestion(difficulty);
+
       setTimeout(() => {
         if (!winner) {
           setAIModalState({ question, targetTile: nextTile });
         }
       }, 650);
-    }
-    if (turn === "human" || winner) {
-      aiMovingRef.current = false;
     }
     // eslint-disable-next-line
   }, [
@@ -85,4 +95,11 @@ export function useAITurn({
     BOARD_SIZE, numDefenses, t, setDisableInput, setDefenseTiles, setDefensesUsed,
     toast, setTurn, setAIModalState, aiMovingRef, aiTarget, humanTarget, defenseTiles, surpriseTiles,
   ]);
+
+  // Extra: always reset blockers on unmount/game restart
+  useEffect(() => {
+    return () => {
+      aiMovingRef.current = false;
+    };
+  }, [aiMovingRef]);
 }

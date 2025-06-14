@@ -1,4 +1,5 @@
 
+
 import React from "react";
 import {
   Dialog,
@@ -59,7 +60,7 @@ const GameSettingsModal = ({
                 {t('settings.title')}
               </DialogTitle>
               <DialogDescription className="mb-0 text-center">
-                Adjust your preferences for sound, board size, and timer.
+                {t('settings.desc')}
               </DialogDescription>
             </div>
           </DialogHeader>
@@ -93,8 +94,8 @@ const GameSettingsModal = ({
                 className="w-full"
               />
               <div className="flex justify-between text-xs text-gray-400 mt-1">
-                <span>5x5</span>
-                <span>12x12</span>
+                <span>{t('settings.boardMin')}</span>
+                <span>{t('settings.boardMax')}</span>
               </div>
             </div>
             {/* Question Time Slider */}
@@ -113,14 +114,14 @@ const GameSettingsModal = ({
                 className="w-full"
               />
               <div className="flex justify-between text-xs text-gray-400 mt-1">
-                <span>6s</span>
-                <span>40s</span>
+                <span>{t('settings.timeMin')}</span>
+                <span>{t('settings.timeMax')}</span>
               </div>
             </div>
             {/* Surprise Count Slider */}
             <div className="flex flex-col gap-1">
               <Label htmlFor="surprise-count-slider" className="text-base font-semibold mb-1 select-none flex justify-between">
-                <span>Surprise Tiles</span>
+                <span>{t('settings.surpriseCount')}</span>
                 <span className="text-primary">{surpriseCount}</span>
               </Label>
               <Slider
@@ -133,14 +134,14 @@ const GameSettingsModal = ({
                 className="w-full"
               />
               <div className="flex justify-between text-xs text-gray-400 mt-1">
-                <span>1</span>
-                <span>8</span>
+                <span>{t('settings.surpriseMin')}</span>
+                <span>{t('settings.surpriseMax')}</span>
               </div>
             </div>
             {/* Defense Count Slider */}
             <div className="flex flex-col gap-1">
               <Label htmlFor="defense-count-slider" className="text-base font-semibold mb-1 select-none flex justify-between">
-                <span>{t('settings.defenseCount') || "Number of Defenses"}</span>
+                <span>{t('settings.defenseCount')}</span>
                 <span className="text-primary">{numDefenses}</span>
               </Label>
               <Slider
@@ -153,8 +154,8 @@ const GameSettingsModal = ({
                 className="w-full"
               />
               <div className="flex justify-between text-xs text-gray-400 mt-1">
-                <span>1</span>
-                <span>4</span>
+                <span>{t('settings.defenseMin')}</span>
+                <span>{t('settings.defenseMax')}</span>
               </div>
             </div>
           </div>
@@ -172,4 +173,3 @@ const GameSettingsModal = ({
 };
 
 export default GameSettingsModal;
-

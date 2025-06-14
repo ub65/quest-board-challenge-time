@@ -1,5 +1,7 @@
 
-import React from "react";
+import React, { useEffect, useRef } from "react";
+import SoundManager from "../SoundManager";
+import Confetti from "../Confetti";
 
 type GameBoardWinnerOverlayProps = {
   winner: "human" | "ai" | null;
@@ -16,9 +18,27 @@ const GameBoardWinnerOverlay: React.FC<GameBoardWinnerOverlayProps> = ({
   t,
   onRestart,
 }) => {
+  // Use ref to only play the effect on the "win" event
+  const shownRef = useRef(false);
+
+  useEffect(() => {
+    if (winner) {
+      shownRef.current = true;
+    } else {
+      shownRef.current = false;
+    }
+  }, [winner]);
+
   if (!winner) return null;
   return (
     <div className="absolute inset-0 bg-black/70 flex flex-col items-center justify-center rounded-lg animate-fade-in z-10">
+      {/* Confetti and Win Sound, only on winner open */}
+      {shownRef.current && (
+        <>
+          <Confetti />
+          <SoundManager trigger="win" />
+        </>
+      )}
       <div className="text-3xl font-bold text-white mb-3 drop-shadow-2xl">
         {winner === "human" ? t("game.youWin") : t("game.aiWins")}
       </div>
@@ -41,4 +61,3 @@ const GameBoardWinnerOverlay: React.FC<GameBoardWinnerOverlayProps> = ({
 };
 
 export default GameBoardWinnerOverlay;
-

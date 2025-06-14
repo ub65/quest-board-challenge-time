@@ -84,11 +84,20 @@ export default {
 					to: {
 						height: '0'
 					}
-				}
+				},
+				glow: {
+					'0%, 100%': {
+						boxShadow: '0 0 0 0px rgba(59,130,246,0.22), 0 0 6px 2px rgba(59,130,246,0.30)'
+					},
+					'50%': {
+						boxShadow: '0 0 0 3px rgba(59,130,246,0.55), 0 0 16px 4px rgba(59,130,246,0.46)'
+					}
+				},
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
-				'accordion-up': 'accordion-up 0.2s ease-out'
+				'accordion-up': 'accordion-up 0.2s ease-out',
+				'glow': 'glow 2.7s ease-in-out infinite',
 			}
 		}
 	},

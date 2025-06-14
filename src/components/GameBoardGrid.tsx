@@ -1,4 +1,3 @@
-
 import React, { useMemo } from "react";
 import { Gift, Shield } from "lucide-react";
 
@@ -109,7 +108,7 @@ const GameBoardGrid: React.FC<GameBoardGridProps> = ({
           text-sm md:text-lg font-bold flex items-center justify-center rounded-lg shadow
           transition-all duration-200
           ${bg} ${border}
-          ${highlight ? "hover:scale-110 ring-4 ring-primary/50 cursor-pointer animate-pulse duration-[4000ms]" : "cursor-default"}
+          ${highlight ? "hover:scale-110 ring-4 ring-primary/50 cursor-pointer animate-glow" : "cursor-default"}
           ${isHuman || isAI ? "text-white" : "text-gray-700"}
         `}
         style={{
@@ -202,4 +201,3 @@ const GameBoardGrid: React.FC<GameBoardGridProps> = ({
 };
 
 export default GameBoardGrid;
-

@@ -88,6 +88,14 @@ const translations = {
     "game.defense_no_surprise": "Cannot place a defense on a surprise tile",
     "game.defense_ai_placed": "AI placed a defense!",
     "game.defense_ai_msg": "AI blocked your path!",
+    
+    // WELCOME SCREEN
+    'welcome.startGame': 'Start Game',
+    'welcome.desc': 'A math board game for fun and learning!',
+    'welcome.playerName': 'Your Name',
+    'welcome.playerNamePlaceholder': 'Enter your name',
+    'welcome.settings': 'Settings',
+    'welcome.back': 'Back',
   },
   he: {
     // Game titles and UI
@@ -166,6 +174,14 @@ const translations = {
     "game.defense_no_surprise": "לא ניתן להציב מחסום על הפתעה",
     "game.defense_ai_placed": "הבינה הציבה מחסום!",
     "game.defense_ai_msg": "הבינה חסמה את דרכך!",
+    
+    // WELCOME SCREEN
+    'welcome.startGame': 'התחל משחק',
+    'welcome.desc': 'משחק לוח ללמידה עם כיף במתמטיקה!',
+    'welcome.playerName': 'השם שלך',
+    'welcome.playerNamePlaceholder': 'הכנס את שמך',
+    'welcome.settings': 'הגדרות',
+    'welcome.back': 'חזרה',
   },
 };
 

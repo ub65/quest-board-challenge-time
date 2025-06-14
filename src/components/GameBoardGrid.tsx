@@ -1,10 +1,11 @@
 
 import React from "react";
-import { Gift } from "lucide-react";
+import { Gift, Shield } from "lucide-react";
 
 type Tile = { x: number; y: number };
 type PlayerPositions = { human: Tile; ai: Tile };
 type SurpriseTile = Tile & { type: string; used: boolean };
+type DefenseTile = Tile;
 
 type GameBoardGridProps = {
   BOARD_SIZE: number;
@@ -18,8 +19,9 @@ type GameBoardGridProps = {
   onTileClick: (tile: Tile) => void;
   getValidMoves: (pos: Tile) => Tile[];
   positionsEqual: (a: Tile, b: Tile) => boolean;
-  // NEW
   surpriseTiles: SurpriseTile[];
+  // NEW
+  defenseTiles?: DefenseTile[];
 };
 
 const GameBoardGrid: React.FC<GameBoardGridProps> = ({
@@ -35,6 +37,7 @@ const GameBoardGrid: React.FC<GameBoardGridProps> = ({
   getValidMoves,
   positionsEqual,
   surpriseTiles,
+  defenseTiles = [],
 }) => {
   const renderTile = (x: number, y: number) => {
     const isHuman = positions.human.x === x && positions.human.y === y;
@@ -65,17 +68,23 @@ const GameBoardGrid: React.FC<GameBoardGridProps> = ({
     const surprise =
       surpriseTiles?.find(st => st.x === x && st.y === y && !st.used);
 
+    // NEW: Defense tile
+    const defense =
+      defenseTiles?.find(dt => dt.x === x && dt.y === y);
+
     const highlight =
       !winner &&
       turn === "human" &&
       getValidMoves(positions.human)
         .filter(t => t.x >= 0 && t.y >= 0 && t.x < BOARD_SIZE && t.y < BOARD_SIZE)
         .some((t) => t.x === x && t.y === y) &&
-      !isHuman && !isAI;
+      !isHuman && !isAI && !defense;
 
     return (
       <button
         key={x + "-" + y}
+        data-tile-x={x}
+        data-tile-y={y}
         className={`
           relative w-16 h-16 md:w-20 md:h-20 text-sm md:text-lg font-bold flex items-center justify-center rounded-lg shadow
           transition-all duration-200
@@ -98,11 +107,13 @@ const GameBoardGrid: React.FC<GameBoardGridProps> = ({
             ? "Your Target"
             : isAITarget
             ? "AI Target"
+            : defense
+            ? "Defense"
             : "Empty"
         }
       >
         <span>{content}</span>
-        {/* Show uncollected points if: not a start/end tile and not currently occupied */}
+        {/* Uncollected points */}
         {(content === "" &&
           !isHuman &&
           !isAI &&
@@ -116,10 +127,16 @@ const GameBoardGrid: React.FC<GameBoardGridProps> = ({
               {boardPoints[y][x]}
             </span>
           )}
-        {/* Surprise tile: if not occupied or target */}
-        {surprise && !isHuman && !isAI && !isHumanTarget && !isAITarget && (
+        {/* Surprise tile */}
+        {surprise && !isHuman && !isAI && !isHumanTarget && !isAITarget && !defense && (
           <span className="absolute top-1 left-1">
             <Gift size={22} className="text-pink-500 animate-bounce" />
+          </span>
+        )}
+        {/* Defense tile */}
+        {defense && !isHuman && !isAI && (
+          <span className="absolute top-1 right-1 z-10">
+            <Shield size={22} className="text-blue-900 drop-shadow" />
           </span>
         )}
         {isHumanTarget && (
@@ -152,3 +169,4 @@ const GameBoardGrid: React.FC<GameBoardGridProps> = ({
 };
 
 export default GameBoardGrid;
+

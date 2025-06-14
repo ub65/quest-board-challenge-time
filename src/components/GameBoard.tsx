@@ -1,10 +1,13 @@
+
 import React, { useEffect, useState, useRef } from "react";
 import TranslateQuestionModal from "./TranslateQuestionModal";
 import SoundManager from "./SoundManager";
 import { questionsByDifficulty } from "@/lib/questions";
 import GameSettingsModal from "./GameSettingsModal";
 import AITranslateQuestionModal from "./AITranslateQuestionModal";
-import LanguageSelector from "./LanguageSelector";
+import GameHeader from "./GameHeader";
+import GameScoreboard from "./GameScoreboard";
+import GameBoardGrid from "./GameBoardGrid";
 import { useLocalization } from "@/contexts/LocalizationContext";
 
 export type PlayerType = "human" | "ai";
@@ -12,24 +15,18 @@ export type PlayerType = "human" | "ai";
 const DEFAULT_BOARD_SIZE = 7;
 const DEFAULT_QUESTION_TIME = 14;
 
-const initialPositions = {
-  human: { x: 0, y: 0 },
-  ai: { x: DEFAULT_BOARD_SIZE - 1, y: DEFAULT_BOARD_SIZE - 1 }
-};
-
 type Tile = { x: number; y: number };
-type MoveState = null | { tile: any; question: any; resolve: (ok: boolean) => void };
 
 function positionsEqual(a: Tile, b: Tile) {
   return a.x === b.x && a.y === b.y;
 }
 
-function getValidMoves(pos: Tile): Tile[] {
+function getValidMoves(pos: Tile, BOARD_SIZE: number): Tile[] {
   const moves: Tile[] = [];
   if (pos.x > 0) moves.push({ x: pos.x - 1, y: pos.y });
-  if (pos.x < DEFAULT_BOARD_SIZE - 1) moves.push({ x: pos.x + 1, y: pos.y });
+  if (pos.x < BOARD_SIZE - 1) moves.push({ x: pos.x + 1, y: pos.y });
   if (pos.y > 0) moves.push({ x: pos.x, y: pos.y - 1 });
-  if (pos.y < DEFAULT_BOARD_SIZE - 1) moves.push({ x: pos.x, y: pos.y + 1 });
+  if (pos.y < BOARD_SIZE - 1) moves.push({ x: pos.x, y: pos.y + 1 });
   return moves;
 }
 
@@ -44,9 +41,8 @@ function getDistance(a: Tile, b: Tile) {
 }
 
 // Simple AI: move closer to target, always answers correctly.
-function getAIMove(pos: Tile, target: Tile) {
-  const moves = getValidMoves(pos);
-  // Pick move that minimizes distance
+function getAIMove(pos: Tile, target: Tile, BOARD_SIZE: number) {
+  const moves = getValidMoves(pos, BOARD_SIZE);
   let best = moves[0];
   let bestDist = getDistance(moves[0], target);
   for (const move of moves) {
@@ -74,12 +70,10 @@ const GameBoard = ({
   onRestart: () => void;
 }) => {
   const { t } = useLocalization();
-  
+
   // Settings state
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [soundEnabled, setSoundEnabled] = useState(true);
-
-  // New settings: question time and board size
   const [questionTime, setQuestionTime] = useState<number>(DEFAULT_QUESTION_TIME);
   const [boardSize, setBoardSize] = useState<number>(DEFAULT_BOARD_SIZE);
 
@@ -125,7 +119,6 @@ const GameBoard = ({
     setBoardPoints(generateRandomPoints(BOARD_SIZE));
   }, [BOARD_SIZE]);
 
-  // When a winner is set, immediately finish the game (clear all modals and block moves).
   useEffect(() => {
     if (winner) {
       setMoveState(null);
@@ -136,7 +129,6 @@ const GameBoard = ({
     }
   }, [winner]);
 
-  // Check for victory
   useEffect(() => {
     if (positions.human.x === humanTarget.x && positions.human.y === humanTarget.y) {
       setWinner("human");
@@ -147,7 +139,6 @@ const GameBoard = ({
     }
   }, [positions, humanTarget.x, humanTarget.y, aiTarget.x, aiTarget.y]);
 
-  // AI turn: only run if no winner and no modal already up.
   useEffect(() => {
     if (winner) {
       aiMovingRef.current = false;
@@ -158,14 +149,13 @@ const GameBoard = ({
       setDisableInput(true);
 
       // Prepare to ask a question before allowing AI to move
-      const move = getValidMoves(positions.ai).filter(
+      const move = getValidMoves(positions.ai, BOARD_SIZE).filter(
         tile => tile.x >= 0 && tile.y >= 0 && tile.x < BOARD_SIZE && tile.y < BOARD_SIZE
       );
-      const nextTile = move.length > 0 ? getAIMove(positions.ai, aiTarget) : positions.ai;
+      const nextTile = move.length > 0 ? getAIMove(positions.ai, aiTarget, BOARD_SIZE) : positions.ai;
 
       const question = getRandomQuestion(difficulty);
       setTimeout(() => {
-        // STOP if winner determined in a race condition
         if (!winner) setAIModalState({ question, targetTile: nextTile });
       }, 650);
     }
@@ -175,20 +165,15 @@ const GameBoard = ({
     // eslint-disable-next-line
   }, [turn, winner, positions.ai, aiModalState, BOARD_SIZE, difficulty]);
 
-  // AI modal submit: collect points, move, update score
   const handleAIModalSubmit = () => {
     if (!aiModalState || winner) return;
     setSound("move");
     setPositions((p) => {
       const { x, y } = aiModalState.targetTile;
-      // Collect points if not start tile and not already 0
       setBoardPoints((prev) => {
         if (prev[y][x] === 0) return prev;
-        // Don't collect on start (0,0) or human start (bottom right)
         if ((x === 0 && y === 0) || (x === BOARD_SIZE - 1 && y === BOARD_SIZE - 1)) return prev;
-        // Add to AI score
         setAIPoints((cur) => cur + prev[y][x]);
-        // Update points grid
         const next = prev.map((row) => [...row]);
         next[y][x] = 0;
         return next;
@@ -205,10 +190,9 @@ const GameBoard = ({
     }, 600);
   };
 
-  // Human move: pick tile -> answer question -> collect points
   const handleTileClick = async (tile: any) => {
     if (turn !== "human" || winner || disableInput) return;
-    const validMoves = getValidMoves(positions.human).filter(
+    const validMoves = getValidMoves(positions.human, BOARD_SIZE).filter(
       t => t.x >= 0 && t.y >= 0 && t.x < BOARD_SIZE && t.y < BOARD_SIZE
     );
     if (!validMoves.some((t) => positionsEqual(t, tile))) return;
@@ -219,17 +203,14 @@ const GameBoard = ({
     });
     setIsModalOpen(false);
     setMoveState(null);
-    if (winner) return; // abort moves after winning
+    if (winner) return;
     if (ok) {
       setPositions((p) => {
         const { x, y } = tile;
         setBoardPoints((prev) => {
           if (prev[y][x] === 0) return prev;
-          // Don't collect on start (0,0) or AI start (top left or bottom right depending on board)
           if ((x === 0 && y === 0) || (x === BOARD_SIZE - 1 && y === BOARD_SIZE - 1)) return prev;
-          // Add to human score
           setHumanPoints((cur) => cur + prev[y][x]);
-          // Update points grid
           const next = prev.map((row) => [...row]);
           next[y][x] = 0;
           return next;
@@ -244,96 +225,6 @@ const GameBoard = ({
     }
   };
 
-  // RENDERING: show collected points on each tile (uncollected), hidden if start/end or player's on it
-  const renderTile = (x: number, y: number) => {
-    const isHuman = positions.human.x === x && positions.human.y === y;
-    const isAI = positions.ai.x === x && positions.ai.y === y;
-    const isHumanTarget = x === humanTarget.x && y === humanTarget.y;
-    const isAITarget = x === aiTarget.x && y === aiTarget.y;
-    let bg = "bg-gray-200";
-    let border = "";
-    let content = "";
-    if (isHuman) {
-      bg = "bg-blue-600";
-      border = "border-4 border-blue-400";
-      content = "YOU";
-    } else if (isAI) {
-      bg = "bg-red-600";
-      border = "border-4 border-red-400";
-      content = "AI";
-    } else if (isHumanTarget) {
-      bg = "bg-green-300";
-      content = "";
-    } else if (isAITarget) {
-      bg = "bg-orange-200";
-      content = "";
-    }
-    const highlight =
-      !winner &&
-      turn === "human" &&
-      getValidMoves(positions.human)
-        .filter(t => t.x >= 0 && t.y >= 0 && t.x < BOARD_SIZE && t.y < BOARD_SIZE)
-        .some((t) => t.x === x && t.y === y) &&
-      !isHuman && !isAI;
-
-    return (
-      <button
-        key={x + "-" + y}
-        className={`
-        relative w-16 h-16 md:w-20 md:h-20 text-sm md:text-lg font-bold flex items-center justify-center rounded-lg shadow
-        transition-all duration-200
-        ${bg} ${border}
-        ${highlight ? "hover:scale-110 ring-4 ring-primary/50 cursor-pointer animate-pulse" : "cursor-default"}
-        ${isHuman || isAI ? "text-white" : "text-gray-700"}
-        `}
-        style={{
-          outline: isHumanTarget || isAITarget ? "2px dashed #6ee7b7" : undefined,
-          zIndex: isHuman || isAI ? 2 : 1,
-        }}
-        disabled={!highlight || disableInput || !!winner}
-        onClick={() => handleTileClick({ x, y })}
-        aria-label={
-          isHuman
-            ? "You"
-            : isAI
-            ? "AI"
-            : isHumanTarget
-            ? "Your Target"
-            : isAITarget
-            ? "AI Target"
-            : "Empty"
-        }
-      >
-        <span>{content}</span>
-        {/* Show uncollected points if: not a start/end tile and not currently occupied */}
-        {(content === "" &&
-          !isHuman &&
-          !isAI &&
-          !(
-            (x === 0 && y === 0) ||
-            (x === BOARD_SIZE - 1 && y === BOARD_SIZE - 1)
-          ) &&
-          boardPoints[y] &&
-          boardPoints[y][x] > 0) && (
-            <span className="absolute bottom-1 right-2 text-xs text-amber-700 font-medium bg-white/80 px-1 py-0.5 rounded shadow">
-              {boardPoints[y][x]}
-            </span>
-          )}
-        {isHumanTarget && (
-          <span className="absolute inset-1 rounded bg-green-400/40 border border-green-600 pointer-events-none">
-            <span className="sr-only">Your target</span>
-          </span>
-        )}
-        {isAITarget && (
-          <span className="absolute inset-1 rounded bg-orange-300/50 border border-orange-400 pointer-events-none">
-            <span className="sr-only">AI target</span>
-          </span>
-        )}
-      </button>
-    );
-  };
-
-  // On restart, preserve settings but reset game state, points and boardPoints
   const handleRestart = () => {
     setPositions({
       human: { x: 0, y: 0 },
@@ -353,38 +244,13 @@ const GameBoard = ({
 
   return (
     <div className="flex flex-col items-center">
-      {/* Respect sound setting: pass soundEnabled to SoundManager */}
       <SoundManager trigger={sound} />
-      {/* Settings button and modal */}
-      <div className="flex flex-row justify-between items-center w-full mb-4 gap-2">
-        <button
-          onClick={() => setSettingsOpen(true)}
-          className="px-3 py-2 rounded-md bg-gray-100 hover:bg-blue-200 text-blue-700 font-medium shadow transition-colors text-base"
-        >
-          {t('game.settings')}
-        </button>
-        <div className="flex flex-col">
-          <span className="font-semibold">{t('game.difficulty')}:</span>
-          <span className="capitalize">{t(`difficulty.${difficulty}`)}</span>
-        </div>
-        <button
-          onClick={handleRestart}
-          className="px-4 py-2 rounded-md bg-gray-200 shadow hover:bg-blue-200 font-bold transition-colors"
-        >
-          {t('game.restart')}
-        </button>
-      </div>
-      {/* POINTS DISPLAY - top of board */}
-      <div className="flex flex-row gap-8 mb-2 w-full justify-center text-lg font-semibold">
-        <div className="flex flex-row items-center gap-2">
-          <span className="w-7 rounded bg-blue-600 text-white flex items-center justify-center font-bold shadow-md">YOU</span>
-          <span className="text-blue-900 ml-2">{t('game.points')}: {humanPoints}</span>
-        </div>
-        <div className="flex flex-row items-center gap-2">
-          <span className="w-7 rounded bg-red-600 text-white flex items-center justify-center font-bold shadow-md">AI</span>
-          <span className="text-red-800 ml-2">{t('game.points')}: {aiPoints}</span>
-        </div>
-      </div>
+      <GameHeader
+        onSettingsOpen={() => setSettingsOpen(true)}
+        onRestart={handleRestart}
+        difficulty={difficulty}
+      />
+      <GameScoreboard humanPoints={humanPoints} aiPoints={aiPoints} />
       <GameSettingsModal
         open={settingsOpen}
         onOpenChange={setSettingsOpen}
@@ -396,17 +262,19 @@ const GameBoard = ({
         onQuestionTimeChange={v => setQuestionTime(Math.max(6, Math.min(40, v || DEFAULT_QUESTION_TIME)))}
       />
       <div className="relative my-3">
-        <div
-          className="grid gap-1"
-          style={{
-            gridTemplateRows: `repeat(${BOARD_SIZE}, minmax(0, 1fr))`,
-            gridTemplateColumns: `repeat(${BOARD_SIZE}, minmax(0, 1fr))`,
-          }}
-        >
-          {Array.from({ length: BOARD_SIZE }).map((_, y) =>
-            Array.from({ length: BOARD_SIZE }).map((_, x) => renderTile(x, y))
-          )}
-        </div>
+        <GameBoardGrid
+          BOARD_SIZE={BOARD_SIZE}
+          boardPoints={boardPoints}
+          positions={positions}
+          humanTarget={humanTarget}
+          aiTarget={aiTarget}
+          winner={winner}
+          turn={turn}
+          disableInput={disableInput}
+          onTileClick={handleTileClick}
+          getValidMoves={(pos) => getValidMoves(pos, BOARD_SIZE)}
+          positionsEqual={positionsEqual}
+        />
         {winner && (
           <div className="absolute inset-0 bg-black/70 flex flex-col items-center justify-center rounded-lg animate-fade-in z-10">
             <div className="text-3xl font-bold text-white mb-3 drop-shadow-2xl">
@@ -429,7 +297,6 @@ const GameBoard = ({
           </div>
         )}
       </div>
-      {/* Human question modal */}
       {moveState && !winner && (
         <TranslateQuestionModal
           isOpen={isModalOpen}
@@ -439,7 +306,6 @@ const GameBoard = ({
           onSubmit={moveState.resolve}
         />
       )}
-      {/* AI question modal */}
       {aiModalState && !winner && (
         <AITranslateQuestionModal
           isOpen={true}
@@ -467,5 +333,3 @@ const GameBoard = ({
 };
 
 export default GameBoard;
-
-// NOTE: This file is now quite long. Consider refactoring for maintainability!

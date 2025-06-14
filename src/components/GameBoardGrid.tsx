@@ -1,10 +1,10 @@
-import React, { useMemo } from "react";
-import { Gift, Shield } from "lucide-react";
 
-type Tile = { x: number; y: number };
+import React from "react";
+import GameTile from "./GameBoard/GameTile";
+import { useValidMoves } from "./GameBoard/useValidMoves";
+import { Tile, SurpriseTile, DefenseTile } from "./GameBoard/types";
+
 type PlayerPositions = { human: Tile; ai: Tile };
-type SurpriseTile = Tile & { type: string; used: boolean };
-type DefenseTile = Tile & { owner: "human" | "ai" };
 
 type GameBoardGridProps = {
   BOARD_SIZE: number;
@@ -39,143 +39,14 @@ const GameBoardGrid: React.FC<GameBoardGridProps> = ({
   defenseTiles = [],
   aiPendingTarget = null,
 }) => {
-  // Memoize the valid moves set per turn unless related state changes
-  const validMovesSet = useMemo(() => {
-    if (winner || turn !== "human") return new Set<string>();
-    return new Set(
-      getValidMoves(positions.human)
-        .filter(
-          (t) =>
-            t.x >= 0 &&
-            t.y >= 0 &&
-            t.x < BOARD_SIZE &&
-            t.y < BOARD_SIZE
-        )
-        .map((t) => `${t.x},${t.y}`)
-    );
-    // Only recalculate when these change:
-  }, [positions.human.x, positions.human.y, defenseTiles, BOARD_SIZE, winner, turn, getValidMoves]);
-
-  const renderTile = (x: number, y: number) => {
-    const isHuman = positions.human.x === x && positions.human.y === y;
-    const isAI = positions.ai.x === x && positions.ai.y === y;
-    const isHumanTarget = x === humanTarget.x && y === humanTarget.y;
-
-    let isAITarget =
-      !aiPendingTarget && x === aiTarget.x && y === aiTarget.y;
-
-    let bg = "bg-gray-200";
-    let border = "";
-    let content = "";
-
-    if (isHuman) {
-      bg = "bg-blue-600";
-      border = "border-4 border-blue-400";
-      content = "YOU";
-    } else if (isAI) {
-      bg = "bg-red-600";
-      border = "border-4 border-red-400";
-      content = "AI";
-    } else if (isHumanTarget) {
-      bg = "bg-green-300";
-      content = "";
-    } else if (isAITarget) {
-      bg = "bg-orange-200";
-      content = "";
-    }
-
-    const surprise =
-      surpriseTiles?.find(st => st.x === x && st.y === y && !st.used);
-
-    const defense = defenseTiles?.find(dt => dt.x === x && dt.y === y);
-
-    // Highlight only if tile is in validMovesSet and turn is human
-    const highlight =
-      !winner &&
-      turn === "human" &&
-      validMovesSet.has(`${x},${y}`) &&
-      !isHuman && !isAI && !defense;
-
-    return (
-      <button
-        key={x + "-" + y}
-        data-tile-x={x}
-        data-tile-y={y}
-        className={`
-          relative 
-          w-[10vw] h-[10vw] min-w-[42px] min-h-[42px]
-          md:w-16 md:h-16 lg:w-20 lg:h-20
-          text-sm md:text-lg font-bold flex items-center justify-center rounded-lg shadow
-          transition-all duration-200
-          ${bg} ${border}
-          ${highlight ? "hover:scale-110 ring-4 ring-primary/50 cursor-pointer animate-glow" : "cursor-default"}
-          ${isHuman || isAI ? "text-white" : "text-gray-700"}
-        `}
-        style={{
-          outline: isHumanTarget || isAITarget ? "2px dashed #6ee7b7" : undefined,
-          zIndex: isHuman || isAI ? 2 : 1,
-          aspectRatio: "1 / 1",
-          maxWidth: "64px",
-          maxHeight: "64px",
-        }}
-        disabled={disableInput || !!winner}
-        onClick={() => onTileClick({ x, y })}
-        aria-label={
-          isHuman
-            ? "You"
-            : isAI
-            ? "AI"
-            : isHumanTarget
-            ? "Your Target"
-            : isAITarget
-            ? "AI Target"
-            : defense
-            ? defense.owner === "human" ? "Human Defense" : "AI Defense"
-            : "Empty"
-        }
-      >
-        <span>{content}</span>
-        {(content === "" &&
-          !isHuman &&
-          !isAI &&
-          !(
-            (x === 0 && y === 0) ||
-            (x === BOARD_SIZE - 1 && y === BOARD_SIZE - 1)
-          ) &&
-          boardPoints[y] &&
-          boardPoints[y][x] > 0) && (
-            <span className="absolute bottom-1 right-2 text-xs text-amber-700 font-medium bg-white/80 px-1 py-0.5 rounded shadow">
-              {boardPoints[y][x]}
-            </span>
-        )}
-        {/* Surprise tile */}
-        {surprise && !isHuman && !isAI && !isHumanTarget && !isAITarget && !defense && (
-          <span className="absolute top-1 left-1">
-            <Gift size={22} className="text-pink-500 animate-bounce" />
-          </span>
-        )}
-        {/* Defense tile */}
-        {defense && !isHuman && !isAI && (
-          <span className={`absolute top-1 right-1 z-10 ${defense.owner === "human" ? "" : ""}`}>
-            <Shield
-              size={22}
-              className={defense.owner === "human" ? "text-blue-900 drop-shadow" : "text-red-800 drop-shadow"}
-            />
-          </span>
-        )}
-        {isHumanTarget && (
-          <span className="absolute inset-1 rounded bg-green-400/40 border border-green-600 pointer-events-none">
-            <span className="sr-only">Your target</span>
-          </span>
-        )}
-        {isAITarget && (
-          <span className="absolute inset-1 rounded bg-orange-300/50 border border-orange-400 pointer-events-none">
-            <span className="sr-only">AI target</span>
-          </span>
-        )}
-      </button>
-    );
-  };
+  const validMovesSet = useValidMoves({
+    turn,
+    winner,
+    BOARD_SIZE,
+    positions,
+    defenseTiles,
+    getValidMoves,
+  });
 
   return (
     <div
@@ -193,7 +64,42 @@ const GameBoardGrid: React.FC<GameBoardGridProps> = ({
         }}
       >
         {Array.from({ length: BOARD_SIZE }).map((_, y) =>
-          Array.from({ length: BOARD_SIZE }).map((_, x) => renderTile(x, y))
+          Array.from({ length: BOARD_SIZE }).map((_, x) => {
+            const surprise =
+              surpriseTiles?.find(st => st.x === x && st.y === y && !st.used);
+            const defense = defenseTiles?.find(dt => dt.x === x && dt.y === y);
+
+            // Highlight only if tile is in validMovesSet and turn is human
+            const highlight =
+              !winner &&
+              turn === "human" &&
+              validMovesSet.has(`${x},${y}`) &&
+              !(positions.human.x === x && positions.human.y === y) &&
+              !(positions.ai.x === x && positions.ai.y === y) &&
+              !defense;
+
+            return (
+              <GameTile
+                key={x + "-" + y}
+                x={x}
+                y={y}
+                BOARD_SIZE={BOARD_SIZE}
+                boardPoints={boardPoints}
+                positions={positions}
+                humanTarget={humanTarget}
+                aiTarget={aiTarget}
+                winner={winner}
+                turn={turn}
+                disableInput={disableInput}
+                highlight={highlight}
+                onTileClick={onTileClick}
+                positionsEqual={positionsEqual}
+                surprise={surprise}
+                defense={defense}
+                aiPendingTarget={aiPendingTarget}
+              />
+            );
+          })
         )}
       </div>
     </div>

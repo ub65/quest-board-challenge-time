@@ -27,6 +27,7 @@ import { canPlaceDefenseHere } from "./GameBoard/defenseHelpers";
 import { useGameSettings } from "./GameBoard/useGameSettings";
 import { useGameBoardState } from "./GameBoard/useGameBoardState";
 import GameBoardArea from "./GameBoard/GameBoardArea";
+import { useDefenseModeHandler } from "./GameBoard/useDefenseModeHandler";
 
 const GameBoard = ({
   difficulty: initialDifficulty,
@@ -92,7 +93,7 @@ const GameBoard = ({
     setDefenseTiles([]);
     setDefensesUsed({ human: 0, ai: 0 });
     setDefenseMode(false);
-  }, [boardSize, numSurprises, numDefenses]);
+  }, [boardSize, numSurprises, numDefenses, setPositions, setWinner, setTurn, setHumanPoints, setAIPoints, setBoardPoints, setSurpriseTiles, setDefenseTiles, setDefensesUsed, setDefenseMode]);
 
   useEffect(() => {
     if (winner) {
@@ -103,7 +104,7 @@ const GameBoard = ({
       aiMovingRef.current = false;
       setDefenseMode(false);
     }
-  }, [winner]);
+  }, [winner, setMoveState, setAIModalState, setIsModalOpen, setDisableInput, setDefenseMode]);
 
   useEffect(() => {
     if (positions.human.x === humanTarget.x && positions.human.y === humanTarget.y) {
@@ -113,7 +114,7 @@ const GameBoard = ({
       setWinner("ai");
       setSound("win");
     }
-  }, [positions, humanTarget.x, humanTarget.y, aiTarget.x, aiTarget.y]);
+  }, [positions, humanTarget.x, humanTarget.y, aiTarget.x, aiTarget.y, setWinner, setSound]);
 
   // AI turn, including defense! (before question)
   useAITurn({
@@ -153,29 +154,13 @@ const GameBoard = ({
     toast,
   });
 
-  // Refactored: HUD Actions
-  function handlePlaceDefenseButton() {
-    setDefenseMode(true);
-    toast({
-      title: t("game.defense_mode_on"),
-      description: t("game.defense_mode_on_desc"),
-      duration: 2200,
-    });
-    const handler = (ev: MouseEvent) => {
-      if (!(ev.target instanceof HTMLElement)) return;
-      let tileDiv = ev.target.closest("button[data-tile-x]");
-      if (!tileDiv) return;
-      const x = parseInt(tileDiv.getAttribute("data-tile-x") || "-1");
-      const y = parseInt(tileDiv.getAttribute("data-tile-y") || "-1");
-      if (x < 0 || y < 0) return;
-      handleDefenseClick({ x, y });
-      document.removeEventListener("click", handler, true);
-      setDefenseMode(false);
-    };
-    setTimeout(() => {
-      document.addEventListener("click", handler, true);
-    }, 100);
-  }
+  // HUD Actions (defense mode) - moved to custom hook
+  const { startDefensePlacement } = useDefenseModeHandler({
+    t,
+    toast,
+    setDefenseMode,
+    handleDefenseClick,
+  });
 
   // Refactored: human move handler now receives surpriseHandler
   const { handleTileClick } = useHumanMoveHandler({
@@ -293,7 +278,7 @@ const GameBoard = ({
       aiPoints={aiPoints}
       numDefenses={numDefenses}
       defensesUsed={defensesUsed}
-      onPlaceDefense={handlePlaceDefenseButton}
+      onPlaceDefense={startDefensePlacement}
       defenseMode={defenseMode}
       boardSize={BOARD_SIZE}
       boardPoints={boardPoints}

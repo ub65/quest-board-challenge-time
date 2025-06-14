@@ -294,6 +294,7 @@ const GameBoard = ({
     setIsModalOpen(false);
     setMoveState(null);
     if (winner) return;
+
     if (ok) {
       setPositions((p) => {
         const { x, y } = tile;
@@ -311,8 +312,11 @@ const GameBoard = ({
       // Surprise tile handling (after position is updated)
       setTimeout(() => {
         const doFreeMove = handleSurprise(tile, "human");
-        if (!doFreeMove) setTurn("ai");
-        // Else: free move, keep turn as human
+        // NEW: After surprise, only allow another move for human if doFreeMove (i.e. "free" surprise)
+        if (!doFreeMove) {
+          setTurn("ai");
+        }
+        // If doFreeMove === true, don't change turn: human gets another move.
       }, 100);
     } else {
       setSound("wrong");
@@ -338,12 +342,11 @@ const GameBoard = ({
     });
     // Surprise tile logic: after AI moves
     setTimeout(() => {
-      const doFreeMove = handleSurprise(aiModalState.targetTile, "ai");
+      handleSurprise(aiModalState.targetTile, "ai");
       setAIModalState(null);
       setTimeout(() => {
         if (!winner) {
-          // --------- CHANGE HERE -----------
-          // No matter if doFreeMove is true, AI should NOT move again.
+          // After the AI answers and any surprise, ALWAYS give turn back to human.
           setTurn("human");
           setDisableInput(false);
           aiMovingRef.current = false;

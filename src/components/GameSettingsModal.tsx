@@ -1,4 +1,3 @@
-
 import React from "react";
 import {
   Dialog,
@@ -17,6 +16,9 @@ import LanguageSelector from "./LanguageSelector";
 import { useLocalization } from "@/contexts/LocalizationContext";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
+import GameSettingsDifficultySelector from "./GameSettingsDifficultySelector";
+import GameSettingsSoundToggle from "./GameSettingsSoundToggle";
+import GameSettingsSlider from "./GameSettingsSlider";
 
 type GameSettingsModalProps = {
   open: boolean;
@@ -75,131 +77,61 @@ const GameSettingsModal = ({
             </div>
           </DialogHeader>
           <div className="py-2 flex flex-col gap-7">
-
             <LanguageSelector />
-
-            {/* Difficulty Setting */}
-            <div>
-              <Label className="text-base font-semibold mb-2 block">{t("game.difficulty")}</Label>
-              <div className="flex gap-2 justify-between flex-wrap">
-                {difficulties.map((d) => (
-                  <button
-                    key={d.value}
-                    type="button"
-                    onClick={() => onDifficultyChange(d.value as "easy" | "medium" | "hard")}
-                    className={cn(
-                      "flex-1 min-w-0 max-w-[110px] sm:max-w-[120px] px-0 py-0 flex items-stretch",
-                    )}
-                    style={{ flexBasis: 0 }} // ensures even distribution even with max-width
-                  >
-                    <span
-                      className={cn(
-                        "w-full h-10 sm:h-11 rounded-md font-bold shadow ring-primary transition-all text-sm flex items-center justify-center border select-none px-2",
-                        d.color,
-                        difficulty === d.value
-                          ? "ring-2 ring-offset-2 scale-105 bg-opacity-80"
-                          : "hover:scale-105 bg-opacity-80"
-                      )}
-                    >
-                      {t(d.labelKey)}
-                    </span>
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Sound Toggle */}
-            <div className="flex items-center justify-between gap-4 px-1">
-              <Label htmlFor="sound-toggle" className="text-base cursor-pointer select-none">
-                {t('settings.sound')}
-              </Label>
-              <Switch
-                id="sound-toggle"
-                checked={soundEnabled}
-                onCheckedChange={onSoundChange}
-                className="scale-110"
-              />
-            </div>
-            {/* Board Size Slider */}
-            <div className="flex flex-col gap-1">
-              <Label htmlFor="board-size-slider" className="text-base font-semibold mb-1 select-none flex justify-between">
-                <span>{t('settings.boardSize')}</span>
-                <span className="text-primary">{boardSize}x{boardSize}</span>
-              </Label>
-              <Slider
-                id="board-size-slider"
-                min={5}
-                max={12}
-                step={1}
-                value={[boardSize]}
-                onValueChange={([val]) => onBoardSizeChange(val)}
-                className="w-full"
-              />
-              <div className="flex justify-between text-xs text-gray-400 mt-1">
-                <span>{t('settings.boardMin')}</span>
-                <span>{t('settings.boardMax')}</span>
-              </div>
-            </div>
-            {/* Question Time Slider */}
-            <div className="flex flex-col gap-1">
-              <Label htmlFor="question-time-slider" className="text-base font-semibold mb-1 select-none flex justify-between">
-                <span>{t('settings.questionTime')}</span>
-                <span className="text-primary">{questionTime} s</span>
-              </Label>
-              <Slider
-                id="question-time-slider"
-                min={6}
-                max={40}
-                step={1}
-                value={[questionTime]}
-                onValueChange={([val]) => onQuestionTimeChange(val)}
-                className="w-full"
-              />
-              <div className="flex justify-between text-xs text-gray-400 mt-1">
-                <span>{t('settings.timeMin')}</span>
-                <span>{t('settings.timeMax')}</span>
-              </div>
-            </div>
-            {/* Surprise Count Slider */}
-            <div className="flex flex-col gap-1">
-              <Label htmlFor="surprise-count-slider" className="text-base font-semibold mb-1 select-none flex justify-between">
-                <span>{t('settings.surpriseCount')}</span>
-                <span className="text-primary">{surpriseCount}</span>
-              </Label>
-              <Slider
-                id="surprise-count-slider"
-                min={1}
-                max={8}
-                step={1}
-                value={[surpriseCount]}
-                onValueChange={([val]) => onSurpriseCountChange(val)}
-                className="w-full"
-              />
-              <div className="flex justify-between text-xs text-gray-400 mt-1">
-                <span>{t('settings.surpriseMin')}</span>
-                <span>{t('settings.surpriseMax')}</span>
-              </div>
-            </div>
-            {/* Defense Count Slider */}
-            <div className="flex flex-col gap-1">
-              <Label htmlFor="defense-count-slider" className="text-base font-semibold mb-1 select-none flex justify-between">
-                <span>{t('settings.defenseCount')}</span>
-                <span className="text-primary">{numDefenses}</span>
-              </Label>
-              <Slider
-                id="defense-count-slider"
-                min={1}
-                max={4}
-                step={1}
-                value={[numDefenses]}
-                onValueChange={([val]) => onNumDefensesChange(val)}
-                className="w-full"
-              />
-              <div className="flex justify-between text-xs text-gray-400 mt-1">
-                <span>{t('settings.defenseMin')}</span>
-                <span>{t('settings.defenseMax')}</span>
-              </div>
-            </div>
+            <GameSettingsDifficultySelector
+              difficulty={difficulty}
+              onDifficultyChange={onDifficultyChange}
+            />
+            <GameSettingsSoundToggle
+              soundEnabled={soundEnabled}
+              onSoundChange={onSoundChange}
+            />
+            <GameSettingsSlider
+              id="board-size-slider"
+              labelKey="settings.boardSize"
+              min={5}
+              max={12}
+              step={1}
+              value={boardSize}
+              onValueChange={onBoardSizeChange}
+              displayValue={`${boardSize}x${boardSize}`}
+              minLabelKey="settings.boardMin"
+              maxLabelKey="settings.boardMax"
+            />
+            <GameSettingsSlider
+              id="question-time-slider"
+              labelKey="settings.questionTime"
+              min={6}
+              max={40}
+              step={1}
+              value={questionTime}
+              onValueChange={onQuestionTimeChange}
+              suffix="s"
+              minLabelKey="settings.timeMin"
+              maxLabelKey="settings.timeMax"
+            />
+            <GameSettingsSlider
+              id="surprise-count-slider"
+              labelKey="settings.surpriseCount"
+              min={1}
+              max={8}
+              step={1}
+              value={surpriseCount}
+              onValueChange={onSurpriseCountChange}
+              minLabelKey="settings.surpriseMin"
+              maxLabelKey="settings.surpriseMax"
+            />
+            <GameSettingsSlider
+              id="defense-count-slider"
+              labelKey="settings.defenseCount"
+              min={1}
+              max={4}
+              step={1}
+              value={numDefenses}
+              onValueChange={onNumDefensesChange}
+              minLabelKey="settings.defenseMin"
+              maxLabelKey="settings.defenseMax"
+            />
           </div>
         </ScrollArea>
         <DialogFooter className="pt-2">

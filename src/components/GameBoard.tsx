@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState, useRef } from "react";
 import TranslateQuestionModal from "./TranslateQuestionModal";
 import SoundManager from "./SoundManager";
@@ -101,16 +102,19 @@ const GameBoard = ({
   const aiTarget = { x: 0, y: 0 };
   const humanTarget = { x: BOARD_SIZE - 1, y: BOARD_SIZE - 1 };
 
-  // State initialization now uses extracted helpers
-  const [positions, setPositions] = useState(() => getInitialPositions(DEFAULT_BOARD_SIZE));
-  const [boardPoints, setBoardPoints] = useState<number[][]>(getInitialPoints);
-  const [surpriseTiles, setSurpriseTiles] = useState(getInitialSurprises);
-  const [defenseTiles, setDefenseTiles] = useState(getInitialDefenses);
-  const [defensesUsed, setDefensesUsed] = useState(getInitialDefensesUsed);
+  // Removed duplicate state initializations below (these caused the double definition error)
+  // const [positions, setPositions] = useState(() => getInitialPositions(DEFAULT_BOARD_SIZE));
+  // const [boardPoints, setBoardPoints] = useState<number[][]>(getInitialPoints);
+  // const [surpriseTiles, setSurpriseTiles] = useState(getInitialSurprises);
+  // const [defenseTiles, setDefenseTiles] = useState(getInitialDefenses);
+  // const [defensesUsed, setDefensesUsed] = useState(getInitialDefensesUsed);
 
   // On game reset (board size/settings change)
   useEffect(() => {
-    setPositions(getInitialPositions(boardSize));
+    setPositions({
+      human: { x: 0, y: 0 },
+      ai: { x: boardSize - 1, y: boardSize - 1 }
+    });
     setWinner(null);
     setTurn("human");
     setHumanPoints(0);
@@ -413,3 +417,4 @@ const GameBoard = ({
 export default GameBoard;
 
 // NOTE: This file was refactored to split out GameBoardHud, GameBoardModals, and move handlers/hook logic for maintainability.
+

@@ -70,6 +70,24 @@ const translations = {
     'surprise.steal.ai': 'AI stole {n} points from you!',
     'surprise.extra.self': 'Bonus! You got {n} extra points!',
     'surprise.extra.ai': 'AI got {n} extra points!',
+    
+    // DEFENSES
+    "game.defenses_left": "Your defenses left",
+    "game.ai_defenses_left": "AI defenses left",
+    "game.defense_place_btn": "Place Defense",
+    "game.defense_mode_on": "Defense Mode",
+    "game.defense_mode_on_desc": "Select a tile (not start/end, not occupied, not surprise) to block the AI.",
+    "game.defense_mode_select": "Select a tile to place your defense...",
+    "game.defense_placed": "Defense Placed",
+    "game.defense_success": "AI cannot move to this tile!",
+    "game.defense_fail": "Invalid defense placement",
+    "game.defense_already_used": "You have used all your defenses",
+    "game.defense_no_corner": "Cannot place defense on start or target tiles",
+    "game.defense_no_player": "Cannot place defense on player tiles",
+    "game.defense_already_here": "There's already a defense here",
+    "game.defense_no_surprise": "Cannot place a defense on a surprise tile",
+    "game.defense_ai_placed": "AI placed a defense!",
+    "game.defense_ai_msg": "AI blocked your path!",
   },
   he: {
     // Game titles and UI
@@ -130,6 +148,24 @@ const translations = {
     'surprise.steal.ai': 'הבינה גנבה {n} נקודות ממך!',
     'surprise.extra.self': 'בונוס! קיבלת {n} נקודות נוספות!',
     'surprise.extra.ai': 'הבינה קיבלה {n} נקודות נוספות!',
+    
+    // DEFENSES
+    "game.defenses_left": "מספר מחסומים שנותרו לך",
+    "game.ai_defenses_left": "מחסומי הבינה שנותרו",
+    "game.defense_place_btn": "הצב מחסום",
+    "game.defense_mode_on": "מצב מחסום",
+    "game.defense_mode_on_desc": "בחר משבצת (לא פינה, לא תפוסה, לא הפתעה) כדי לחסום את הבינה.",
+    "game.defense_mode_select": "בחר משבצת להצבת המחסום...",
+    "game.defense_placed": "המחסום הוצב",
+    "game.defense_success": "הבינה לא יכולה לעבור למשבצת זו!",
+    "game.defense_fail": "לא ניתן להציב מחסום כאן",
+    "game.defense_already_used": "ניצלת כבר את כל המחסומים שלך",
+    "game.defense_no_corner": "לא ניתן להציב מחסום בפינות",
+    "game.defense_no_player": "לא ניתן להציב מחסום על שחקן",
+    "game.defense_already_here": "כבר קיים מחסום כאן",
+    "game.defense_no_surprise": "לא ניתן להציב מחסום על הפתעה",
+    "game.defense_ai_placed": "הבינה הציבה מחסום!",
+    "game.defense_ai_msg": "הבינה חסמה את דרכך!",
   },
 };
 

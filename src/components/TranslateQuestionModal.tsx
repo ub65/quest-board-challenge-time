@@ -36,7 +36,6 @@ const TranslateQuestionModal = ({
   const { t } = useLocalization();
   const [selected, setSelected] = useState<number | null>(null);
   const [shuffled, setShuffled] = useState<{ answer: string; idx: number }[]>([]);
-  const [localTimeLimit, setLocalTimeLimit] = useState(timeLimit);
   const [time, setTime] = useState(timeLimit);
   const [answered, setAnswered] = useState<boolean>(false);
 
@@ -48,7 +47,6 @@ const TranslateQuestionModal = ({
       }));
       setShuffled(shuffle(arr));
       setSelected(null);
-      setLocalTimeLimit(timeLimit);
       setTime(timeLimit);
       setAnswered(false);
     }
@@ -64,12 +62,6 @@ const TranslateQuestionModal = ({
     const tmo = setTimeout(() => setTime((s) => s - 1), 1000);
     return () => clearTimeout(tmo);
   }, [time, isOpen, answered, onSubmit]);
-
-  // Handle slider change
-  const handleSliderChange = ([val]: number[]) => {
-    setLocalTimeLimit(val);
-    setTime(val);
-  };
 
   const handlePick = (pickedIdx: number) => {
     if (answered) return;
@@ -88,19 +80,18 @@ const TranslateQuestionModal = ({
       style={{ pointerEvents: isOpen ? "auto" : "none" }}
     >
       <div className="w-full max-w-lg bg-white rounded-lg shadow-lg p-6 animate-scale-in flex flex-col">
-        {/* New Time Slider */}
+        {/* Time Remaining Slider - readonly, just shows current time left */}
         <div className="flex flex-col gap-2 mb-5">
           <label className="font-semibold flex items-center justify-between select-none">
-            <span>{t('question.timeLimit') || "Time limit"}</span>
-            <span className="ml-2 text-primary">{localTimeLimit}s</span>
+            <span>{t('question.timeLeft') || "Time left"}</span>
+            <span className="ml-2 text-primary">{time}s</span>
           </label>
           <Slider
             min={MIN_TIME}
             max={MAX_TIME}
             step={1}
-            value={[localTimeLimit]}
-            onValueChange={handleSliderChange}
-            disabled={answered}
+            value={[time]}
+            disabled
             className="w-full"
           />
           <div className="flex justify-between text-xs text-gray-400 mt-1">
@@ -163,3 +154,4 @@ const TranslateQuestionModal = ({
 };
 
 export default TranslateQuestionModal;
+

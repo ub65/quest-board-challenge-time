@@ -121,7 +121,11 @@ const MathQuestionModal = ({
         </div>
         {/* Math question prompt */}
         <div className="mb-2 text-lg font-bold">{t('question.answerMath') || "Solve the math problem"}</div>
-        <div className="mb-6 text-2xl text-primary font-semibold select-none">
+        <div
+          className="mb-6 text-2xl text-primary font-semibold select-none"
+          dir="ltr" // Force the math prompt to render LTR
+          style={{ textAlign: language === "he" ? "right" : undefined }}
+        >
           {question.prompt}
         </div>
         <div className="flex flex-col gap-4">
@@ -148,7 +152,9 @@ const MathQuestionModal = ({
               onClick={() => handlePick(i)}
               style={{ direction }}
             >
-              {answer}
+              <span dir="ltr" style={{ display: "inline-block", minWidth: 40 }}>
+                {answer}
+              </span>
             </button>
           ))}
         </div>
@@ -165,4 +171,3 @@ const MathQuestionModal = ({
 };
 
 export default MathQuestionModal;
-

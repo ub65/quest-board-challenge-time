@@ -17,9 +17,14 @@ const Index = () => {
   const [difficulty, setDifficulty] = useState<"easy" | "medium" | "hard">("easy");
   const [gameKey, setGameKey] = useState(0);
 
+  // Refactor steps for clarity
+  // mode: which mode user picked, step: UI progression
   const [step, setStep] = useState<"mode" | "welcome" | "game" | "matchmaking">("mode");
   const [settingsOpen, setSettingsOpen] = useState(false);
+
+  // Reset player name when changing mode, to ensure no confusion
   const [playerName, setPlayerName] = useState("");
+
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [questionTime, setQuestionTime] = useState(20);
   const [boardSize, setBoardSize] = useState(8);
@@ -29,32 +34,37 @@ const Index = () => {
   const [mode, setMode] = useState<"ai" | "online" | null>(null);
   const [onlineGame, setOnlineGame] = useState<OnlineGameState>(null);
 
+  // When "Restart" go back to root state
   const handleRestart = () => {
     setGameKey((k) => k + 1);
     setStep("mode");
     setMode(null);
     setOnlineGame(null);
+    setPlayerName(""); // reset name for next new game
   };
 
-  // Handle mode selection
+  // Mode selection logic
   const handleSelectMode = (selectedMode: "ai" | "online") => {
     setMode(selectedMode);
+    setPlayerName(""); // reset name in both flows, to ensure clean screen
 
     if (selectedMode === "ai") {
+      // Start AI welcome flow
       setStep("welcome");
     } else if (selectedMode === "online") {
-      // Go to "matchmaking" state: searching for opponent
+      // Enter "matchmaking" state: searching for opponent
       setStep("matchmaking");
+      // Simulate matchmaking delay, then match and enter game
       setTimeout(() => {
-        // Simulate being matched: assign a random game code and role HOST
+        // Generate a random game code and assign role "host"
         const code = Math.random().toString(36).substring(2, 8).toUpperCase();
         setOnlineGame({ gameCode: code, role: "host" });
         setStep("game");
-      }, 1600); // simulate matchmaking delay
+      }, 1600);
     }
   };
 
-  // Mode selection screen
+  // 1. Main mode SELECTOR
   if (step === "mode") {
     return (
       <GameModeSelector
@@ -64,7 +74,7 @@ const Index = () => {
     );
   }
 
-  // "Searching for opponent" screen for New Game/Online
+  // 2. Online: "Searching for another player..." (matchmaking)
   if (mode === "online" && step === "matchmaking") {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen w-full bg-gradient-to-br from-sky-100 via-blue-200 to-violet-100 px-4 animate-fade-in">
@@ -78,6 +88,8 @@ const Index = () => {
           onClick={() => {
             setMode(null);
             setStep("mode");
+            setOnlineGame(null);
+            setPlayerName(""); // clear name when returning to mode select
           }}
         >
           {t("general.back") || "Back"}
@@ -86,7 +98,7 @@ const Index = () => {
     );
   }
 
-  // Online: when onlineGame is set, show board
+  // 3. Online: When matched, show board (with game code & role)
   if (mode === "online" && step === "game" && onlineGame) {
     return (
       <div className="w-full max-w-3xl animate-fade-in">
@@ -102,7 +114,7 @@ const Index = () => {
     );
   }
 
-  // AI flow (welcome -> game)
+  // 4. AI flow: Welcome, then game
   return (
     <div
       className={`
@@ -126,7 +138,8 @@ const Index = () => {
         difficulty={difficulty}
         onDifficultyChange={setDifficulty}
       />
-      {step === "welcome" && (
+      {/* Show welcome only in AI mode */}
+      {step === "welcome" && mode === "ai" && (
         <WelcomeScreen
           language={language}
           playerName={playerName}
@@ -136,6 +149,7 @@ const Index = () => {
           onSettings={() => setSettingsOpen(true)}
         />
       )}
+      {/* AI game */}
       {step === "game" && mode === "ai" && (
         <div className="w-full max-w-3xl animate-fade-in">
           <GameBoard
@@ -151,3 +165,4 @@ const Index = () => {
 };
 
 export default Index;
+

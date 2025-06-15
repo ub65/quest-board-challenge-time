@@ -1,4 +1,3 @@
-
 import type { Config } from "tailwindcss";
 
 export default {
@@ -85,16 +84,18 @@ export default {
 					to: {
 						height: '0'
 					}
+				},
+				'flash': {
+					'0%, 100%': { opacity: '1' },
+					'50%': { opacity: '0.1' }
 				}
-				// Removed the 'glow' keyframes here
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
-				'accordion-up': 'accordion-up 0.2s ease-out'
-				// Removed the 'glow' animation here
+				'accordion-up': 'accordion-up 0.2s ease-out',
+				'flash': 'flash 1s steps(2, jump-none) infinite'
 			}
 		}
 	},
 	plugins: [require("tailwindcss-animate")],
 } satisfies Config;
-

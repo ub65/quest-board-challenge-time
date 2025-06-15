@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Gift, Shield } from "lucide-react";
 import { Tile, SurpriseTile, DefenseTile } from "./types";
+import { useLocalization } from "@/contexts/LocalizationContext";
 
 type Props = {
   x: number;
@@ -39,6 +40,8 @@ const GameTile: React.FC<Props> = ({
   defense,
   aiPendingTarget
 }) => {
+  const { t, language } = useLocalization();
+
   const isHuman = positions.human.x === x && positions.human.y === y;
   const isAI = positions.ai.x === x && positions.ai.y === y;
   const isHumanTarget = x === humanTarget.x && y === humanTarget.y;
@@ -68,7 +71,7 @@ const GameTile: React.FC<Props> = ({
       "shadow-[0_2px_10px_-3px_rgba(37,99,235,0.22)] dark:shadow-[0_2px_24px_-6px_rgba(56,189,248,0.22)]";
     fontClass =
       "font-mono font-bold text-blue-800 dark:text-blue-200 tracking-widest";
-    content = "YOU";
+    content = t("game.youLabel"); // Use translated value
   } else if (isAI) {
     bg =
       "bg-orange-100 dark:bg-orange-900";
@@ -191,7 +194,7 @@ const GameTile: React.FC<Props> = ({
       onClick={() => onTileClick({ x, y })}
       aria-label={
         isHuman
-          ? "You"
+          ? t("game.youLabel")
           : isAI
           ? "AI"
           : isHumanTarget

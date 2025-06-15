@@ -1,4 +1,3 @@
-
 import { Gift } from "lucide-react";
 import { useCallback } from "react";
 import type { Tile, PlayerType, SurpriseTile } from "./types";
@@ -28,7 +27,7 @@ export function useSurprise({
   toast,
 }: UseSurpriseProps) {
   return useCallback(
-    (tile: Tile, player: PlayerType) => {
+    (tile, player) => {
       const sIdx = surpriseTiles.findIndex(
         (st) => st.x === tile.x && st.y === tile.y && !st.used
       );
@@ -102,7 +101,10 @@ export function useSurprise({
         description: (
           <span className="flex items-center gap-2">
             <Gift className="inline-block text-pink-500" size={24} />
-            {message}
+            <span>
+              <span className="font-semibold">🎉 Surprise! </span>
+              {message}
+            </span>
           </span>
         ),
         duration: 3000,

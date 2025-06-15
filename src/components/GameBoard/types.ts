@@ -1,9 +1,8 @@
-
 export type PlayerType = "human" | "ai";
 
 export const DEFAULT_BOARD_SIZE = 7;
 export const DEFAULT_QUESTION_TIME = 14;
-export const DEFAULT_DEFENSES = 1;
+export const DEFAULT_DEFENSES = 3;
 export const SURPRISE_TYPES = [
   "double",
   "lose",

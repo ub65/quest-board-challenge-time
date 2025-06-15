@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { DEFAULT_BOARD_SIZE, DEFAULT_QUESTION_TIME, DEFAULT_DEFENSES } from "./types";
 

@@ -1,5 +1,5 @@
-
 import { useState } from "react";
+import { DEFAULT_DEFENSES } from "@/components/GameBoard/types";
 
 type Mode = "ai";
 type Step = "welcome" | "game";
@@ -16,7 +16,7 @@ export default function useIndexGameFlow() {
   const [questionTime, setQuestionTime] = useState(20);
   const [boardSize, setBoardSize] = useState(8);
   const [numSurprises, setNumSurprises] = useState(4);
-  const [numDefenses, setNumDefenses] = useState(2);
+  const [numDefenses, setNumDefenses] = useState(DEFAULT_DEFENSES);
 
   // Only single-player "ai" mode
   const mode: Mode = "ai";

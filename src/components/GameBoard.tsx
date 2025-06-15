@@ -118,18 +118,18 @@ const GameBoard = ({
   const handleStartGame = () => {
     setGameStarted(true);
     setDisableInput(false);
-    // Show toast after button pressed (not on mount)!
-    if (startingPlayer) {
-      const toastKey =
-        startingPlayer === "human"
-          ? "game.startingPlayer.human"
-          : "game.startingPlayer.ai";
-      toast({
-        title: t("game.title"),
-        description: t(toastKey),
-        duration: 3500,
-      });
-    }
+    // Removed: Show toast after button pressed (not on mount)!
+    // if (startingPlayer) {
+    //   const toastKey =
+    //     startingPlayer === "human"
+    //       ? "game.startingPlayer.human"
+    //       : "game.startingPlayer.ai";
+    //   toast({
+    //     title: t("game.title"),
+    //     description: t(toastKey),
+    //     duration: 3500,
+    //   });
+    // }
   };
 
   useEffect(() => {

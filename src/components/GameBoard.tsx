@@ -1,4 +1,3 @@
-
 // Refactored GameBoard: uses split files for state and logic
 import React, { useRef, useEffect, useState } from "react";
 import { useLocalization } from "@/contexts/LocalizationContext";
@@ -25,6 +24,7 @@ import { useGameBoardState } from "./GameBoard/useGameBoardState";
 import GameBoardArea from "./GameBoard/GameBoardArea";
 import { useDefenseModeHandler } from "./GameBoard/useDefenseModeHandler";
 import { getRandomMathQuestion } from "@/lib/mathQuestions";
+import GameBoardModals from "./GameBoard/GameBoardModals";
 
 const GameBoard = ({
   difficulty: initialDifficulty,
@@ -333,11 +333,22 @@ const GameBoard = ({
       onDifficultyChange={setDifficulty}
       surpriseCount={numSurprises}
       playerName={playerName}
-    />
+    >
+      {/* Inject modals for human/ai turn based on current move/question type */}
+      <GameBoardModals
+        moveState={moveState}
+        isModalOpen={isModalOpen}
+        aiModalState={aiModalState}
+        winner={winner}
+        questionTime={questionTime}
+        onHumanSubmit={moveState?.resolve}
+        onAISubmit={handleAIModalSubmit}
+        questionType={questionType}
+      />
+    </GameBoardArea>
   );
 };
 
 export default GameBoard;
 
 // NOTE: This file is now much smaller and delegates logic via hooks and separated files.
-

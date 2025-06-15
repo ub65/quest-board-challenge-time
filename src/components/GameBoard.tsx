@@ -1,3 +1,4 @@
+
 // Refactored GameBoard: uses split files for state and logic
 import React, { useRef, useEffect, useState } from "react";
 import { useLocalization } from "@/contexts/LocalizationContext";
@@ -70,6 +71,7 @@ const GameBoard = ({
     isModalOpen, setIsModalOpen,
     sound, setSound,
     disableInput, setDisableInput,
+    humanHasMoved, setHumanHasMoved, // <- NEW, included
   } = useGameBoardState(boardSize, numSurprises, numDefenses);
 
   // --- Derived targets
@@ -96,7 +98,8 @@ const GameBoard = ({
     setDefenseTiles([]);
     setDefensesUsed({ human: 0, ai: 0 });
     setDefenseMode(false);
-  }, [boardSize, numSurprises, numDefenses, setPositions, setWinner, setTurn, setHumanPoints, setAIPoints, setBoardPoints, setSurpriseTiles, setDefenseTiles, setDefensesUsed, setDefenseMode]);
+    setHumanHasMoved(false); // <-- important: reset on game start
+  }, [boardSize, numSurprises, numDefenses, setPositions, setWinner, setTurn, setHumanPoints, setAIPoints, setBoardPoints, setSurpriseTiles, setDefenseTiles, setDefensesUsed, setDefenseMode, setHumanHasMoved]);
 
   useEffect(() => {
     if (winner) {
@@ -134,7 +137,6 @@ const GameBoard = ({
 
   // Helper for AI to get question of correct type:
   function getQuestionForAiTurn() {
-    // same logic as getQuestionForTurn, but can be refactored to a single function
     const qtype = questionType;
     let q;
     if (qtype === "math") {
@@ -168,6 +170,7 @@ const GameBoard = ({
     toast,
     setTurn,
     aiMovingRef,
+    humanHasMoved, // <-- pass flag to AI hook!
     // Only pass this setAIModalState override ONCE!
     setAIModalState: (val) => {
       // OVERRIDE: always pass a question of the selected type!
@@ -224,6 +227,8 @@ const GameBoard = ({
     handleSurprise: surpriseHandler,
     questionType,
     getQuestionForTurn,
+    setHumanHasMoved, // <-- ensure human move handler sets this!
+    humanHasMoved, // <-- optional, not needed here but if future logic,
   });
 
   // AI move modal submit handler
@@ -389,3 +394,4 @@ const GameBoard = ({
 export default GameBoard;
 
 // NOTE: This file is now much smaller and delegates logic via hooks and separated files.
+

@@ -1,3 +1,4 @@
+
 import { useEffect, useRef } from "react";
 import { getRandomQuestion, getValidMoves, getAIMove, getAIDefenseTile } from "./utils";
 import { PlayerType, Tile, DefenseTile, SurpriseTile } from "./types";
@@ -24,17 +25,15 @@ type AIMoveProps = {
   setTurn: (p: PlayerType) => void;
   setAIModalState: (f: any) => void;
   aiMovingRef: React.MutableRefObject<boolean>;
+  humanHasMoved?: boolean; // <-- NEW, optional for type safety
 };
 
 function chooseAIMove(moves: any[], current: any, target: any, difficulty: "easy" | "medium" | "hard") {
-  // Higher difficulty = more likely to pick optimal move
   const mistakeProb = difficulty === "easy" ? 0.30 : difficulty === "medium" ? 0.15 : 0.07;
   if (moves.length === 0) return current;
   if (Math.random() < mistakeProb) {
-    // Choose a random move
     return moves[Math.floor(Math.random() * moves.length)];
   }
-  // Otherwise best move towards target
   let best = moves[0];
   let bestDist = Math.abs(moves[0].x - target.x) + Math.abs(moves[0].y - target.y);
   for (const move of moves) {
@@ -48,11 +47,9 @@ function chooseAIMove(moves: any[], current: any, target: any, difficulty: "easy
 }
 
 function maybeWrongAnswer(question: any, difficulty: "easy" | "medium" | "hard") {
-  // AI has higher chance to make mistakes at lower difficulty (only for multiple-choice)
   const mistakeProb = difficulty === "easy" ? 0.35 : difficulty === "medium" ? 0.18 : 0.05;
   let aiAnswer = question.correct;
   if (question.answers && Array.isArray(question.answers) && Math.random() < mistakeProb) {
-    // Pick a wrong answer that's not the correct one
     const wrongs = question.answers.map((_, i) => i).filter(i => i !== question.correct);
     aiAnswer = wrongs[Math.floor(Math.random() * wrongs.length)];
   }
@@ -62,10 +59,16 @@ function maybeWrongAnswer(question: any, difficulty: "easy" | "medium" | "hard")
 export function useAITurn({
   turn, winner, aiModalState, disableInput, positions, defensesUsed, defenseTiles, surpriseTiles, numDefenses, difficulty, BOARD_SIZE,
   aiTarget, humanTarget, t, setDisableInput, setDefenseTiles, setDefensesUsed, toast, setTurn, setAIModalState, aiMovingRef,
+  humanHasMoved,
 }: AIMoveProps) {
   useEffect(() => {
-    // DEBUG LOGS to track effect activations and blockers
-    console.log("[AI TURN HOOK] running", {turn, winner, aiModalState, aiMoving: aiMovingRef.current, disableInput});
+    console.log("[AI TURN HOOK] running", {turn, winner, aiModalState, aiMoving: aiMovingRef.current, disableInput, humanHasMoved});
+
+    // Prevent any AI move until human has moved
+    if (!humanHasMoved) {
+      aiMovingRef.current = false;
+      return;
+    }
 
     // Always reset moving ref when human's turn or game over
     if (winner || turn === "human") {
@@ -74,15 +77,11 @@ export function useAITurn({
       return;
     }
 
-    // AI turn begins
-    // Don't permit moving if already in modal, or marked as "moving"
     if (turn === "ai" && !aiModalState && !aiMovingRef.current) {
-      // Activate AI logic!
       console.log("[AI TURN HOOK] AI is starting move!");
       aiMovingRef.current = true;
       setDisableInput(true);
 
-      // AI defense logic
       if (defensesUsed.ai < numDefenses) {
         const aiDefense = getAIDefenseTile({
           humanPos: positions.human,
@@ -108,16 +107,12 @@ export function useAITurn({
           return;
         }
       }
-      // AI move logic
       const allMoves = getValidMoves(positions.ai, BOARD_SIZE, defenseTiles);
       const move = chooseAIMove(allMoves, positions.ai, aiTarget, difficulty);
 
-      // getRandomQuestion may be replaced by user code for math/translate, so just get latest from props
       const question = getRandomQuestion(difficulty);
-      // Now, choose AI's answer, possibly making a mistake
       const aiAnswer = maybeWrongAnswer(question, difficulty);
 
-      // Inject chosen answer as `aiChoice` into modal/question object, so game logic can act as if AI selected it
       const aiQuestionWithChoice = { ...question, aiChoice: aiAnswer };
 
       setTimeout(() => {
@@ -131,10 +126,9 @@ export function useAITurn({
     turn, winner, aiModalState, disableInput, positions, defensesUsed.ai,
     BOARD_SIZE, numDefenses, t, setDisableInput, setDefenseTiles, setDefensesUsed,
     toast, setTurn, setAIModalState, aiMovingRef, aiTarget, humanTarget, defenseTiles, surpriseTiles,
-    difficulty
+    difficulty, humanHasMoved
   ]);
 
-  // Extra: always reset blockers on unmount/game restart
   useEffect(() => {
     return () => {
       aiMovingRef.current = false;

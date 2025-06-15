@@ -30,6 +30,9 @@ export function useGameBoardState(boardSize: number, numSurprises: number, numDe
   const [sound, setSound] = useState<"move" | "wrong" | "win" | null>(null);
   const [disableInput, setDisableInput] = useState(false);
 
+  // New: track if human has made their first move yet (for AI timing)
+  const [humanHasMoved, setHumanHasMoved] = useState(false);
+
   return {
     boardPoints, setBoardPoints,
     humanPoints, setHumanPoints,
@@ -45,5 +48,6 @@ export function useGameBoardState(boardSize: number, numSurprises: number, numDe
     isModalOpen, setIsModalOpen,
     sound, setSound,
     disableInput, setDisableInput,
+    humanHasMoved, setHumanHasMoved, // <- expose in state
   }
 }

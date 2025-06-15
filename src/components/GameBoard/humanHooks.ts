@@ -1,13 +1,14 @@
 
 import { useCallback } from "react";
 import { getRandomQuestion, getValidMoves } from "./utils";
-// Removed: import { canMoveTo } from "./defenseHelpers";
 
 export function useHumanMoveHandler({
   winner, disableInput, turn, positions, BOARD_SIZE, defenseTiles, difficulty,
   defenseMode, handleDefenseClick, setSound, setPositions, setBoardPoints,
   setIsModalOpen, setMoveState, setTurn, setHumanPoints, handleSurprise,
   questionType, getQuestionForTurn,
+  setHumanHasMoved, // <-- Accept as prop
+  humanHasMoved, // <-- Accept as prop (optional, not used here but for clarity)
 }: {
   winner: any;
   disableInput: boolean;
@@ -28,10 +29,11 @@ export function useHumanMoveHandler({
   handleSurprise: any;
   questionType: "math" | "translate";
   getQuestionForTurn: () => any;
+  setHumanHasMoved: (b: boolean) => void;
+  humanHasMoved?: boolean;
 }) {
   // Helper function to determine if human can move to a tile
   function canMoveTo(tile: { x: number; y: number }, aiPos: { x: number; y: number }, defenseTiles: any[], BOARD_SIZE: number) {
-    // getValidMoves expects: currentPos, board size, defense tiles, otherPlayerPos
     const valid = getValidMoves(positions.human, BOARD_SIZE, defenseTiles, aiPos);
     return valid.some((t: { x: number; y: number }) => t.x === tile.x && t.y === tile.y);
   }
@@ -43,13 +45,11 @@ export function useHumanMoveHandler({
     }
     if (winner || disableInput || turn !== "human") return;
 
-    // Check if the human can move to the selected tile
     if (!canMoveTo(tile, positions.ai, defenseTiles, BOARD_SIZE)) {
       setSound("wrong");
       return;
     }
 
-    // Show a question for human move
     const question = getQuestionForTurn();
     setMoveState({
       tile,
@@ -57,7 +57,6 @@ export function useHumanMoveHandler({
       resolve: (ok: boolean) => {
         setSound(ok ? "move" : "wrong");
         setIsModalOpen(false);
-        // Always reset moveState on submit to prevent stacking
         setMoveState(null);
 
         if (!ok) {
@@ -76,6 +75,8 @@ export function useHumanMoveHandler({
           return { ...p, human: { x: tile.x, y: tile.y } };
         });
 
+        setHumanHasMoved(true); // <-- Set this on *first* valid move
+
         setTimeout(() => {
           handleSurprise(tile, "human");
           setTimeout(() => {
@@ -87,7 +88,7 @@ export function useHumanMoveHandler({
       }
     });
     setIsModalOpen(true);
-  }, [BOARD_SIZE, defenseMode, defenseTiles, disableInput, getQuestionForTurn, handleDefenseClick, handleSurprise, positions.ai, positions.human, setBoardPoints, setHumanPoints, setIsModalOpen, setMoveState, setPositions, setSound, setTurn, winner]);
+  }, [BOARD_SIZE, defenseMode, defenseTiles, disableInput, getQuestionForTurn, handleDefenseClick, handleSurprise, positions.ai, positions.human, setBoardPoints, setHumanPoints, setIsModalOpen, setMoveState, setPositions, setSound, setTurn, setHumanHasMoved, winner]);
 
   return { handleTileClick };
 }

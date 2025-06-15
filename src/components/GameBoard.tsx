@@ -56,13 +56,7 @@ const GameBoard = ({
     boardSize, setBoardSize,
     numSurprises, setNumSurprises,
     numDefenses, setNumDefenses,
-    questionType: settingsQuestionType, setQuestionType,
   } = useGameSettings(initialDifficulty);
-
-  // When the prop value changes, update settingsQuestionType
-  useEffect(() => {
-    setQuestionType(questionType);
-  }, [questionType, setQuestionType]);
 
   // --- Refactored board state ---
   const {
@@ -131,7 +125,7 @@ const GameBoard = ({
 
   // This change allows using math/translate Qs as per setting
   function getQuestionForTurn() {
-    if (settingsQuestionType === "math") {
+    if (questionType === "math") {
       return getRandomMathQuestion(difficulty);
     } else {
       return getRandomQuestion(difficulty);
@@ -343,10 +337,6 @@ const GameBoard = ({
       onDifficultyChange={setDifficulty}
       surpriseCount={numSurprises}
       playerName={playerName}
-      // questionType={settingsQuestionType} // REMOVED: Not required by GameBoardArea, kept locally
-      // These props passed but unused unless you add code later:
-      // gameCode={gameCode}
-      // onlineRole={onlineRole}
     />
   );
 };

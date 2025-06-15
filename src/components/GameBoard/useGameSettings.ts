@@ -10,7 +10,6 @@ export function useGameSettings(initialDifficulty: "easy" | "medium" | "hard") {
   const [boardSize, setBoardSize] = useState<number>(DEFAULT_BOARD_SIZE);
   const [numSurprises, setNumSurprises] = useState<number>(4);
   const [numDefenses, setNumDefenses] = useState(DEFAULT_DEFENSES);
-  const [questionType, setQuestionType] = useState<"translate" | "math">("translate");
 
   return {
     difficulty, setDifficulty,
@@ -20,6 +19,5 @@ export function useGameSettings(initialDifficulty: "easy" | "medium" | "hard") {
     boardSize, setBoardSize,
     numSurprises, setNumSurprises,
     numDefenses, setNumDefenses,
-    questionType, setQuestionType,
   };
 }

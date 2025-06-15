@@ -1,4 +1,3 @@
-
 import React from "react";
 import GameBoard from "@/components/GameBoard";
 import { useLocalization } from "@/contexts/LocalizationContext";
@@ -12,45 +11,7 @@ const Index = () => {
   const { t, language } = useLocalization();
   const flow = useIndexGameFlow();
 
-  // --- STEP: Mode selection ---
-  if (flow.step === "mode") {
-    return (
-      <GameModeSelector
-        t={t}
-        onSelect={flow.handleModeSelect}
-      />
-    );
-  }
-
-  // --- STEP: Online / Lobby ---
-  if (flow.mode === "online" && flow.step === "lobby") {
-    return (
-      <OnlineLobby
-        t={t}
-        onBack={flow.handleLobbyBack}
-        onGameStart={flow.handleOnlineGameStart}
-        onVsAISolo={flow.handleLobbyVsAISolo}
-      />
-    );
-  }
-
-  // --- STEP: Online board ---
-  if (flow.mode === "online" && flow.step === "game" && flow.onlineGame) {
-    return (
-      <div className="w-full max-w-3xl animate-fade-in">
-        <GameBoard
-          key={flow.gameKey}
-          difficulty={flow.difficulty}
-          onRestart={flow.handleRestart}
-          playerName={flow.playerName}
-          gameCode={flow.onlineGame.gameCode}
-          onlineRole={flow.onlineGame.role}
-        />
-      </div>
-    );
-  }
-
-  // --- STEP: AI flow ---
+  // --- Single-player flow only ---
   return (
     <div
       className={`
@@ -74,17 +35,17 @@ const Index = () => {
         difficulty={flow.difficulty}
         onDifficultyChange={flow.setDifficulty}
       />
-      {flow.step === "welcome" && flow.mode === "ai" && (
+      {flow.step === "welcome" && (
         <WelcomeScreen
           language={language}
           playerName={flow.playerName}
           setPlayerName={flow.setPlayerName}
           t={t}
-          onStart={() => flow.setStep("game")}
+          onStart={flow.handleStart}
           onSettings={() => flow.setSettingsOpen(true)}
         />
       )}
-      {flow.step === "game" && flow.mode === "ai" && (
+      {flow.step === "game" && (
         <div className="w-full max-w-3xl animate-fade-in">
           <GameBoard
             key={flow.gameKey}

@@ -17,6 +17,32 @@ import GameSettingsSoundToggle from "./GameSettingsSoundToggle";
 import GameSettingsSlider from "./GameSettingsSlider";
 import { Button } from "@/components/ui/button";
 
+// Utility to detect iOS/keyboard (very basic, best-effort)
+const useKeyboardPadding = () => {
+  const [keyboardPad, setKeyboardPad] = useState(0);
+
+  useEffect(() => {
+    const handler = () => {
+      // If window.innerHeight shrinks, assume keyboard open
+      if (window.visualViewport) {
+        setKeyboardPad(
+          Math.max(0, window.outerHeight - window.visualViewport.height)
+        );
+      } else {
+        setKeyboardPad(0);
+      }
+    };
+    window.visualViewport?.addEventListener("resize", handler);
+    window.visualViewport?.addEventListener("scroll", handler);
+    return () => {
+      window.visualViewport?.removeEventListener("resize", handler);
+      window.visualViewport?.removeEventListener("scroll", handler);
+    };
+  }, []);
+
+  return keyboardPad;
+};
+
 type QuestionType = "translate" | "math";
 
 type GameSettingsModalProps = {
@@ -105,14 +131,11 @@ const GameSettingsModal = ({
     onOpenChange(false);
   };
 
+  // Add extra bottom padding if keyboard is open (for iOS esp.)
+  const keyboardPad = useKeyboardPadding();
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      {/* 
-        Trick for mobile: 
-        - Make outer DialogContent use flex-col and min-h to fit screen
-        - Put the ScrollArea around BOTH settings and action buttons so everything is scrollable on mobile 
-        - On desktop, footer buttons will be sticky at the bottom as usual
-      */}
       <DialogContent
         className="
           bg-gradient-to-br from-background to-secondary p-0 shadow-2xl rounded-2xl border-0 
@@ -127,7 +150,15 @@ const GameSettingsModal = ({
           maxHeight: "95vh",
         }}
       >
-        <ScrollArea className="flex-1 px-6 pt-7 pb-4 max-h-[88vh] sm:max-h-[630px] w-full">
+        <ScrollArea
+          className="flex-1 px-6 pt-7 pb-4 max-h-[88vh] sm:max-h-[630px] w-full"
+          style={{
+            minHeight: 0,
+            maxHeight: "calc(95vh - 0px)",
+            // Keyboard-aware bottom pad for iOS/Android if needed
+            paddingBottom: (keyboardPad || 96) + "px", // At least enough for buttons
+          }}
+        >
           <DialogHeader>
             <div className="flex flex-col items-center gap-1 mb-2">
               <SlidersHorizontal size={32} className="text-primary" />
@@ -196,28 +227,30 @@ const GameSettingsModal = ({
               maxLabelKey="settings.defenseMax"
             />
           </div>
-          {/* Buttons are inside the ScrollArea so they are always reachable, even when the keyboard is open! */}
-          <DialogFooter className="pt-6 flex flex-col gap-2 sticky bottom-0 bg-gradient-to-b from-transparent to-white/90 z-10">
-            <div className="flex gap-2 w-full">
-              <Button
-                className="flex-1 font-semibold"
-                onClick={handleSave}
-                variant="default"
-              >
-                <Save className="w-4 h-4 mr-2" />
-                {t('settings.save') || "Save"}
-              </Button>
-              <Button
-                className="flex-1"
-                variant="secondary"
-                onClick={handleCancel}
-                type="button"
-              >
-                {t('settings.cancel') || "Cancel"}
-              </Button>
-            </div>
-          </DialogFooter>
+          {/* Reserve vertical space at bottom to always allow scrolling to buttons */}
+          <div id="bottom-spacer" style={{ height: (keyboardPad || 96) }} />
         </ScrollArea>
+        {/* Footer is now outside scroll, always reachable at bottom */}
+        <DialogFooter className="pt-3 pb-4 px-6 flex flex-col gap-2 bg-gradient-to-b from-transparent to-white/95 w-full z-10 sticky bottom-0">
+          <div className="flex gap-2 w-full">
+            <Button
+              className="flex-1 font-semibold"
+              onClick={handleSave}
+              variant="default"
+            >
+              <Save className="w-4 h-4 mr-2" />
+              {t('settings.save') || "Save"}
+            </Button>
+            <Button
+              className="flex-1"
+              variant="secondary"
+              onClick={handleCancel}
+              type="button"
+            >
+              {t('settings.cancel') || "Cancel"}
+            </Button>
+          </div>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );

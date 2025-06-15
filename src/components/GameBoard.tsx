@@ -269,7 +269,12 @@ const GameBoard = ({
     if (problem) {
       toast({
         title: t("game.defense_fail") || "Invalid defense placement",
-        description: problem,
+        description: (
+          <span className="flex items-center gap-2">
+            <span className="font-semibold">⛔ Defense! </span>
+            {problem}
+          </span>
+        ),
         duration: 2500,
       });
       return;
@@ -279,7 +284,12 @@ const GameBoard = ({
     setDefenseMode(false);
     toast({
       title: t("game.defense_placed") || "Defense Placed",
-      description: t("game.defense_success") || "AI cannot move to this tile!",
+      description: (
+        <span className="flex items-center gap-2">
+          <span className="font-semibold">🛡️ Defense! </span>
+          {t("game.defense_success") || "AI cannot move to this tile!"}
+        </span>
+      ),
       duration: 2000,
     });
   }

@@ -1,10 +1,10 @@
-
 import React, { useState } from "react";
 import GameBoard from "@/components/GameBoard";
 import { useLocalization } from "@/contexts/LocalizationContext";
 import WelcomeScreen from "@/components/WelcomeScreen";
 import GameSettingsModal from "@/components/GameSettingsModal";
 import GameModeSelector from "@/components/GameModeSelector";
+import OnlineLobby from "@/components/OnlineLobby";
 
 // Define an online game interface to store online info
 type OnlineGameState = {
@@ -19,7 +19,7 @@ const Index = () => {
 
   // Refactor steps for clarity
   // mode: which mode user picked, step: UI progression
-  const [step, setStep] = useState<"mode" | "welcome" | "game" | "matchmaking">("mode");
+  const [step, setStep] = useState<"mode" | "welcome" | "game" | "matchmaking" | "lobby">("mode");
   const [settingsOpen, setSettingsOpen] = useState(false);
 
   // Reset player name when changing mode, to ensure no confusion
@@ -43,62 +43,49 @@ const Index = () => {
     setPlayerName(""); // reset name for next new game
   };
 
-  // Mode selection logic
-  const handleSelectMode = (selectedMode: "ai" | "online") => {
-    setMode(selectedMode);
-    setPlayerName(""); // reset name in both flows, to ensure clean screen
-
-    if (selectedMode === "ai") {
-      // Start AI welcome flow
-      setStep("welcome");
-    } else if (selectedMode === "online") {
-      // Enter "matchmaking" state: searching for opponent
-      setStep("matchmaking");
-      // Simulate matchmaking delay, then match and enter game
-      setTimeout(() => {
-        // Generate a random game code and assign role "host"
-        const code = Math.random().toString(36).substring(2, 8).toUpperCase();
-        setOnlineGame({ gameCode: code, role: "host" });
-        setStep("game");
-      }, 1600);
-    }
-  };
-
-  // 1. Main mode SELECTOR
+  // Show mode selection UI
   if (step === "mode") {
     return (
       <GameModeSelector
         t={t}
-        onSelect={handleSelectMode}
+        onSelect={(selectedMode) => {
+          setMode(selectedMode);
+          setPlayerName("");
+          if (selectedMode === "ai") {
+            setStep("welcome");
+          } else if (selectedMode === "online") {
+            setStep("lobby");
+          }
+        }}
       />
     );
   }
 
-  // 2. Online: "Searching for another player..." (matchmaking)
-  if (mode === "online" && step === "matchmaking") {
+  // --- LOBBY FLOW FOR ONLINE ---
+  if (mode === "online" && step === "lobby") {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen w-full bg-gradient-to-br from-sky-100 via-blue-200 to-violet-100 px-4 animate-fade-in">
-        <div className="w-full max-w-sm mx-auto bg-white/95 shadow-xl rounded-3xl p-7 flex flex-col gap-8 mt-10 items-center">
-          <span className="text-4xl animate-pulse">🔎</span>
-          <h2 className="text-xl font-bold text-center">{t("online.matchMakingTitle") || "Searching for another player..."}</h2>
-          <p className="text-gray-500 text-center">{t("online.matchMakingDesc") || "Hang tight! We'll start the game as soon as a player is found."}</p>
-        </div>
-        <button
-          className="mt-8 text-blue-600 underline"
-          onClick={() => {
-            setMode(null);
-            setStep("mode");
-            setOnlineGame(null);
-            setPlayerName(""); // clear name when returning to mode select
-          }}
-        >
-          {t("general.back") || "Back"}
-        </button>
-      </div>
+      <OnlineLobby
+        t={t}
+        onBack={() => {
+          setStep("mode");
+          setMode(null);
+          setOnlineGame(null);
+          setPlayerName("");
+        }}
+        onGameStart={(gameCode: string, role: "host" | "guest") => {
+          setOnlineGame({ gameCode, role });
+          setStep("game");
+        }}
+        onVsAISolo={() => {
+          setMode("ai");
+          setStep("welcome");
+          setOnlineGame(null);
+        }}
+      />
     );
   }
 
-  // 3. Online: When matched, show board (with game code & role)
+  // --- ONLINE: SHOW BOARD WHEN ONLINE GAME IS ACTIVE ---
   if (mode === "online" && step === "game" && onlineGame) {
     return (
       <div className="w-full max-w-3xl animate-fade-in">
@@ -114,7 +101,7 @@ const Index = () => {
     );
   }
 
-  // 4. AI flow: Welcome, then game
+  // AI SINGLE PLAYER FLOW
   return (
     <div
       className={`
@@ -165,4 +152,3 @@ const Index = () => {
 };
 
 export default Index;
-

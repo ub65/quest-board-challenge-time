@@ -1,3 +1,4 @@
+
 import React from "react";
 import {
   Dialog,
@@ -8,9 +9,6 @@ import {
   DialogClose,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
-import { Slider } from "@/components/ui/slider";
 import { SlidersHorizontal } from "lucide-react";
 import LanguageSelector from "./LanguageSelector";
 import { useLocalization } from "@/contexts/LocalizationContext";
@@ -63,8 +61,8 @@ const GameSettingsModal = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="bg-gradient-to-br from-background to-secondary p-0 shadow-2xl rounded-2xl border-0 max-w-[420px] max-h-[90vh] sm:max-h-[650px]">
-        <ScrollArea className="px-8 pt-8 pb-0 max-h-[80vh] sm:max-h-[610px]">
+      <DialogContent className="bg-gradient-to-br from-background to-secondary p-0 shadow-2xl rounded-2xl border-0 max-w-[500px] max-h-[95vh] sm:max-h-[700px] w-full">
+        <ScrollArea className="px-6 pt-7 pb-2 max-h-[88vh] sm:max-h-[630px]">
           <DialogHeader>
             <div className="flex flex-col items-center gap-1 mb-2">
               <SlidersHorizontal size={32} className="text-primary" />
@@ -76,7 +74,7 @@ const GameSettingsModal = ({
               </DialogDescription>
             </div>
           </DialogHeader>
-          <div className="py-2 flex flex-col gap-7">
+          <div className="py-2 flex flex-col gap-7 w-full">
             <LanguageSelector />
             <GameSettingsDifficultySelector
               difficulty={difficulty}
@@ -147,3 +145,4 @@ const GameSettingsModal = ({
 };
 
 export default GameSettingsModal;
+

@@ -62,6 +62,11 @@ const GameBoardArea: React.FC<GameBoardAreaProps> = ({
   onBoardSizeChange, onQuestionTimeChange, onSurpriseCountChange, onNumDefensesChange, onDifficultyChange, surpriseCount,
   playerName
 }) => {
+  // Dummy placeholder for props no longer used due to question type now controlled from welcome screen only.
+  // We need to pass them to GameSettingsModal due to its required props.
+  const dummyQuestionType = "translate";
+  const dummySetQuestionType = () => {};
+
   return (
     <div
       className="flex flex-col items-center"
@@ -140,6 +145,8 @@ const GameBoardArea: React.FC<GameBoardAreaProps> = ({
         onNumDefensesChange={onNumDefensesChange}
         difficulty={difficulty}
         onDifficultyChange={onDifficultyChange}
+        questionType={dummyQuestionType}
+        onQuestionTypeChange={dummySetQuestionType}
       />
     </div>
   );

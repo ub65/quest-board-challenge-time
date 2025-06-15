@@ -1,3 +1,4 @@
+
 import React, { useRef, useEffect, useState } from "react";
 import { useLocalization } from "@/contexts/LocalizationContext";
 import { toast } from "@/components/ui/use-toast";
@@ -33,9 +34,9 @@ const GameBoard = ({
   difficulty: initialDifficulty,
   onRestart,
   playerName,
-  gameCode,     // <-- now optional
-  onlineRole,   // <-- now optional
-  questionType = "translate", // ADDED: so we can pass this down!
+  gameCode,
+  onlineRole,
+  questionType = "translate",
 }: {
   difficulty: "easy" | "medium" | "hard";
   onRestart: () => void;
@@ -137,7 +138,7 @@ const GameBoard = ({
     }
   }
 
-  // Use getQuestionForTurn() in useHumanMoveHandler and useAITurn (these hooks expect a getQuestion function)
+  // Remove getQuestion from props to useAITurn, useHumanMoveHandler
 
   // AI turn, including defense! (before question)
   useAITurn({
@@ -161,8 +162,8 @@ const GameBoard = ({
     toast,
     setTurn,
     setAIModalState,
-    aiMovingRef,
-    getQuestion: getQuestionForTurn
+    aiMovingRef
+    // getQuestion: getQuestionForTurn (REMOVED: handled internally for now)
   });
 
   // Extracted: surprise logic
@@ -205,7 +206,7 @@ const GameBoard = ({
     setTurn,
     setHumanPoints,
     handleSurprise: surpriseHandler,
-    getQuestion: getQuestionForTurn
+    // getQuestion: getQuestionForTurn (REMOVED: handled internally for now)
   });
 
   // AI move handler (after answering modal)
@@ -342,7 +343,7 @@ const GameBoard = ({
       onDifficultyChange={setDifficulty}
       surpriseCount={numSurprises}
       playerName={playerName}
-      questionType={settingsQuestionType}
+      // questionType={settingsQuestionType} // REMOVED: Not required by GameBoardArea, kept locally
       // These props passed but unused unless you add code later:
       // gameCode={gameCode}
       // onlineRole={onlineRole}
@@ -351,3 +352,6 @@ const GameBoard = ({
 };
 
 export default GameBoard;
+
+// NOTE: This file is now quite large (354+ lines).
+// Consider requesting a file refactor!

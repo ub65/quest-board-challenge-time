@@ -5,12 +5,16 @@ import { useLocalization } from "@/contexts/LocalizationContext";
 import WelcomeScreen from "@/components/WelcomeScreen";
 import GameSettingsModal from "@/components/GameSettingsModal";
 import useIndexGameFlow from "./useIndexGameFlow";
-
 // REMOVE: import GameModeSelector, OnlineLobby as unused
 
 const Index = () => {
   const { t, language } = useLocalization();
   const flow = useIndexGameFlow();
+
+  // Add dummy props for questionType and onQuestionTypeChange to GameSettingsModal,
+  // which are required but in this flow are only controlled (user-facing) from welcome screen.
+  const dummyQuestionType = "translate";
+  const dummySetQuestionType = () => {};
 
   // --- Single-player flow only ---
   return (
@@ -35,6 +39,8 @@ const Index = () => {
         onNumDefensesChange={flow.setNumDefenses}
         difficulty={flow.difficulty}
         onDifficultyChange={flow.setDifficulty}
+        questionType={dummyQuestionType}
+        onQuestionTypeChange={dummySetQuestionType}
         // REMOVED: questionType and onQuestionTypeChange (now controlled only from welcome screen)
       />
       {flow.step === "welcome" && (

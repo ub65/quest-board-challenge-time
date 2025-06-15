@@ -32,11 +32,15 @@ import { useDefenseModeHandler } from "./GameBoard/useDefenseModeHandler";
 const GameBoard = ({
   difficulty: initialDifficulty,
   onRestart,
-  playerName
+  playerName,
+  gameCode,     // <-- now optional
+  onlineRole,   // <-- now optional
 }: {
   difficulty: "easy" | "medium" | "hard";
   onRestart: () => void;
   playerName?: string;
+  gameCode?: string;
+  onlineRole?: "host" | "guest";
 }) => {
   const { t, language } = useLocalization();
 
@@ -317,8 +321,12 @@ const GameBoard = ({
       onDifficultyChange={setDifficulty}
       surpriseCount={numSurprises}
       playerName={playerName}
+      // These props passed but unused unless you add code later:
+      // gameCode={gameCode}
+      // onlineRole={onlineRole}
     />
   );
 };
 
 export default GameBoard;
+

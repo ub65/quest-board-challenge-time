@@ -104,7 +104,7 @@ export function useAITurn({
         });
         if (aiDefense) {
           setDefenseTiles(prev => [...prev, { ...aiDefense, owner: "ai" }]);
-          setDefensesUsed(d) => ({ ...d, ai: d.ai + 1 });
+          setDefensesUsed(d => ({ ...d, ai: d.ai + 1 }));
           toast({
             title: t("game.defense_ai_placed") || "AI placed a defense!",
             description: t("game.defense_ai_msg") || "AI blocked your path!",

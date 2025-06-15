@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import {
   Dialog,
@@ -93,11 +92,6 @@ const GameSettingsModal = ({
     onDifficultyChange(pendingDifficulty);
 
     onOpenChange(false);
-    toast({
-      title: t('settings.savedTitle') || "Settings saved",
-      description: t('settings.savedDesc') || "Your preferences have been updated.",
-      icon: <Save className="mr-2" />,
-    });
   };
 
   // Cancel handler: just close, discard changes

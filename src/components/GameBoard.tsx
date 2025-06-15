@@ -118,6 +118,12 @@ const GameBoard = ({
   const handleStartGame = () => {
     setGameStarted(true);
     setDisableInput(false);
+    // If AI is starting player, flag as "human has moved" so AI can actually move:
+    if (startingPlayer === "ai") {
+      setHumanHasMoved(true);
+    } else {
+      setHumanHasMoved(false);
+    }
     // Removed: Show toast after button pressed (not on mount)!
     // if (startingPlayer) {
     //   const toastKey =

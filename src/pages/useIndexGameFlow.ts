@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { DEFAULT_DEFENSES } from "@/components/GameBoard/types";
 

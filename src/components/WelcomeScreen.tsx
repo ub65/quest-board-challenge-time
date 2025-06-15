@@ -1,6 +1,6 @@
-
 import React, { useState } from "react";
 import LanguageSelector from "./LanguageSelector";
+import QuestionTypeSelector from "./QuestionTypeSelector";
 import { Settings } from "lucide-react";
 
 type WelcomeScreenProps = {
@@ -8,6 +8,8 @@ type WelcomeScreenProps = {
   setPlayerName: (name: string) => void;
   onStart: () => void;
   onSettings: () => void;
+  questionType: "translate" | "math";
+  setQuestionType: (q: "translate" | "math") => void;
   language: string;
   t: (k: string, params?: any) => string;
 };
@@ -17,12 +19,13 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = ({
   setPlayerName,
   onStart,
   onSettings,
+  questionType,
+  setQuestionType,
   language,
   t,
 }) => {
-  const [localName, setLocalName] = useState(playerName);
+  const [localName, setLocalName] = React.useState(playerName);
 
-  // Sync prop if entering after first welcome
   React.useEffect(() => {
     setLocalName(playerName);
   }, [playerName]);
@@ -39,6 +42,11 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = ({
           </p>
         </div>
         <LanguageSelector />
+        <QuestionTypeSelector
+          value={questionType}
+          onChange={setQuestionType}
+          t={t}
+        />
         <div>
           <label htmlFor="player-name-input" className="block font-medium mb-1">
             {t("welcome.playerName") || "Your Name"}

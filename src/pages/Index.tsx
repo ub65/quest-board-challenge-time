@@ -4,9 +4,9 @@ import GameBoard from "@/components/GameBoard";
 import { useLocalization } from "@/contexts/LocalizationContext";
 import WelcomeScreen from "@/components/WelcomeScreen";
 import GameSettingsModal from "@/components/GameSettingsModal";
-import GameModeSelector from "@/components/GameModeSelector";
-import OnlineLobby from "@/components/OnlineLobby";
 import useIndexGameFlow from "./useIndexGameFlow";
+
+// REMOVE: import GameModeSelector, OnlineLobby as unused
 
 const Index = () => {
   const { t, language } = useLocalization();
@@ -35,8 +35,7 @@ const Index = () => {
         onNumDefensesChange={flow.setNumDefenses}
         difficulty={flow.difficulty}
         onDifficultyChange={flow.setDifficulty}
-        questionType={flow.questionType}
-        onQuestionTypeChange={flow.setQuestionType}
+        // REMOVED: questionType and onQuestionTypeChange (now controlled only from welcome screen)
       />
       {flow.step === "welcome" && (
         <WelcomeScreen
@@ -46,6 +45,8 @@ const Index = () => {
           t={t}
           onStart={flow.handleStart}
           onSettings={() => flow.setSettingsOpen(true)}
+          questionType={flow.questionType}
+          setQuestionType={flow.setQuestionType}
         />
       )}
       {flow.step === "game" && (

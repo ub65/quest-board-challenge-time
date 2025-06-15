@@ -109,7 +109,7 @@ const translations = {
     
     // WELCOME SCREEN
     'welcome.startGame': 'Start Game',
-    'welcome.desc': 'A math and translate words board game for fun and learning!',
+    'welcome.desc': 'A fun math and word game!',
     'welcome.playerName': 'Your Name',
     'welcome.playerNamePlaceholder': 'Enter your name',
     'welcome.settings': 'Settings',
@@ -223,7 +223,7 @@ const translations = {
     
     // WELCOME SCREEN
     'welcome.startGame': 'התחל משחק',
-    'welcome.desc': 'משחק לוח ללמידה עם כיף במתמטיקה ותרגום מילים!',
+    'welcome.desc': 'משחק חשבון ומילים כיפי!',
     'welcome.playerName': 'השם שלך',
     'welcome.playerNamePlaceholder': 'הכנס את שמך',
     'welcome.settings': 'הגדרות',

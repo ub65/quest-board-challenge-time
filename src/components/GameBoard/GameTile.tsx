@@ -71,21 +71,24 @@ const GameTile: React.FC<Props> = ({
       data-tile-x={x}
       data-tile-y={y}
       className={`
-        relative 
-        w-[10vw] h-[10vw] min-w-[42px] min-h-[42px]
-        md:w-16 md:h-16 lg:w-20 lg:h-20
-        text-sm md:text-lg font-bold flex items-center justify-center rounded-lg shadow
+        relative select-none
+        w-[10vw] h-[10vw] min-w-[38px] min-h-[38px] max-w-[52px] max-h-[52px]
+        md:w-14 md:h-14 md:max-w-[62px] md:max-h-[62px] 
+        lg:w-16 lg:h-16 lg:max-w-[72px] lg:max-h-[72px]
+        text-[3.8vw] md:text-base font-bold flex items-center justify-center rounded-xl shadow
         transition-all duration-200
         ${bg} ${border}
-        ${highlight ? "hover:scale-110 ring-4 ring-primary/50 cursor-pointer animate-glow" : "cursor-default"}
+        ${highlight ? "hover:scale-110 ring-4 ring-primary/40 cursor-pointer animate-[pulse_1.3s_infinite]" : "cursor-default"}
         ${isHuman || isAI ? "text-white" : "text-gray-700"}
+        active:scale-105
+        touch-manipulation
       `}
       style={{
         outline: isHumanTarget || isAITarget ? "2px dashed #6ee7b7" : undefined,
         zIndex: isHuman || isAI ? 2 : 1,
         aspectRatio: "1 / 1",
-        maxWidth: "64px",
-        maxHeight: "64px",
+        boxSizing: "border-box",
+        // Increased borderRadius for friendlier touch look
       }}
       disabled={disableInput || !!winner}
       onClick={() => onTileClick({ x, y })}
@@ -115,35 +118,32 @@ const GameTile: React.FC<Props> = ({
         ) &&
         boardPoints[y] &&
         boardPoints[y][x] > 0) && (
-          <span className="absolute bottom-1 right-2 text-xs text-amber-700 font-medium bg-white/80 px-1 py-0.5 rounded shadow">
+          <span className="absolute bottom-1 right-2 text-xs md:text-sm text-amber-700 font-medium bg-white/80 px-1.5 py-0.5 rounded shadow pointer-events-none select-none">
             {boardPoints[y][x]}
           </span>
         )}
       {surprise && !isHuman && !isAI && !isHumanTarget && !isAITarget && !defense && (
         <span className="absolute top-1 left-1">
-          <Gift size={22} className="text-pink-500 animate-bounce" />
+          <Gift size={18} className="text-pink-500 animate-bounce" />
         </span>
       )}
       {defense && !isHuman && !isAI && (
         <span className={`absolute top-1 right-1 z-10`}>
           <Shield
-            size={22}
+            size={19}
             className={defense.owner === "human" ? "text-blue-900 drop-shadow" : "text-red-800 drop-shadow"}
           />
         </span>
       )}
       {isHumanTarget && (
-        <span className="absolute inset-1 rounded bg-green-400/40 border border-green-600 pointer-events-none">
-          <span className="sr-only">Your target</span>
-        </span>
+        <span className="absolute inset-1 rounded bg-green-400/40 border border-green-600 pointer-events-none" />
       )}
       {isAITarget && (
-        <span className="absolute inset-1 rounded bg-orange-300/50 border border-orange-400 pointer-events-none">
-          <span className="sr-only">AI target</span>
-        </span>
+        <span className="absolute inset-1 rounded bg-orange-300/50 border border-orange-400 pointer-events-none" />
       )}
     </button>
   );
 };
 
 export default GameTile;
+

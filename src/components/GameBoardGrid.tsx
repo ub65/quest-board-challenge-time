@@ -1,4 +1,3 @@
-
 import React from "react";
 import GameTile from "./GameBoard/GameTile";
 import { useValidMoves } from "./GameBoard/useValidMoves";
@@ -48,19 +47,31 @@ const GameBoardGrid: React.FC<GameBoardGridProps> = ({
     getValidMoves,
   });
 
+  // Responsive: calculate max grid width based on screen size
+  // (Larger on desktop, nearly full on mobile)
+  // Grid will shrink to fit mobile screens, keeping spacing tight.
   return (
     <div
-      className="w-full overflow-x-auto md:overflow-visible flex justify-center"
+      className="w-full flex justify-center items-center"
       style={{
         WebkitOverflowScrolling: "touch"
       }}
     >
       <div
-        className="grid gap-1"
+        className={`
+          grid gap-[2vw] 
+          md:gap-1
+          rounded-2xl p-[2vw] md:p-2 shadow-lg bg-white/90
+          border border-gray-200
+          transition-all
+        `}
         style={{
           gridTemplateRows: `repeat(${BOARD_SIZE}, minmax(0, 1fr))`,
           gridTemplateColumns: `repeat(${BOARD_SIZE}, minmax(0, 1fr))`,
-          maxWidth: "95vw",
+          width: "100%",
+          maxWidth: "450px",
+          minWidth: "min(92vw, 400px)",
+          // Ensures mobile grid fits screen, prevents overflow.
         }}
       >
         {Array.from({ length: BOARD_SIZE }).map((_, y) =>

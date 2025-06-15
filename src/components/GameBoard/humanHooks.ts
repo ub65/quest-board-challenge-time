@@ -7,8 +7,7 @@ export function useHumanMoveHandler({
   winner, disableInput, turn, positions, BOARD_SIZE, defenseTiles, difficulty,
   defenseMode, handleDefenseClick, setSound, setPositions, setBoardPoints,
   setIsModalOpen, setMoveState, setTurn, setHumanPoints, handleSurprise,
-  questionType,
-  getQuestionForTurn,
+  questionType, getQuestionForTurn,
 }: {
   winner: any;
   disableInput: boolean;
@@ -58,6 +57,9 @@ export function useHumanMoveHandler({
       resolve: (ok: boolean) => {
         setSound(ok ? "move" : "wrong");
         setIsModalOpen(false);
+        // Always reset moveState on submit to prevent stacking
+        setMoveState(null);
+
         if (!ok) {
           setTurn("ai");
           return;
@@ -89,4 +91,3 @@ export function useHumanMoveHandler({
 
   return { handleTileClick };
 }
-

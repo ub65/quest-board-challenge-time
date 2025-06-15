@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import GameBoard from "@/components/GameBoard";
 import { useLocalization } from "@/contexts/LocalizationContext";
@@ -96,9 +95,8 @@ const Index = () => {
             difficulty={difficulty}
             onRestart={handleRestart}
             playerName={playerName}
-            // Optionally, pass gameCode/role as props for online
-            // gameCode={onlineGame.gameCode}
-            // onlineRole={onlineGame.role}
+            gameCode={onlineGame.gameCode}
+            onlineRole={onlineGame.role}
           />
         </div>
       );

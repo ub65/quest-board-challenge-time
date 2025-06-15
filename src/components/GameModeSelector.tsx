@@ -1,6 +1,6 @@
 
 import React from "react";
-import { User2, Bot } from "lucide-react";
+import { Bot, Search } from "lucide-react";
 
 type GameModeSelectorProps = {
   onSelect: (mode: "ai" | "online") => void;
@@ -24,7 +24,7 @@ const GameModeSelector: React.FC<GameModeSelectorProps> = ({ onSelect, t }) => (
           className="flex items-center gap-3 justify-center px-6 py-4 bg-blue-500 text-white rounded-lg font-bold text-lg shadow transition hover:bg-blue-600"
           onClick={() => onSelect("online")}
         >
-          <User2 className="w-7 h-7" /> {t("welcome.playOnline") || "Play Online (2 players)"}
+          <Search className="w-7 h-7" /> {t("welcome.newGame") || "New Game"}
         </button>
       </div>
     </div>

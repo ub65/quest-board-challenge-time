@@ -1,4 +1,5 @@
-import React from "react";
+
+import React, { useEffect, useRef, useState } from "react";
 import { Gift, Shield } from "lucide-react";
 import { Tile, SurpriseTile, DefenseTile } from "./types";
 
@@ -64,12 +65,50 @@ const GameTile: React.FC<Props> = ({
     content = "";
   }
 
-  // Setup target border without flickering
   let targetBorder = "";
   if (isHumanTarget) {
     targetBorder = "border-2 border-dashed border-green-400";
   } else if (isAITarget) {
     targetBorder = "border-2 border-dashed border-orange-300";
+  }
+
+  // State & logic for 1s glow effect when this tile becomes a target
+  // Using useRef so we trigger effect only on target change
+  const [showGlow, setShowGlow] = useState(false);
+  const prevTargetRef = useRef({ human: { x: -1, y: -1 }, ai: { x: -1, y: -1 } });
+
+  useEffect(() => {
+    let shouldGlow = false;
+    if (isHumanTarget) {
+      // Only glow if JUST became the new humanTarget
+      const prev = prevTargetRef.current.human;
+      if (prev.x !== x || prev.y !== y) {
+        shouldGlow = true;
+        prevTargetRef.current.human = { x, y };
+      }
+    }
+    if (isAITarget) {
+      const prev = prevTargetRef.current.ai;
+      if (prev.x !== x || prev.y !== y) {
+        shouldGlow = true;
+        prevTargetRef.current.ai = { x, y };
+      }
+    }
+    setShowGlow(shouldGlow);
+    if (shouldGlow) {
+      const t = setTimeout(() => setShowGlow(false), 1000);
+      return () => clearTimeout(t);
+    }
+  // we only want to re-trigger if the target tiles change
+  // eslint-disable-next-line
+  }, [isHumanTarget, isAITarget, x, y]);
+
+  // Select animated border classes
+  let glowAnimClass = "";
+  if (showGlow && isHumanTarget) {
+    glowAnimClass = "animate-glow-green";
+  } else if (showGlow && isAITarget) {
+    glowAnimClass = "animate-glow-orange";
   }
 
   return (
@@ -84,18 +123,16 @@ const GameTile: React.FC<Props> = ({
         lg:w-16 lg:h-16 lg:max-w-[72px] lg:max-h-[72px]
         text-[3.8vw] md:text-base font-bold flex items-center justify-center rounded-xl shadow
         transition-all duration-200
-        ${bg} ${border} ${targetBorder}
+        ${bg} ${border} ${targetBorder} ${glowAnimClass}
         ${highlight ? "hover:scale-110 cursor-pointer" : "cursor-default"}
         ${isHuman || isAI ? "text-white" : "text-gray-700"}
         active:scale-105
         touch-manipulation
       `}
       style={{
-        // removed outline to prevent flicker
         zIndex: isHuman || isAI ? 2 : 1,
         aspectRatio: "1 / 1",
         boxSizing: "border-box",
-        // Increased borderRadius for friendlier touch look
       }}
       disabled={disableInput || !!winner}
       onClick={() => onTileClick({ x, y })}

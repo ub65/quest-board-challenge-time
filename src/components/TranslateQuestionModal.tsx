@@ -48,7 +48,7 @@ const TranslateQuestionModal = ({
   onSubmit: (isCorrect: boolean) => void;
   timeLimit?: number;
 }) => {
-  const { t } = useLocalization();
+  const { t, language } = useLocalization();
   const [selected, setSelected] = useState<number | null>(null);
   const [shuffled, setShuffled] = useState<{ answer: string; idx: number }[]>([]);
   const [time, setTime] = useState(timeLimit);
@@ -101,6 +101,8 @@ const TranslateQuestionModal = ({
 
   const sliderColorClass = getTimeSliderColor(time, timeLimit);
 
+  const answerButtonAlign = language === "he" ? "text-right" : "text-left";
+
   return (
     <div
       className={`
@@ -139,7 +141,8 @@ const TranslateQuestionModal = ({
             <button
               key={i}
               className={`
-                border px-5 py-3 rounded-lg text-lg text-left
+                border px-5 py-3 rounded-lg text-lg
+                ${answerButtonAlign}
                 transition-all duration-150
                 ${
                   answered

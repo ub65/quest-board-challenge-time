@@ -33,6 +33,7 @@ const GameBoard = ({
   gameCode,
   onlineRole,
   questionType = "translate",
+  isOnline = false,
 }: {
   difficulty: "easy" | "medium" | "hard";
   onRestart: () => void;
@@ -40,8 +41,18 @@ const GameBoard = ({
   gameCode?: string;
   onlineRole?: "host" | "guest";
   questionType?: "translate" | "math";
+  isOnline?: boolean;
 }) => {
   const { t, language } = useLocalization();
+
+  // Show online info banner if in online mode (gameCode + role)
+  const onlineBanner = isOnline && gameCode && onlineRole ? (
+    <div className="bg-blue-50 border border-blue-300 text-blue-700 rounded p-3 mb-3 text-center">
+      <span className="font-bold">Online Mode:</span>{" "}
+      Game Code: <span className="font-mono text-base">{gameCode}</span> |{" "}
+      Role: {onlineRole === "host" ? "Host" : "Guest"}
+    </div>
+  ) : null;
 
   // Settings
   const {
@@ -370,6 +381,7 @@ const GameBoard = ({
 
   return (
     <div className="relative w-full">
+      {onlineBanner}
       {/* Show overlay modal before game starts */}
       {!gameStarted && startingPlayer && (
         <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black/40">

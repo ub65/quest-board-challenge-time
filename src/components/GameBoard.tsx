@@ -167,8 +167,8 @@ const GameBoard = ({
     setDefensesUsed,
     toast,
     setTurn,
-    setAIModalState,
     aiMovingRef,
+    // Only pass this setAIModalState override ONCE!
     setAIModalState: (val) => {
       // OVERRIDE: always pass a question of the selected type!
       if (val && val.targetTile) {

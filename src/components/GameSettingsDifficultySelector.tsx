@@ -23,7 +23,7 @@ const GameSettingsDifficultySelector = ({ difficulty, onDifficultyChange }: Prop
       <Label className="text-base font-semibold mb-2 block text-center w-full">
         {t("game.difficulty")}
       </Label>
-      <div className="flex gap-2 justify-center w-full">
+      <div className="flex gap-4 justify-center w-full">
         {difficulties.map((d) => (
           <button
             key={d.value}

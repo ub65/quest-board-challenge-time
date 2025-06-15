@@ -1,3 +1,4 @@
+
 import React from "react";
 import GameTile from "./GameBoard/GameTile";
 import { useValidMoves } from "./GameBoard/useValidMoves";
@@ -47,9 +48,7 @@ const GameBoardGrid: React.FC<GameBoardGridProps> = ({
     getValidMoves,
   });
 
-  // Responsive: calculate max grid width based on screen size
-  // (Larger on desktop, nearly full on mobile)
-  // Grid will shrink to fit mobile screens, keeping spacing tight.
+  // Modern frosted glass+gradient effect for the board background
   return (
     <div
       className="w-full flex justify-center items-center"
@@ -58,20 +57,24 @@ const GameBoardGrid: React.FC<GameBoardGridProps> = ({
       }}
     >
       <div
-        className={`
-          grid gap-[2vw] 
-          md:gap-1
-          rounded-2xl p-[2vw] md:p-2 shadow-lg bg-white/90
-          border border-gray-200
+        className={
+          `
+          grid gap-[2.6vw] md:gap-2
+          rounded-[2.6rem] md:rounded-2xl p-[3vw] md:p-4
+          shadow-2xl
+          bg-gradient-to-br from-blue-100/85 via-white/85 to-violet-200/80
+          border border-blue-100/60 backdrop-blur-xl
+          relative
+          ring-2 ring-sky-100/60
           transition-all
-        `}
+        `
+        }
         style={{
           gridTemplateRows: `repeat(${BOARD_SIZE}, minmax(0, 1fr))`,
           gridTemplateColumns: `repeat(${BOARD_SIZE}, minmax(0, 1fr))`,
           width: "100%",
-          maxWidth: "450px",
-          minWidth: "min(92vw, 400px)",
-          // Ensures mobile grid fits screen, prevents overflow.
+          maxWidth: "460px",
+          minWidth: "min(99vw, 380px)",
         }}
       >
         {Array.from({ length: BOARD_SIZE }).map((_, y) =>
@@ -118,3 +121,4 @@ const GameBoardGrid: React.FC<GameBoardGridProps> = ({
 };
 
 export default GameBoardGrid;
+

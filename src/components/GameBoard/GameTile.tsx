@@ -45,24 +45,34 @@ const GameTile: React.FC<Props> = ({
   const isHumanTarget = x === humanTarget.x && y === humanTarget.y;
   let isAITarget = !aiPendingTarget && x === aiTarget.x && y === aiTarget.y;
 
-  let bg = "bg-gray-200";
-  let border = "";
+  // --- Tile visual state
+  // Stronger highlight and saturated gradient backgrounds for special states
+  let bg = "bg-gradient-to-b from-white via-indigo-100 to-violet-100";
+  let border = "border-2 border-indigo-100/60";
   let content = "";
 
   if (isHuman) {
-    bg = "bg-blue-600";
-    border = "border-4 border-blue-400";
+    bg = "bg-gradient-to-b from-blue-500 via-blue-400 to-cyan-400";
+    border =
+      "border-4 border-blue-700/60 shadow-blue-300/70 shadow-2xl ring-2 ring-blue-400/20";
     content = "YOU";
   } else if (isAI) {
-    bg = "bg-red-600";
-    border = "border-4 border-red-400";
+    bg = "bg-gradient-to-b from-red-600 via-red-500 to-orange-400";
+    border =
+      "border-4 border-red-700/70 shadow-orange-400/70 shadow-2xl ring-2 ring-orange-500/20";
     content = "AI";
   } else if (isHumanTarget) {
-    bg = "bg-green-300";
+    bg = "bg-gradient-to-b from-green-300 via-green-200 to-emerald-100";
     content = "";
   } else if (isAITarget) {
-    bg = "bg-orange-200";
+    bg = "bg-gradient-to-b from-orange-300 via-orange-200 to-yellow-100";
     content = "";
+  } else if (surprise && !defense) {
+    bg = "bg-gradient-to-b from-pink-100 to-pink-200";
+    border = "border-2 border-pink-200";
+  } else if (defense) {
+    bg = "bg-gradient-to-b from-gray-200 to-gray-100";
+    border = "border-2 border-gray-400/60";
   }
 
   let targetBorder = "";
@@ -72,15 +82,13 @@ const GameTile: React.FC<Props> = ({
     targetBorder = "border-2 border-dashed border-orange-300";
   }
 
-  // State & logic for 1s glow effect when this tile becomes a target
-  // Using useRef so we trigger effect only on target change
+  // Glow border on target transition
   const [showGlow, setShowGlow] = useState(false);
   const prevTargetRef = useRef({ human: { x: -1, y: -1 }, ai: { x: -1, y: -1 } });
 
   useEffect(() => {
     let shouldGlow = false;
     if (isHumanTarget) {
-      // Only glow if JUST became the new humanTarget
       const prev = prevTargetRef.current.human;
       if (prev.x !== x || prev.y !== y) {
         shouldGlow = true;
@@ -99,17 +107,24 @@ const GameTile: React.FC<Props> = ({
       const t = setTimeout(() => setShowGlow(false), 1000);
       return () => clearTimeout(t);
     }
-  // we only want to re-trigger if the target tiles change
-  // eslint-disable-next-line
+    // eslint-disable-next-line
   }, [isHumanTarget, isAITarget, x, y]);
 
-  // Select animated border classes
   let glowAnimClass = "";
   if (showGlow && isHumanTarget) {
     glowAnimClass = "animate-glow-green";
   } else if (showGlow && isAITarget) {
     glowAnimClass = "animate-glow-orange";
   }
+
+  // --- Responsive sizing for mobile/desktop
+  // Special tile class for extra shadow and animations
+  const raisedClass = (highlight || isHuman || isAI)
+    ? "hover:scale-[1.08] md:hover:scale-105 active:scale-100"
+    : "";
+
+  // Content/text color/decoration
+  const isSpecial = isHuman || isAI || isHumanTarget || isAITarget || defense || surprise;
 
   return (
     <button
@@ -118,21 +133,27 @@ const GameTile: React.FC<Props> = ({
       data-tile-y={y}
       className={`
         relative select-none
-        w-[10vw] h-[10vw] min-w-[38px] min-h-[38px] max-w-[52px] max-h-[52px]
-        md:w-14 md:h-14 md:max-w-[62px] md:max-h-[62px] 
-        lg:w-16 lg:h-16 lg:max-w-[72px] lg:max-h-[72px]
-        text-[3.8vw] md:text-base font-bold flex items-center justify-center rounded-xl shadow
-        transition-all duration-200
-        ${bg} ${border} ${targetBorder} ${glowAnimClass}
-        ${highlight ? "hover:scale-110 cursor-pointer" : "cursor-default"}
-        ${isHuman || isAI ? "text-white" : "text-gray-700"}
-        active:scale-105
+        w-[10vw] h-[10vw] min-w-[40px] min-h-[40px] max-w-[54px] max-h-[54px]
+        md:w-[54px] md:h-[54px]
+        lg:w-16 lg:h-16
+        text-[4.5vw] md:text-lg font-extrabold flex items-center justify-center
+        rounded-2xl
+        shadow-2xl ${bg} ${border} ${targetBorder} ${glowAnimClass} 
+        ${highlight ? "cursor-pointer hover:ring-2 hover:ring-indigo-400/60 hover:shadow-indigo-200/70 transition-transform duration-150" : "cursor-default"}
+        ${raisedClass}
+        ${isHuman ? "text-white drop-shadow-[0_2px_3px_rgba(0,32,108,0.18)]" : ""}
+        ${isAI ? "text-white drop-shadow-[0_2px_3px_rgba(160,32,32,0.18)]" : ""}
+        ${(isHumanTarget || isAITarget) ? "text-gray-600" : ""}
+        ${(surprise && !isHuman && !isAI) ? "ring-2 ring-pink-200/40" : ""}
+        transition-all duration-200 ease-in-out
+        overflow-hidden
         touch-manipulation
       `}
       style={{
-        zIndex: isHuman || isAI ? 2 : 1,
+        zIndex: isHuman || isAI ? 2 : isSpecial ? 1.5 : 1,
         aspectRatio: "1 / 1",
         boxSizing: "border-box",
+        WebkitTapHighlightColor: "transparent",
       }}
       disabled={disableInput || !!winner}
       onClick={() => onTileClick({ x, y })}
@@ -162,28 +183,30 @@ const GameTile: React.FC<Props> = ({
         ) &&
         boardPoints[y] &&
         boardPoints[y][x] > 0) && (
-          <span className="absolute bottom-1 right-2 text-xs md:text-sm text-amber-700 font-medium bg-white/80 px-1.5 py-0.5 rounded shadow pointer-events-none select-none">
+          <span className="absolute bottom-[2px] right-[8px] text-xs md:text-base text-orange-700 font-black bg-white/90 px-2 py-0.5 rounded shadow-lg pointer-events-none select-none border border-amber-100">
             {boardPoints[y][x]}
           </span>
         )}
       {surprise && !isHuman && !isAI && !isHumanTarget && !isAITarget && !defense && (
-        <span className="absolute top-1 left-1">
-          <Gift size={18} className="text-pink-500 animate-bounce" />
+        <span className="absolute top-2 left-2 z-20">
+          <Gift size={22} className="text-pink-500 drop-shadow-glow animate-bounce" />
         </span>
       )}
       {defense && !isHuman && !isAI && (
-        <span className={`absolute top-1 right-1 z-10`}>
+        <span className={`absolute top-2 right-2 z-20`}>
           <Shield
-            size={19}
-            className={defense.owner === "human" ? "text-blue-900 drop-shadow" : "text-red-800 drop-shadow"}
+            size={22}
+            className={defense.owner === "human"
+              ? "text-blue-900 drop-shadow-[0_0_7px_rgba(30,140,255,0.18)]"
+              : "text-red-800 drop-shadow-[0_0_7px_rgba(230,80,50,0.18)]"}
           />
         </span>
       )}
       {isHumanTarget && (
-        <span className="absolute inset-1 rounded bg-green-400/40 border border-green-600 pointer-events-none" />
+        <span className="absolute inset-1 rounded bg-green-400/35 border border-green-600/70 pointer-events-none z-10" />
       )}
       {isAITarget && (
-        <span className="absolute inset-1 rounded bg-orange-300/50 border border-orange-400 pointer-events-none" />
+        <span className="absolute inset-1 rounded bg-orange-300/40 border border-orange-400/70 pointer-events-none z-10" />
       )}
     </button>
   );

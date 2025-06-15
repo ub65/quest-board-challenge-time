@@ -40,7 +40,7 @@ const MathQuestionModal = ({
   onSubmit: (isCorrect: boolean) => void;
   timeLimit?: number;
 }) => {
-  const { t } = useLocalization();
+  const { t, language } = useLocalization();
   const [selected, setSelected] = useState<number | null>(null);
   const [shuffled, setShuffled] = useState<{ answer: string; idx: number }[]>([]);
   const [time, setTime] = useState(timeLimit);
@@ -91,15 +91,18 @@ const MathQuestionModal = ({
 
   const sliderColorClass = getTimeSliderColor(time, timeLimit);
 
+  // Set direction for Hebrew
+  const direction = language === "he" ? "rtl" : "ltr";
+
   return (
     <div
       className={`
       fixed inset-0 z-[100] flex items-center justify-center bg-black/60 animate-fade-in
     `}
-      style={{ pointerEvents: isOpen ? "auto" : "none" }}
+      style={{ pointerEvents: isOpen ? "auto" : "none", direction }}
     >
       <SoundManager trigger={playWinSound ? "win" : null} />
-      <div className="w-full max-w-lg bg-white rounded-lg shadow-lg p-6 animate-scale-in flex flex-col">
+      <div className="w-full max-w-lg bg-white rounded-lg shadow-lg p-6 animate-scale-in flex flex-col" style={{ direction }}>
         {isOpen && !answered && time > 0 && <TickSound tick={time} />}
         <div className="flex flex-col gap-2 mb-5">
           <label className="font-semibold flex items-center justify-between select-none">
@@ -143,6 +146,7 @@ const MathQuestionModal = ({
               `}
               disabled={answered}
               onClick={() => handlePick(i)}
+              style={{ direction }}
             >
               {answer}
             </button>
@@ -161,3 +165,4 @@ const MathQuestionModal = ({
 };
 
 export default MathQuestionModal;
+

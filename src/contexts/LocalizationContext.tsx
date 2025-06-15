@@ -112,6 +112,7 @@ const translations = {
     'welcome.playerName': 'Your Name',
     'welcome.playerNamePlaceholder': 'Enter your name',
     'welcome.settings': 'Settings',
+    'welcome.questionType': 'Question Type', // Added line
     'welcome.back': 'Back',
     
     // New: support fallbacks for {n} interpolation
@@ -218,6 +219,7 @@ const translations = {
     'welcome.playerName': 'השם שלך',
     'welcome.playerNamePlaceholder': 'הכנס את שמך',
     'welcome.settings': 'הגדרות',
+    'welcome.questionType': 'סוג שאלה', // Added line
     'welcome.back': 'חזרה',
     
     // New: support fallbacks for {n} interpolation

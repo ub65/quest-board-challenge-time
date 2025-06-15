@@ -1,3 +1,5 @@
+
+// Refactored GameBoard: uses split files for state and logic
 import React, { useRef, useEffect, useState } from "react";
 import { useLocalization } from "@/contexts/LocalizationContext";
 import { toast } from "@/components/ui/use-toast";
@@ -5,18 +7,12 @@ import {
   PlayerType,
   DEFAULT_BOARD_SIZE,
   DEFAULT_QUESTION_TIME,
-  DEFAULT_DEFENSES,
-  SURPRISE_TYPES,
 } from "./GameBoard/types";
 import {
   getValidMoves,
   positionsEqual,
   generateRandomPoints,
   getRandomSurpriseTiles,
-  getAIDefenseTile,
-  getDistance,
-  getAIMove,
-  getRandomQuestion,
 } from "./GameBoard/utils";
 import { useAITurn } from "./GameBoard/aiHooks";
 import { useHumanMoveHandler } from "./GameBoard/humanHooks";
@@ -46,7 +42,7 @@ const GameBoard = ({
 }) => {
   const { t, language } = useLocalization();
 
-  // --- Refactored settings state ---
+  // Settings
   const {
     difficulty, setDifficulty,
     settingsOpen, setSettingsOpen,
@@ -57,7 +53,7 @@ const GameBoard = ({
     numDefenses, setNumDefenses,
   } = useGameSettings(initialDifficulty);
 
-  // --- Refactored board state ---
+  // Board/game state
   const {
     boardPoints, setBoardPoints,
     humanPoints, setHumanPoints,
@@ -75,12 +71,12 @@ const GameBoard = ({
     disableInput, setDisableInput,
   } = useGameBoardState(boardSize, numSurprises, numDefenses);
 
-  // Restore missing variables: 
+  // --- Derived targets
   const BOARD_SIZE = boardSize;
   const aiTarget = { x: 0, y: 0 };
   const humanTarget = { x: BOARD_SIZE - 1, y: BOARD_SIZE - 1 };
 
-  // State for AI modal and ref for AI moving (needed by AITurn hook)
+  // Modal management for AI
   const [aiModalState, setAIModalState] = useState<null | { question: any; targetTile: any }>(null);
   const aiMovingRef = useRef(false);
 
@@ -124,7 +120,6 @@ const GameBoard = ({
 
   // This change allows using math/translate Qs as per setting
   function getQuestionForTurn() {
-    // Diagnostic: Print the type and result
     const qtype = questionType;
     let q;
     if (qtype === "math") {
@@ -136,9 +131,7 @@ const GameBoard = ({
     return q;
   }
 
-  // Remove getQuestion from props to useAITurn, useHumanMoveHandler
-
-  // AI turn, including defense! (before question)
+  // AI turn (with defense/board state passed)
   useAITurn({
     turn,
     winner,
@@ -161,10 +154,9 @@ const GameBoard = ({
     setTurn,
     setAIModalState,
     aiMovingRef
-    // getQuestion: getQuestionForTurn (REMOVED: handled internally for now)
   });
 
-  // Extracted: surprise logic
+  // SURPRISE logic
   const surpriseHandler = useSurprise({
     boardPoints,
     surpriseTiles,
@@ -177,7 +169,7 @@ const GameBoard = ({
     toast,
   });
 
-  // HUD Actions (defense mode) - moved to custom hook
+  // HUD Actions (defense mode)
   const { startDefensePlacement } = useDefenseModeHandler({
     t,
     toast,
@@ -185,7 +177,7 @@ const GameBoard = ({
     handleDefenseClick,
   });
 
-  // Refactored: human move handler now receives surpriseHandler
+  // Human move handler
   const { handleTileClick } = useHumanMoveHandler({
     winner,
     disableInput,
@@ -204,10 +196,9 @@ const GameBoard = ({
     setTurn,
     setHumanPoints,
     handleSurprise: surpriseHandler,
-    // getQuestion: getQuestionForTurn (REMOVED: handled internally for now)
   });
 
-  // AI move handler (after answering modal)
+  // AI move modal submit handler
   const handleAIModalSubmit = () => {
     if (!aiModalState || winner) return;
     setSound("move");
@@ -235,7 +226,7 @@ const GameBoard = ({
     }, 100);
   };
 
-  // Defense placement handler
+  // Defense placement
   function handleDefenseClick(tile: { x: number; y: number }) {
     const problem = canPlaceDefenseHere({
       tile,
@@ -265,7 +256,7 @@ const GameBoard = ({
     });
   }
 
-  // Reset game using extracted hook
+  // Restart game
   const handleRestart = useGameRestart({
     boardSize,
     numSurprises,
@@ -347,5 +338,5 @@ const GameBoard = ({
 
 export default GameBoard;
 
-// NOTE: This file is now quite large (354+ lines).
-// Consider requesting a file refactor!
+// NOTE: This file is now much smaller and delegates logic via hooks and separated files.
+

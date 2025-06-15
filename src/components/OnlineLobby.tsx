@@ -2,6 +2,7 @@
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/use-toast";
+import { ToastAction } from "@/components/ui/toast";
 
 /**
  * Online lobby supporting game creation/joining flows, now allows playing vs AI after joining.
@@ -38,11 +39,23 @@ const OnlineLobby: React.FC<{
       setGameCode(newCode);
       setCurrentRole("host");
       setIsCreating(false);
+      const toastId = Math.random().toString(36).substring(2);
       toast({
+        id: toastId,
         title: t("online.lobbyGameCreated") || "Game Created",
-        description: `${t("online.lobbyShareCode") || "Share this code:"} ${newCode}`,
+        description:
+          `${t("online.lobbyShareCode") || "Share this code:"} ${newCode}`,
+        duration: 45000,
+        action: (
+          <ToastAction altText={t("online.lobbyContinue") || "Continue"} onClick={() => {
+            setStep("choose-opponent");
+            // Dismiss the toast by id if needed (Radix Toast will close automatically)
+          }}>
+            {t("online.lobbyContinue") || "Continue"}
+          </ToastAction>
+        ),
       });
-      setStep("choose-opponent");
+      // Don't move to "choose-opponent" yet—wait for user to press Continue.
     }, 700);
   };
 
@@ -178,3 +191,4 @@ const OnlineLobby: React.FC<{
 };
 
 export default OnlineLobby;
+

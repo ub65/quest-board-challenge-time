@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { useLocalization } from "@/contexts/LocalizationContext";
 import { Slider } from "@/components/ui/slider";
@@ -101,7 +100,8 @@ const TranslateQuestionModal = ({
 
   const sliderColorClass = getTimeSliderColor(time, timeLimit);
 
-  const answerButtonAlign = language === "he" ? "text-right" : "text-left";
+  // Remove answerButtonAlign, always center
+  // const answerButtonAlign = language === "he" ? "text-right" : "text-left";
 
   return (
     <div
@@ -142,7 +142,7 @@ const TranslateQuestionModal = ({
               key={i}
               className={`
                 border px-5 py-3 rounded-lg text-lg
-                ${answerButtonAlign}
+                text-center
                 transition-all duration-150
                 ${
                   answered
@@ -178,4 +178,3 @@ const TranslateQuestionModal = ({
 };
 
 export default TranslateQuestionModal;
-

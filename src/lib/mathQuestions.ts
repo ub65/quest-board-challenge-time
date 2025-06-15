@@ -1,4 +1,3 @@
-
 /**
  * Utility to generate random math questions by difficulty.
  * Returns an object: { prompt: string, answers: string[], correct: number }
@@ -22,8 +21,18 @@ export function getRandomMathQuestion(difficulty: "easy" | "medium" | "hard"): M
       a = getRandomInt(1, 10);
       b = getRandomInt(1, 10);
       op = Math.random() > 0.5 ? "+" : "-";
-      solution = op === "+" ? a + b : a - b;
-      prompt = `${a} ${op} ${b} = ?`;
+      if (op === "-") {
+        // Ensure non-negative result
+        if (a < b) {
+          // Swap so that a >= b
+          [a, b] = [b, a];
+        }
+        solution = a - b;
+        prompt = `${a} - ${b} = ?`;
+      } else {
+        solution = a + b;
+        prompt = `${a} + ${b} = ?`;
+      }
       break;
     case "medium":
       a = getRandomInt(2, 12);

@@ -197,6 +197,8 @@ const GameBoard = ({
     setTurn,
     setHumanPoints,
     handleSurprise: surpriseHandler,
+    questionType,
+    getQuestionForTurn,
   });
 
   // AI move modal submit handler

@@ -1,138 +1,83 @@
-
 import { useCallback } from "react";
-import { getRandomQuestion, getValidMoves, positionsEqual } from "./utils";
-import { Tile, PlayerType, DefenseTile } from "./types";
-
-type UseHumanMovesProps = {
-  winner: PlayerType | null;
-  disableInput: boolean;
-  turn: PlayerType;
-  positions: { human: Tile; ai: Tile };
-  BOARD_SIZE: number;
-  defenseTiles: DefenseTile[];
-  difficulty: "easy" | "medium" | "hard";
-  defenseMode: boolean;
-  handleDefenseClick: (tile: Tile) => void;
-
-  setSound: (s: any) => void;
-  setPositions: (f: (p: any) => any) => void;
-  setBoardPoints: (f: (bp: number[][]) => number[][]) => void;
-  setIsModalOpen: (b: boolean) => void;
-  setMoveState: (v: any) => void;
-  setTurn: (p: PlayerType) => void;
-  setHumanPoints: (f: (v: number) => number) => void;
-  handleSurprise: (tile: Tile, player: PlayerType) => boolean | undefined;
-};
+import { getRandomQuestion } from "./utils";
+import { canMoveTo } from "./defenseHelpers";
 
 export function useHumanMoveHandler({
-  winner,
-  disableInput,
-  turn,
-  positions,
-  BOARD_SIZE,
-  defenseTiles,
-  difficulty,
-  defenseMode,
-  handleDefenseClick,
-  setSound,
-  setPositions,
-  setBoardPoints,
-  setIsModalOpen,
-  setMoveState,
-  setTurn,
-  setHumanPoints,
-  handleSurprise,
-}: UseHumanMovesProps) {
-  // returns a stable tile click handler for GameBoardGrid
-  const handleTileClick = useCallback(
-    async (tile: Tile) => {
-      if (winner || disableInput) return;
+  winner, disableInput, turn, positions, BOARD_SIZE, defenseTiles, difficulty,
+  defenseMode, handleDefenseClick, setSound, setPositions, setBoardPoints,
+  setIsModalOpen, setMoveState, setTurn, setHumanPoints, handleSurprise,
+  questionType,
+  getQuestionForTurn,
+}: {
+  winner: any;
+  disableInput: boolean;
+  turn: any;
+  positions: any;
+  BOARD_SIZE: number;
+  defenseTiles: any[];
+  difficulty: string;
+  defenseMode: boolean;
+  handleDefenseClick: (tile: {x: number, y: number}) => void;
+  setSound: (s: any) => void;
+  setPositions: any;
+  setBoardPoints: any;
+  setIsModalOpen: any;
+  setMoveState: any;
+  setTurn: any;
+  setHumanPoints: any;
+  handleSurprise: any;
+  questionType: "math" | "translate";
+  getQuestionForTurn: () => any;
+}) {
+  const handleTileClick = useCallback((tile) => {
+    if (defenseMode) {
+      handleDefenseClick(tile);
+      return;
+    }
+    if (winner || disableInput || turn !== "human") return;
 
-      // In defense mode, clicks should place a defense instead of moving
-      if (defenseMode) {
-        handleDefenseClick(tile);
-        return;
-      }
+    // Check if the human can move to the selected tile
+    if (!canMoveTo(tile, positions.ai, defenseTiles, BOARD_SIZE)) {
+      setSound("wrong");
+      return;
+    }
 
-      // NOT DEFENSE MODE: regular move
-      if (turn !== "human") return;
+    // Show a question for human move
+    const question = getQuestionForTurn();
+    setMoveState({
+      tile,
+      question,
+      resolve: (ok: boolean) => {
+        setSound(ok ? "move" : "wrong");
+        setIsModalOpen(false);
+        if (!ok) {
+          setTurn("ai");
+          return;
+        }
 
-      const validMoves = getValidMoves(
-        positions.human,
-        BOARD_SIZE,
-        defenseTiles,
-        positions.ai
-      ).filter(
-        (t) =>
-          t.x >= 0 &&
-          t.y >= 0 &&
-          t.x < BOARD_SIZE &&
-          t.y < BOARD_SIZE
-      );
-      if (!validMoves.some((t) => positionsEqual(t, tile))) return;
-      const question = getRandomQuestion(difficulty);
-      const ok = await new Promise<boolean>((resolve) => {
-        setMoveState({ tile, question, resolve });
-        setIsModalOpen(true);
-      });
-      setIsModalOpen(false);
-      setMoveState(null);
-      if (winner) return;
-
-      if (ok) {
         setPositions((p) => {
-          const { x, y } = tile;
           setBoardPoints((prev) => {
-            if (prev[y][x] === 0) return prev;
-            if (
-              (x === 0 && y === 0) ||
-              (x === BOARD_SIZE - 1 && y === BOARD_SIZE - 1)
-            )
-              return prev;
-            setHumanPoints((cur) => cur + prev[y][x]);
-            // DO NOT clear the points! Commented out:
-            // const next = prev.map((row) => [...row]);
-            // next[y][x] = 0;
-            // return next;
-            return prev;
+            const newBoard = prev.map((row) => [...row]);
+            if (!((tile.x === BOARD_SIZE - 1 && tile.y === BOARD_SIZE - 1) || (tile.x === 0 && tile.y === 0))) {
+              setHumanPoints((cur) => cur + newBoard[tile.y][tile.x]);
+            }
+            return newBoard;
           });
-          return { ...p, human: { x, y } };
+          return { ...p, human: { x: tile.x, y: tile.y } };
         });
-        setSound("move");
 
         setTimeout(() => {
-          const doFreeMove = handleSurprise(tile, "human");
-          if (!doFreeMove) {
-            setTurn("ai");
-          }
-          // If doFreeMove: stay on human
+          handleSurprise(tile, "human");
+          setTimeout(() => {
+            if (!winner) {
+              setTurn("ai");
+            }
+          }, 600);
         }, 100);
-      } else {
-        setSound("wrong");
-        setTurn("ai");
       }
-    },
-    [
-      winner,
-      disableInput,
-      defenseMode,
-      turn,
-      positions,
-      BOARD_SIZE,
-      defenseTiles,
-      difficulty,
-      handleDefenseClick,
-      setSound,
-      setPositions,
-      setBoardPoints,
-      setIsModalOpen,
-      setMoveState,
-      setTurn,
-      setHumanPoints,
-      handleSurprise,
-    ]
-  );
+    });
+    setIsModalOpen(true);
+  }, [BOARD_SIZE, canMoveTo, defenseMode, defenseTiles, disableInput, getQuestionForTurn, handleDefenseClick, handleSurprise, positions.ai, setBoardPoints, setHumanPoints, setIsModalOpen, setMoveState, setPositions, setSound, setTurn, winner]);
 
   return { handleTileClick };
 }
-

@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/use-toast";
@@ -39,9 +38,7 @@ const OnlineLobby: React.FC<{
       setGameCode(newCode);
       setCurrentRole("host");
       setIsCreating(false);
-      const toastId = Math.random().toString(36).substring(2);
       toast({
-        id: toastId,
         title: t("online.lobbyGameCreated") || "Game Created",
         description:
           `${t("online.lobbyShareCode") || "Share this code:"} ${newCode}`,
@@ -191,4 +188,3 @@ const OnlineLobby: React.FC<{
 };
 
 export default OnlineLobby;
-

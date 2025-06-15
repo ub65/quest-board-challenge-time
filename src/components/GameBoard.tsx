@@ -1,4 +1,3 @@
-
 import React, { useRef, useEffect, useState } from "react";
 import { useLocalization } from "@/contexts/LocalizationContext";
 import { toast } from "@/components/ui/use-toast";
@@ -125,11 +124,16 @@ const GameBoard = ({
 
   // This change allows using math/translate Qs as per setting
   function getQuestionForTurn() {
-    if (questionType === "math") {
-      return getRandomMathQuestion(difficulty);
+    // Diagnostic: Print the type and result
+    const qtype = questionType;
+    let q;
+    if (qtype === "math") {
+      q = getRandomMathQuestion(difficulty);
     } else {
-      return getRandomQuestion(difficulty);
+      q = getRandomQuestion(difficulty);
     }
+    console.log("[QUESTION GENERATOR]", { qtype, result: q });
+    return q;
   }
 
   // Remove getQuestion from props to useAITurn, useHumanMoveHandler

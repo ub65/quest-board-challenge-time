@@ -24,6 +24,12 @@ const GameBoardModals: React.FC<GameBoardModalsProps> = ({
   onHumanSubmit,
   onAISubmit,
 }) => {
+  if (moveState) {
+    console.log("[MODAL/HUMAN] Showing modal with question:", moveState.question);
+  }
+  if (aiModalState) {
+    console.log("[MODAL/AI] Showing modal with question:", aiModalState.question);
+  }
   return (
     <>
       {moveState && !winner && (
@@ -48,3 +54,4 @@ const GameBoardModals: React.FC<GameBoardModalsProps> = ({
 };
 
 export default GameBoardModals;
+

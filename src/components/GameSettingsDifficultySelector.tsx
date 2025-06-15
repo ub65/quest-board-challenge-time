@@ -19,24 +19,24 @@ const GameSettingsDifficultySelector = ({ difficulty, onDifficultyChange }: Prop
   const { t } = useLocalization();
 
   return (
-    <div>
-      <Label className="text-base font-semibold mb-2 block">
+    <div className="flex flex-col items-center w-full">
+      <Label className="text-base font-semibold mb-2 block text-center w-full">
         {t("game.difficulty")}
       </Label>
-      <div className="flex gap-2 justify-between flex-wrap">
+      <div className="flex gap-2 justify-center w-full">
         {difficulties.map((d) => (
           <button
             key={d.value}
             type="button"
             onClick={() => onDifficultyChange(d.value as "easy" | "medium" | "hard")}
             className={cn(
-              "flex-1 min-w-0 max-w-[110px] sm:max-w-[120px] px-0 py-0 flex items-stretch"
+              "min-w-0 flex-1 max-w-[90px] px-0 py-0 flex items-stretch"
             )}
             style={{ flexBasis: 0 }}
           >
             <span
               className={cn(
-                "w-full h-10 sm:h-11 rounded-md font-bold shadow ring-primary transition-all text-sm flex items-center justify-center border select-none px-2",
+                "w-full h-8 sm:h-9 rounded-md font-bold shadow ring-primary transition-all text-xs flex items-center justify-center border select-none px-1",
                 d.color,
                 difficulty === d.value
                   ? "ring-2 ring-offset-2 scale-105 bg-opacity-80"

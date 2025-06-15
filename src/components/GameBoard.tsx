@@ -13,6 +13,7 @@ import {
   positionsEqual,
   generateRandomPoints,
   getRandomSurpriseTiles,
+  getRandomQuestion // Add this import
 } from "./GameBoard/utils";
 import { useAITurn } from "./GameBoard/aiHooks";
 import { useHumanMoveHandler } from "./GameBoard/humanHooks";

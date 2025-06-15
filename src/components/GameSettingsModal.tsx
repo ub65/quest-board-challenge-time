@@ -16,6 +16,7 @@ import GameSettingsDifficultySelector from "./GameSettingsDifficultySelector";
 import GameSettingsSoundToggle from "./GameSettingsSoundToggle";
 import GameSettingsSlider from "./GameSettingsSlider";
 import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
 
 // Utility to detect iOS/keyboard (very basic, best-effort)
 const useKeyboardPadding = () => {
@@ -23,7 +24,6 @@ const useKeyboardPadding = () => {
 
   useEffect(() => {
     const handler = () => {
-      // If window.innerHeight shrinks, assume keyboard open
       if (window.visualViewport) {
         setKeyboardPad(
           Math.max(0, window.outerHeight - window.visualViewport.height)
@@ -137,119 +137,162 @@ const GameSettingsModal = ({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        className="
-          bg-gradient-to-br from-background to-secondary p-0 shadow-2xl rounded-2xl border-0 
-          max-w-[500px] max-h-[95vh] sm:max-h-[700px] w-full
+        className={`
+          !p-0
+          max-w-[420px]
+          sm:max-w-[440px]
+          w-full
+          rounded-2xl
+          overflow-hidden
+          border
+          bg-white
+          shadow-xl
           flex flex-col
-        "
+          min-h-[66vh]
+          max-h-[97vh]
+          animate-fade-in
+        `}
         style={{
-          padding: 0,
-          display: "flex",
-          flexDirection: "column",
-          minHeight: "60vh",
-          maxHeight: "95vh",
+          minHeight: "66vh",
+          maxHeight: "97vh",
+          borderWidth: 1,
+          borderColor: "rgb(228,232,240)",
+          backgroundColor: "white"
         }}
       >
+        {/* Classic "windowed" header */}
+        <div className="bg-gradient-to-b from-slate-50 to-slate-100 p-6 pb-4 w-full border-b flex flex-col items-center">
+          <div className="flex items-center gap-3">
+            <span className="rounded-md bg-primary/10 p-2 flex items-center justify-center">
+              <SlidersHorizontal size={28} className="text-primary" />
+            </span>
+            <DialogTitle className="text-xl font-bold tracking-tight text-gray-900">
+              {t("settings.title")}
+            </DialogTitle>
+          </div>
+          <DialogDescription className="mt-2 text-base text-gray-500 text-center max-w-[340px]">
+            {t("settings.desc")}
+          </DialogDescription>
+        </div>
+        <Separator className="w-full" />
+        {/* SCROLL AREA FOR SETTINGS */}
         <ScrollArea
-          className="flex-1 px-6 pt-7 pb-4 max-h-[88vh] sm:max-h-[630px] w-full"
+          className="flex-1 px-5 pt-3 pb-2 overflow-y-auto w-full"
           style={{
             minHeight: 0,
-            maxHeight: "calc(95vh - 0px)",
-            // Keyboard-aware bottom pad for iOS/Android if needed
-            paddingBottom: (keyboardPad || 96) + "px", // At least enough for buttons
+            maxHeight: "calc(97vh - 182px)",
+            paddingBottom: (keyboardPad || 96) + "px",
           }}
         >
-          <DialogHeader>
-            <div className="flex flex-col items-center gap-1 mb-2">
-              <SlidersHorizontal size={32} className="text-primary" />
-              <DialogTitle className="text-2xl font-bold tracking-tight">
-                {t('settings.title')}
-              </DialogTitle>
-              <DialogDescription className="mb-0 text-center">
-                {t('settings.desc')}
-              </DialogDescription>
-            </div>
-          </DialogHeader>
-          <div className="py-2 flex flex-col gap-7 w-full">
-            <LanguageSelector />
-            <GameSettingsDifficultySelector
-              difficulty={pendingDifficulty}
-              onDifficultyChange={setPendingDifficulty}
-            />
-            <GameSettingsSoundToggle
-              soundEnabled={pendingSound}
-              onSoundChange={setPendingSound}
-            />
-            <GameSettingsSlider
-              id="board-size-slider"
-              labelKey="settings.boardSize"
-              min={5}
-              max={12}
-              step={1}
-              value={pendingBoardSize}
-              onValueChange={setPendingBoardSize}
-              displayValue={`${pendingBoardSize}x${pendingBoardSize}`}
-              minLabelKey="settings.boardMin"
-              maxLabelKey="settings.boardMax"
-            />
-            <GameSettingsSlider
-              id="question-time-slider"
-              labelKey="settings.questionTime"
-              min={6}
-              max={40}
-              step={1}
-              value={pendingQuestionTime}
-              onValueChange={setPendingQuestionTime}
-              suffix="s"
-              minLabelKey="settings.timeMin"
-              maxLabelKey="settings.timeMax"
-            />
-            <GameSettingsSlider
-              id="surprise-count-slider"
-              labelKey="settings.surpriseCount"
-              min={1}
-              max={8}
-              step={1}
-              value={pendingSurpriseCount}
-              onValueChange={setPendingSurpriseCount}
-              minLabelKey="settings.surpriseMin"
-              maxLabelKey="settings.surpriseMax"
-            />
-            <GameSettingsSlider
-              id="defense-count-slider"
-              labelKey="settings.defenseCount"
-              min={1}
-              max={4}
-              step={1}
-              value={pendingNumDefenses}
-              onValueChange={setPendingNumDefenses}
-              minLabelKey="settings.defenseMin"
-              maxLabelKey="settings.defenseMax"
-            />
+          {/* CONTENTS */}
+          <div className="flex flex-col gap-4 w-full mx-auto max-w-[350px]">
+            <section>
+              <LanguageSelector />
+            </section>
+            <Separator className="my-2" />
+            <section>
+              <GameSettingsDifficultySelector
+                difficulty={pendingDifficulty}
+                onDifficultyChange={setPendingDifficulty}
+              />
+            </section>
+            <Separator className="my-2" />
+            <section>
+              <GameSettingsSoundToggle
+                soundEnabled={pendingSound}
+                onSoundChange={setPendingSound}
+              />
+            </section>
+            <Separator className="my-2" />
+            <section>
+              <GameSettingsSlider
+                id="board-size-slider"
+                labelKey="settings.boardSize"
+                min={5}
+                max={12}
+                step={1}
+                value={pendingBoardSize}
+                onValueChange={setPendingBoardSize}
+                displayValue={`${pendingBoardSize}x${pendingBoardSize}`}
+                minLabelKey="settings.boardMin"
+                maxLabelKey="settings.boardMax"
+              />
+            </section>
+            <section>
+              <GameSettingsSlider
+                id="question-time-slider"
+                labelKey="settings.questionTime"
+                min={6}
+                max={40}
+                step={1}
+                value={pendingQuestionTime}
+                onValueChange={setPendingQuestionTime}
+                suffix="s"
+                minLabelKey="settings.timeMin"
+                maxLabelKey="settings.timeMax"
+              />
+            </section>
+            <section>
+              <GameSettingsSlider
+                id="surprise-count-slider"
+                labelKey="settings.surpriseCount"
+                min={1}
+                max={8}
+                step={1}
+                value={pendingSurpriseCount}
+                onValueChange={setPendingSurpriseCount}
+                minLabelKey="settings.surpriseMin"
+                maxLabelKey="settings.surpriseMax"
+              />
+            </section>
+            <section>
+              <GameSettingsSlider
+                id="defense-count-slider"
+                labelKey="settings.defenseCount"
+                min={1}
+                max={4}
+                step={1}
+                value={pendingNumDefenses}
+                onValueChange={setPendingNumDefenses}
+                minLabelKey="settings.defenseMin"
+                maxLabelKey="settings.defenseMax"
+              />
+            </section>
           </div>
-          {/* Reserve vertical space at bottom to always allow scrolling to buttons */}
-          <div id="bottom-spacer" style={{ height: (keyboardPad || 96) }} />
+          {/* Spacer for bottom footer */}
+          <div style={{ height: (keyboardPad || 104) }} />
         </ScrollArea>
-        {/* Footer is now outside scroll, always reachable at bottom */}
-        <DialogFooter className="pt-3 pb-4 px-6 flex flex-col gap-2 bg-gradient-to-b from-transparent to-white/95 w-full z-10 sticky bottom-0">
-          <div className="flex gap-2 w-full">
-            <Button
-              className="flex-1 font-semibold"
-              onClick={handleSave}
-              variant="default"
-            >
-              <Save className="w-4 h-4 mr-2" />
-              {t('settings.save') || "Save"}
-            </Button>
-            <Button
-              className="flex-1"
-              variant="secondary"
-              onClick={handleCancel}
-              type="button"
-            >
-              {t('settings.cancel') || "Cancel"}
-            </Button>
-          </div>
+        {/* Fixed footer */}
+        <DialogFooter
+          className="
+            bg-gradient-to-b from-slate-100 to-white/95
+            px-6
+            py-4
+            flex flex-row-reverse gap-3
+            border-t
+            sticky
+            bottom-0
+            w-full
+            shadow-[0_-3px_12px_-6px_rgba(0,0,0,0.07)]
+            z-30
+          "
+        >
+          <Button
+            className="font-semibold min-w-[110px]"
+            onClick={handleSave}
+            variant="default"
+          >
+            <Save className="w-4 h-4 mr-2" />
+            {t("settings.save") || "Save"}
+          </Button>
+          <Button
+            variant="secondary"
+            onClick={handleCancel}
+            type="button"
+            className="min-w-[100px]"
+          >
+            {t("settings.cancel") || "Cancel"}
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
@@ -257,4 +300,3 @@ const GameSettingsModal = ({
 };
 
 export default GameSettingsModal;
-

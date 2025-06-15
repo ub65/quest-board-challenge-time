@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -9,14 +9,15 @@ import {
   DialogClose,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { SlidersHorizontal } from "lucide-react";
+import { SlidersHorizontal, Save } from "lucide-react";
 import LanguageSelector from "./LanguageSelector";
 import { useLocalization } from "@/contexts/LocalizationContext";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { cn } from "@/lib/utils";
 import GameSettingsDifficultySelector from "./GameSettingsDifficultySelector";
 import GameSettingsSoundToggle from "./GameSettingsSoundToggle";
 import GameSettingsSlider from "./GameSettingsSlider";
+import { Button } from "@/components/ui/button";
+import { useToast } from "@/components/ui/use-toast";
 
 type GameSettingsModalProps = {
   open: boolean;
@@ -35,12 +36,6 @@ type GameSettingsModalProps = {
   onDifficultyChange: (d: "easy" | "medium" | "hard") => void;
 };
 
-const difficulties = [
-  { labelKey: "difficulty.easy", value: "easy", color: "bg-green-200" },
-  { labelKey: "difficulty.medium", value: "medium", color: "bg-yellow-200" },
-  { labelKey: "difficulty.hard", value: "hard", color: "bg-red-200" },
-];
-
 const GameSettingsModal = ({
   open,
   onOpenChange,
@@ -58,6 +53,57 @@ const GameSettingsModal = ({
   onDifficultyChange,
 }: GameSettingsModalProps) => {
   const { t } = useLocalization();
+  const { toast } = useToast();
+
+  // Local state for "pending" settings
+  const [pendingSound, setPendingSound] = useState(soundEnabled);
+  const [pendingBoardSize, setPendingBoardSize] = useState(boardSize);
+  const [pendingQuestionTime, setPendingQuestionTime] = useState(questionTime);
+  const [pendingSurpriseCount, setPendingSurpriseCount] = useState(surpriseCount);
+  const [pendingNumDefenses, setPendingNumDefenses] = useState(numDefenses);
+  const [pendingDifficulty, setPendingDifficulty] = useState<"easy" | "medium" | "hard">(difficulty);
+
+  // Reset local state whenever the modal is opened
+  useEffect(() => {
+    if (open) {
+      setPendingSound(soundEnabled);
+      setPendingBoardSize(boardSize);
+      setPendingQuestionTime(questionTime);
+      setPendingSurpriseCount(surpriseCount);
+      setPendingNumDefenses(numDefenses);
+      setPendingDifficulty(difficulty);
+    }
+  }, [
+    open,
+    soundEnabled,
+    boardSize,
+    questionTime,
+    surpriseCount,
+    numDefenses,
+    difficulty
+  ]);
+
+  // Save handler
+  const handleSave = () => {
+    onSoundChange(pendingSound);
+    onBoardSizeChange(pendingBoardSize);
+    onQuestionTimeChange(pendingQuestionTime);
+    onSurpriseCountChange(pendingSurpriseCount);
+    onNumDefensesChange(pendingNumDefenses);
+    onDifficultyChange(pendingDifficulty);
+
+    onOpenChange(false);
+    toast({
+      title: t('settings.savedTitle') || "Settings saved",
+      description: t('settings.savedDesc') || "Your preferences have been updated.",
+      icon: <Save className="mr-2" />,
+    });
+  };
+
+  // Cancel handler: just close, discard changes
+  const handleCancel = () => {
+    onOpenChange(false);
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -77,12 +123,12 @@ const GameSettingsModal = ({
           <div className="py-2 flex flex-col gap-7 w-full">
             <LanguageSelector />
             <GameSettingsDifficultySelector
-              difficulty={difficulty}
-              onDifficultyChange={onDifficultyChange}
+              difficulty={pendingDifficulty}
+              onDifficultyChange={setPendingDifficulty}
             />
             <GameSettingsSoundToggle
-              soundEnabled={soundEnabled}
-              onSoundChange={onSoundChange}
+              soundEnabled={pendingSound}
+              onSoundChange={setPendingSound}
             />
             <GameSettingsSlider
               id="board-size-slider"
@@ -90,9 +136,9 @@ const GameSettingsModal = ({
               min={5}
               max={12}
               step={1}
-              value={boardSize}
-              onValueChange={onBoardSizeChange}
-              displayValue={`${boardSize}x${boardSize}`}
+              value={pendingBoardSize}
+              onValueChange={setPendingBoardSize}
+              displayValue={`${pendingBoardSize}x${pendingBoardSize}`}
               minLabelKey="settings.boardMin"
               maxLabelKey="settings.boardMax"
             />
@@ -102,8 +148,8 @@ const GameSettingsModal = ({
               min={6}
               max={40}
               step={1}
-              value={questionTime}
-              onValueChange={onQuestionTimeChange}
+              value={pendingQuestionTime}
+              onValueChange={setPendingQuestionTime}
               suffix="s"
               minLabelKey="settings.timeMin"
               maxLabelKey="settings.timeMax"
@@ -114,8 +160,8 @@ const GameSettingsModal = ({
               min={1}
               max={8}
               step={1}
-              value={surpriseCount}
-              onValueChange={onSurpriseCountChange}
+              value={pendingSurpriseCount}
+              onValueChange={setPendingSurpriseCount}
               minLabelKey="settings.surpriseMin"
               maxLabelKey="settings.surpriseMax"
             />
@@ -125,19 +171,33 @@ const GameSettingsModal = ({
               min={1}
               max={4}
               step={1}
-              value={numDefenses}
-              onValueChange={onNumDefensesChange}
+              value={pendingNumDefenses}
+              onValueChange={setPendingNumDefenses}
               minLabelKey="settings.defenseMin"
               maxLabelKey="settings.defenseMax"
             />
           </div>
         </ScrollArea>
-        <DialogFooter className="pt-2">
-          <DialogClose asChild>
-            <button className="rounded-lg bg-primary px-4 py-2 text-primary-foreground hover:bg-primary/90 font-semibold text-base transition-colors w-full shadow mb-2">
-              {t('settings.close')}
-            </button>
-          </DialogClose>
+        <DialogFooter className="pt-2 flex flex-col gap-2">
+          {/* Save/Cancel Buttons */}
+          <div className="flex gap-2 w-full">
+            <Button
+              className="flex-1 font-semibold"
+              onClick={handleSave}
+              variant="default"
+            >
+              <Save className="w-4 h-4 mr-2" />
+              {t('settings.save') || "Save"}
+            </Button>
+            <Button
+              className="flex-1"
+              variant="secondary"
+              onClick={handleCancel}
+              type="button"
+            >
+              {t('settings.cancel') || "Cancel"}
+            </Button>
+          </div>
         </DialogFooter>
       </DialogContent>
     </Dialog>
@@ -145,4 +205,3 @@ const GameSettingsModal = ({
 };
 
 export default GameSettingsModal;
-

@@ -32,6 +32,7 @@ const translations = {
     'question.timeLeft': 'Time left:',
     'question.correct': 'Correct!',
     'question.wrong': 'Wrong',
+    'question.answerMath': 'Solve the math problem',
     
     // AI modal
     'ai.answering': 'AI is answering...',
@@ -145,6 +146,7 @@ const translations = {
     'question.timeLeft': 'זמן שנותר:',
     'question.correct': 'נכון!',
     'question.wrong': 'שגוי',
+    'question.answerMath': 'פתור את התרגיל',
     
     // AI modal
     'ai.answering': 'הבינה המלאכותית עונה...',

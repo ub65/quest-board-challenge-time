@@ -1,4 +1,3 @@
-
 // Refactored GameBoard: uses split files for state and logic
 import React, { useRef, useEffect, useState } from "react";
 import { useLocalization } from "@/contexts/LocalizationContext";
@@ -71,7 +70,8 @@ const GameBoard = ({
     isModalOpen, setIsModalOpen,
     sound, setSound,
     disableInput, setDisableInput,
-    humanHasMoved, setHumanHasMoved, // <- NEW, included
+    humanHasMoved, setHumanHasMoved,
+    getRandomStartingPlayer, // <-- get helper
   } = useGameBoardState(boardSize, numSurprises, numDefenses);
 
   // --- Derived targets
@@ -83,14 +83,16 @@ const GameBoard = ({
   const [aiModalState, setAIModalState] = useState<null | { question: any; targetTile: any }>(null);
   const aiMovingRef = useRef(false);
 
-  // On game reset (board size/settings change)
+  // Randomize starting player and show a message on new game
   useEffect(() => {
+    // Only run on the first mount or relevant board/game setting changes (but not each render)
+    const startingPlayer = getRandomStartingPlayer();
+    setTurn(startingPlayer);
     setPositions({
       human: { x: 0, y: 0 },
       ai: { x: boardSize - 1, y: boardSize - 1 }
     });
     setWinner(null);
-    setTurn("human");
     setHumanPoints(0);
     setAIPoints(0);
     setBoardPoints(generateRandomPoints(boardSize));
@@ -99,7 +101,17 @@ const GameBoard = ({
     setDefensesUsed({ human: 0, ai: 0 });
     setDefenseMode(false);
     setHumanHasMoved(false); // <-- important: reset on game start
-  }, [boardSize, numSurprises, numDefenses, setPositions, setWinner, setTurn, setHumanPoints, setAIPoints, setBoardPoints, setSurpriseTiles, setDefenseTiles, setDefensesUsed, setDefenseMode, setHumanHasMoved]);
+
+    // Announce starting player
+    toast({
+      title: t("game.startingPlayer") || "Game Start",
+      description: startingPlayer === "human"
+        ? t("game.humanStarts") || "You start the game! 🚶"
+        : t("game.aiStarts") || "AI starts the game! 🤖",
+      duration: 2500,
+    });
+    // eslint-disable-next-line
+  }, [boardSize, numSurprises, numDefenses, setPositions, setWinner, setTurn, setHumanPoints, setAIPoints, setBoardPoints, setSurpriseTiles, setDefenseTiles, setDefensesUsed, setDefenseMode, setHumanHasMoved, getRandomStartingPlayer, t, toast]);
 
   useEffect(() => {
     if (winner) {
@@ -394,4 +406,3 @@ const GameBoard = ({
 export default GameBoard;
 
 // NOTE: This file is now much smaller and delegates logic via hooks and separated files.
-

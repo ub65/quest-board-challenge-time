@@ -57,6 +57,8 @@ const translations = {
     'settings.boardMax': '12x12',
     'settings.timeMin': '6s',
     'settings.timeMax': '40s',
+    'settings.save': 'Save',
+    'settings.cancel': 'Cancel',
     
     // Difficulty selector
     'difficulty.choose': 'Choose Your Challenge Level',
@@ -157,6 +159,8 @@ const translations = {
     'settings.boardMax': '12x12',
     'settings.timeMin': '6שנ',
     'settings.timeMax': '40שנ',
+    'settings.save': 'שמור',
+    'settings.cancel': 'בטל',
     
     // Difficulty selector
     'difficulty.choose': 'בחר את רמת האתגר שלך',

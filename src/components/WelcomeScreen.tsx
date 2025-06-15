@@ -1,7 +1,9 @@
+
 import React, { useState } from "react";
 import LanguageSelector from "./LanguageSelector";
 import QuestionTypeSelector from "./QuestionTypeSelector";
-import { Settings } from "lucide-react";
+import { Settings, Info } from "lucide-react";
+import InstructionsModal from "./InstructionsModal";
 
 type WelcomeScreenProps = {
   playerName: string;
@@ -25,6 +27,7 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = ({
   t,
 }) => {
   const [localName, setLocalName] = React.useState(playerName);
+  const [showInstructions, setShowInstructions] = React.useState(false);
 
   React.useEffect(() => {
     setLocalName(playerName);
@@ -74,17 +77,27 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = ({
         >
           {t("welcome.startGame") || "Start Game"}
         </button>
-        <button
-          type="button"
-          onClick={onSettings}
-          className="flex items-center justify-center gap-2 text-blue-600 font-semibold hover:underline transition"
-        >
-          <Settings size={18} /> {t("welcome.settings") || "Settings"}
-        </button>
+        <div className="flex flex-row gap-3 w-full">
+          <button
+            type="button"
+            onClick={onSettings}
+            className="flex-1 flex items-center justify-center gap-2 text-blue-600 font-semibold hover:underline transition"
+          >
+            <Settings size={18} /> {t("welcome.settings") || "Settings"}
+          </button>
+          <button
+            type="button"
+            onClick={() => setShowInstructions(true)}
+            className="flex-1 flex items-center justify-center gap-2 text-blue-600 font-semibold hover:underline transition"
+          >
+            <Info size={18} /> {t("instructions.button")}
+          </button>
+        </div>
       </div>
       <div className="mt-8 text-xs text-gray-500">
         &copy; {new Date().getFullYear()} Math Board Game ❤️
       </div>
+      <InstructionsModal open={showInstructions} onOpenChange={setShowInstructions} />
     </div>
   );
 };

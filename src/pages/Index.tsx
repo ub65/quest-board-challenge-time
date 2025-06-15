@@ -1,3 +1,4 @@
+
 import React from "react";
 import GameBoard from "@/components/GameBoard";
 import { useLocalization } from "@/contexts/LocalizationContext";
@@ -34,6 +35,8 @@ const Index = () => {
         onNumDefensesChange={flow.setNumDefenses}
         difficulty={flow.difficulty}
         onDifficultyChange={flow.setDifficulty}
+        questionType={flow.questionType}
+        onQuestionTypeChange={flow.setQuestionType}
       />
       {flow.step === "welcome" && (
         <WelcomeScreen
@@ -52,6 +55,7 @@ const Index = () => {
             difficulty={flow.difficulty}
             onRestart={flow.handleRestart}
             playerName={flow.playerName}
+            questionType={flow.questionType}
           />
         </div>
       )}

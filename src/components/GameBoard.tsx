@@ -1,4 +1,3 @@
-
 import React, { useRef, useEffect, useState } from "react";
 import { useLocalization } from "@/contexts/LocalizationContext";
 import { toast } from "@/components/ui/use-toast";
@@ -28,6 +27,7 @@ import { useGameSettings } from "./GameBoard/useGameSettings";
 import { useGameBoardState } from "./GameBoard/useGameBoardState";
 import GameBoardArea from "./GameBoard/GameBoardArea";
 import { useDefenseModeHandler } from "./GameBoard/useDefenseModeHandler";
+import { getRandomMathQuestion } from "@/lib/mathQuestions";
 
 const GameBoard = ({
   difficulty: initialDifficulty,
@@ -35,12 +35,14 @@ const GameBoard = ({
   playerName,
   gameCode,     // <-- now optional
   onlineRole,   // <-- now optional
+  questionType = "translate", // ADDED: so we can pass this down!
 }: {
   difficulty: "easy" | "medium" | "hard";
   onRestart: () => void;
   playerName?: string;
   gameCode?: string;
   onlineRole?: "host" | "guest";
+  questionType?: "translate" | "math";
 }) => {
   const { t, language } = useLocalization();
 
@@ -53,7 +55,13 @@ const GameBoard = ({
     boardSize, setBoardSize,
     numSurprises, setNumSurprises,
     numDefenses, setNumDefenses,
+    questionType: settingsQuestionType, setQuestionType,
   } = useGameSettings(initialDifficulty);
+
+  // When the prop value changes, update settingsQuestionType
+  useEffect(() => {
+    setQuestionType(questionType);
+  }, [questionType, setQuestionType]);
 
   // --- Refactored board state ---
   const {
@@ -120,6 +128,17 @@ const GameBoard = ({
     }
   }, [positions, humanTarget.x, humanTarget.y, aiTarget.x, aiTarget.y, setWinner, setSound]);
 
+  // This change allows using math/translate Qs as per setting
+  function getQuestionForTurn() {
+    if (settingsQuestionType === "math") {
+      return getRandomMathQuestion(difficulty);
+    } else {
+      return getRandomQuestion(difficulty);
+    }
+  }
+
+  // Use getQuestionForTurn() in useHumanMoveHandler and useAITurn (these hooks expect a getQuestion function)
+
   // AI turn, including defense! (before question)
   useAITurn({
     turn,
@@ -143,6 +162,7 @@ const GameBoard = ({
     setTurn,
     setAIModalState,
     aiMovingRef,
+    getQuestion: getQuestionForTurn
   });
 
   // Extracted: surprise logic
@@ -185,6 +205,7 @@ const GameBoard = ({
     setTurn,
     setHumanPoints,
     handleSurprise: surpriseHandler,
+    getQuestion: getQuestionForTurn
   });
 
   // AI move handler (after answering modal)
@@ -321,6 +342,7 @@ const GameBoard = ({
       onDifficultyChange={setDifficulty}
       surpriseCount={numSurprises}
       playerName={playerName}
+      questionType={settingsQuestionType}
       // These props passed but unused unless you add code later:
       // gameCode={gameCode}
       // onlineRole={onlineRole}
@@ -329,4 +351,3 @@ const GameBoard = ({
 };
 
 export default GameBoard;
-

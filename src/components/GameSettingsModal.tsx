@@ -17,6 +17,9 @@ import GameSettingsSoundToggle from "./GameSettingsSoundToggle";
 import GameSettingsSlider from "./GameSettingsSlider";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
+import { Label } from "@/components/ui/label";
+
+type QuestionType = "translate" | "math";
 
 type GameSettingsModalProps = {
   open: boolean;
@@ -33,7 +36,14 @@ type GameSettingsModalProps = {
   onNumDefensesChange: (v: number) => void;
   difficulty: "easy" | "medium" | "hard";
   onDifficultyChange: (d: "easy" | "medium" | "hard") => void;
+  questionType: QuestionType;
+  onQuestionTypeChange: (q: QuestionType) => void;
 };
+
+const QUESTION_TYPE_OPTIONS = [
+  { value: "translate", labelKey: "settings.questionTypeTranslate" },
+  { value: "math", labelKey: "settings.questionTypeMath" },
+];
 
 const GameSettingsModal = ({
   open,
@@ -50,6 +60,8 @@ const GameSettingsModal = ({
   onNumDefensesChange,
   difficulty,
   onDifficultyChange,
+  questionType,
+  onQuestionTypeChange,
 }: GameSettingsModalProps) => {
   const { t } = useLocalization();
   const { toast } = useToast();
@@ -61,6 +73,7 @@ const GameSettingsModal = ({
   const [pendingSurpriseCount, setPendingSurpriseCount] = useState(surpriseCount);
   const [pendingNumDefenses, setPendingNumDefenses] = useState(numDefenses);
   const [pendingDifficulty, setPendingDifficulty] = useState<"easy" | "medium" | "hard">(difficulty);
+  const [pendingQuestionType, setPendingQuestionType] = useState<QuestionType>(questionType);
 
   // Reset local state whenever the modal is opened
   useEffect(() => {
@@ -71,6 +84,7 @@ const GameSettingsModal = ({
       setPendingSurpriseCount(surpriseCount);
       setPendingNumDefenses(numDefenses);
       setPendingDifficulty(difficulty);
+      setPendingQuestionType(questionType);
     }
   }, [
     open,
@@ -79,7 +93,8 @@ const GameSettingsModal = ({
     questionTime,
     surpriseCount,
     numDefenses,
-    difficulty
+    difficulty,
+    questionType,
   ]);
 
   // Save handler
@@ -90,6 +105,7 @@ const GameSettingsModal = ({
     onSurpriseCountChange(pendingSurpriseCount);
     onNumDefensesChange(pendingNumDefenses);
     onDifficultyChange(pendingDifficulty);
+    onQuestionTypeChange(pendingQuestionType);
 
     onOpenChange(false);
   };
@@ -116,6 +132,26 @@ const GameSettingsModal = ({
           </DialogHeader>
           <div className="py-2 flex flex-col gap-7 w-full">
             <LanguageSelector />
+            {/* QUESTION TYPE SELECTOR */}
+            <div className="flex flex-col items-center gap-2 w-full">
+              <Label className="text-base font-semibold mb-2 block text-center w-full">
+                {t("settings.questionType")}
+              </Label>
+              <div className="flex gap-3 justify-center w-full">
+                {QUESTION_TYPE_OPTIONS.map(opt => (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    onClick={() => setPendingQuestionType(opt.value as QuestionType)}
+                    className={`flex-1 px-2 py-2 rounded-md font-bold shadow border select-none transition-all text-xs
+                      ${pendingQuestionType === opt.value ? "bg-blue-600 text-white border-blue-700 scale-105" : "bg-gray-100 border-gray-300 hover:bg-blue-200"}
+                    `}
+                  >
+                    {t(opt.labelKey)}
+                  </button>
+                ))}
+              </div>
+            </div>
             <GameSettingsDifficultySelector
               difficulty={pendingDifficulty}
               onDifficultyChange={setPendingDifficulty}

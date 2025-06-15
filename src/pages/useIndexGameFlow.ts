@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { DEFAULT_DEFENSES } from "@/components/GameBoard/types";
 
@@ -17,6 +18,7 @@ export default function useIndexGameFlow() {
   const [boardSize, setBoardSize] = useState(8);
   const [numSurprises, setNumSurprises] = useState(4);
   const [numDefenses, setNumDefenses] = useState(DEFAULT_DEFENSES);
+  const [questionType, setQuestionType] = useState<"translate" | "math">("translate");
 
   // Only single-player "ai" mode
   const mode: Mode = "ai";
@@ -43,6 +45,7 @@ export default function useIndexGameFlow() {
     boardSize, setBoardSize,
     numSurprises, setNumSurprises,
     numDefenses, setNumDefenses,
+    questionType, setQuestionType,
     mode,
     handleRestart,
     handleStart,

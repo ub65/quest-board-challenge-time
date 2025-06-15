@@ -59,6 +59,10 @@ const translations = {
     'settings.timeMax': '40s',
     'settings.save': 'Save',
     'settings.cancel': 'Cancel',
+    'settings.questionType': 'Question Type',
+    'settings.questionTypeTranslate': 'Word Translate',
+    'settings.questionTypeMath': 'Math Question',
+    'question.mathPrompt': 'Solve:',
     
     // Difficulty selector
     'difficulty.choose': 'Choose Your Challenge Level',
@@ -161,6 +165,10 @@ const translations = {
     'settings.timeMax': '40שנ',
     'settings.save': 'שמור',
     'settings.cancel': 'בטל',
+    'settings.questionType': 'סוג שאלה',
+    'settings.questionTypeTranslate': 'תרגום מילים',
+    'settings.questionTypeMath': 'שאלה במתמטיקה',
+    'question.mathPrompt': 'פתור:',
     
     // Difficulty selector
     'difficulty.choose': 'בחר את רמת האתגר שלך',

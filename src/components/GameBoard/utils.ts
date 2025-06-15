@@ -1,4 +1,3 @@
-
 import {
   SURPRISE_TYPES,
   Tile,
@@ -7,6 +6,7 @@ import {
   PlayerType,
 } from "./types";
 import { getRandomQuestionByDifficulty } from "@/lib/questions";
+import { getRandomMathQuestion } from "@/lib/mathQuestions";
 
 // Tiles and moves
 export function positionsEqual(a: Tile, b: Tile) {
@@ -33,7 +33,7 @@ export function getValidMoves(
   return moves;
 }
 
-export function getRandomQuestion(difficulty: "easy" | "medium" | "hard") {
+export function getRandomTranslationQuestion(difficulty: "easy" | "medium" | "hard") {
   return getRandomQuestionByDifficulty(difficulty);
 }
 
@@ -128,3 +128,6 @@ export function getAIDefenseTile(options: {
   }
   return null;
 }
+
+// If other code relies on getRandomQuestion, alias it for "translate"
+export const getRandomQuestion = getRandomTranslationQuestion;

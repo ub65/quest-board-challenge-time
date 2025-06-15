@@ -1,6 +1,7 @@
+
 import { useCallback } from "react";
-import { getRandomQuestion } from "./utils";
-import { canMoveTo } from "./defenseHelpers";
+import { getRandomQuestion, getValidMoves } from "./utils";
+// Removed: import { canMoveTo } from "./defenseHelpers";
 
 export function useHumanMoveHandler({
   winner, disableInput, turn, positions, BOARD_SIZE, defenseTiles, difficulty,
@@ -29,6 +30,13 @@ export function useHumanMoveHandler({
   questionType: "math" | "translate";
   getQuestionForTurn: () => any;
 }) {
+  // Helper function to determine if human can move to a tile
+  function canMoveTo(tile: { x: number; y: number }, aiPos: { x: number; y: number }, defenseTiles: any[], BOARD_SIZE: number) {
+    // getValidMoves expects: currentPos, board size, defense tiles, otherPlayerPos
+    const valid = getValidMoves(positions.human, BOARD_SIZE, defenseTiles, aiPos);
+    return valid.some((t: { x: number; y: number }) => t.x === tile.x && t.y === tile.y);
+  }
+
   const handleTileClick = useCallback((tile) => {
     if (defenseMode) {
       handleDefenseClick(tile);
@@ -77,7 +85,8 @@ export function useHumanMoveHandler({
       }
     });
     setIsModalOpen(true);
-  }, [BOARD_SIZE, canMoveTo, defenseMode, defenseTiles, disableInput, getQuestionForTurn, handleDefenseClick, handleSurprise, positions.ai, setBoardPoints, setHumanPoints, setIsModalOpen, setMoveState, setPositions, setSound, setTurn, winner]);
+  }, [BOARD_SIZE, defenseMode, defenseTiles, disableInput, getQuestionForTurn, handleDefenseClick, handleSurprise, positions.ai, positions.human, setBoardPoints, setHumanPoints, setIsModalOpen, setMoveState, setPositions, setSound, setTurn, winner]);
 
   return { handleTileClick };
 }
+

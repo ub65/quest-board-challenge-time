@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Gift, Shield } from "lucide-react";
 import { Tile, SurpriseTile, DefenseTile } from "./types";
@@ -86,7 +85,7 @@ const GameTile: React.FC<Props> = ({
         text-[3.8vw] md:text-base font-bold flex items-center justify-center rounded-xl shadow
         transition-all duration-200
         ${bg} ${border} ${targetBorder}
-        ${highlight ? "hover:scale-110 ring-4 ring-primary/40 cursor-pointer animate-[pulse_1s_infinite]" : "cursor-default"}
+        ${highlight ? "hover:scale-110 cursor-pointer" : "cursor-default"}
         ${isHuman || isAI ? "text-white" : "text-gray-700"}
         active:scale-105
         touch-manipulation

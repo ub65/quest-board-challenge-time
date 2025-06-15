@@ -13,7 +13,7 @@ const LocalizationContext = createContext<LocalizationContextType | undefined>(u
 const translations = {
   en: {
     // Game titles and UI
-    'game.title': 'Translate Race',
+    'game.title': 'Tile Titans',
     'game.difficulty': 'Difficulty',
     'game.restart': 'Restart',
     'game.settings': '⚙️ Settings',
@@ -121,13 +121,13 @@ const translations = {
     
     // --- Instructions ---
     "instructions.button": "Instructions",
-    "instructions.title": "How to Play",
+    "instructions.title": "How to Play Tile Titans",
     "instructions.content":
-      "Welcome to Translate Race!\n\nGoal: Be the first to reach your opponent's starting tile (the opposite corner) before the AI does!\n\nHow To Play:\n• You and the AI take turns. Your goal is to reach the opponent’s start tile.\n• Each move, answer a question correctly to advance.\n• You can only move up, down, left, or right – no diagonal moves!\n• Question types: translation or math, as you choose on the opening screen.\n• There are surprise tiles – land on them for random effects!\n• Use defense blocks to block the AI (if enabled in settings).\n• The first to reach the opponent's starting tile (top-left for AI, bottom-right for you) wins.\n\nGood luck!",
+      "Welcome to Tile Titans!\n\nGoal: Be the first to reach your opponent's starting tile (the opposite corner) before the AI does!\n\nHow To Play:\n• You and the AI take turns. Your goal is to reach the opponent’s start tile.\n• Each move, answer a question correctly to advance.\n• You can only move up, down, left, or right – no diagonal moves!\n• Question types: translation or math, as you choose on the opening screen.\n• There are surprise tiles – land on them for random effects!\n• Use defense blocks to block the AI (if enabled in settings).\n• The first to reach the opponent's starting tile (top-left for AI, bottom-right for you) wins.\n\nGood luck, Titan!",
   },
   he: {
     // Game titles and UI
-    'game.title': 'מירוץ התרגום',
+    'game.title': 'טייל טייטנס',
     'game.difficulty': 'רמת קושי',
     'game.restart': 'התחל מחדש',
     'game.settings': '⚙️ הגדרות',
@@ -235,9 +235,9 @@ const translations = {
     
     // --- Instructions ---
     "instructions.button": "הוראות משחק",
-    "instructions.title": "איך משחקים",
+    "instructions.title": "איך משחקים טייל טייטנס",
     "instructions.content":
-      "ברוכים הבאים למירוץ התרגום!\n\nמטרה: להגיע ראשון למשבצת הפתיחה של היריב (הפינה הנגדית) לפני הבינה המלאכותית!\n\nאיך משחקים:\n• אתה והבינה משחקים בתורות. המטרה להגיע ראשון למשבצת הפתיחה של היריב.\n• בכל תור, ענה נכון על שאלה כדי להתקדם.\n• אפשר לזוז רק למעלה, למטה, שמאלה או ימינה – אין תזוזה באלכסון!\n• סוגי שאלות: תרגום או חשבון — לבחירתך על מסך הפתיחה.\n• יש משבצות הפתעה לאורך הדרך — פגוש אותן לאפקטים אקראיים!\n• אפשר להציב מחסומים נגד הבינה (אם הגדרת בהגדרות).\n• הראשון שמגיע לפינה של היריב (משמאל למעלה לבינה; מימין למטה עבורך) מנצח.\n\nבהצלחה!",
+      "ברוכים הבאים לטייל טייטנס!\n\nמטרה: להגיע ראשון למשבצת ההתחלה של היריב (הפינה הנגדית) לפני הבינה המלאכותית!\n\nאיך משחקים:\n• אתה והבינה משחקים בתורות. המטרה להגיע ראשון למשבצת ההתחלה של היריב.\n• בכל תור, ענה נכון על שאלה כדי להתקדם.\n• אפשר לזוז רק למעלה, למטה, שמאלה או ימינה – אין תזוזה באלכסון!\n• סוגי שאלות: תרגום או חשבון — לבחירתך על מסך הפתיחה.\n• יש משבצות הפתעה לאורך הדרך — פגוש אותן לאפקטים אקראיים!\n• אפשר להציב מחסומים נגד הבינה (אם הגדרת בהגדרות).\n• הראשון שמגיע לפינה של היריב (משמאל למעלה לבינה; מימין למטה עבורך) מנצח.\n\nבהצלחה, טיטאן!",
   },
 };
 

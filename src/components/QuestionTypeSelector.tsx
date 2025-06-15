@@ -24,7 +24,7 @@ const QuestionTypeSelector: React.FC<Props> = ({ value, onChange, t }) => {
             `}
           onClick={() => onChange("translate")}
         >
-          {t("welcome.wordTranslate") || "Word Translate"}
+          {t("settings.questionTypeTranslate") || "Word Translate"}
         </button>
         <button
           type="button"
@@ -36,7 +36,7 @@ const QuestionTypeSelector: React.FC<Props> = ({ value, onChange, t }) => {
             `}
           onClick={() => onChange("math")}
         >
-          {t("welcome.mathQuestion") || "Math Question"}
+          {t("settings.questionTypeMath") || "Math Question"}
         </button>
       </div>
     </div>
@@ -44,3 +44,4 @@ const QuestionTypeSelector: React.FC<Props> = ({ value, onChange, t }) => {
 };
 
 export default QuestionTypeSelector;
+

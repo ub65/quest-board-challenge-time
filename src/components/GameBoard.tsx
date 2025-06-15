@@ -83,11 +83,19 @@ const GameBoard = ({
   const [aiModalState, setAIModalState] = useState<null | { question: any; targetTile: any }>(null);
   const aiMovingRef = useRef(false);
 
+  // NEW: State to track if the game proper has started.
+  const [gameStarted, setGameStarted] = useState(false);
+
+  // Store starting player and announcement, but do not proceed till "Start Game" button is clicked.
+  const [startingPlayer, setStartingPlayer] = useState<"human" | "ai" | null>(null);
+
   // Randomize starting player and show a message on new game
   useEffect(() => {
-    // Only run on the first mount or relevant board/game setting changes (but not each render)
-    const startingPlayer = getRandomStartingPlayer();
-    setTurn(startingPlayer);
+    // On mount or relevant setting changes: pick starting player, but do not start game immediately
+    const randomStartingPlayer = getRandomStartingPlayer();
+    setStartingPlayer(randomStartingPlayer);
+    setGameStarted(false); // Block normal gameplay
+    setTurn(randomStartingPlayer);
     setPositions({
       human: { x: 0, y: 0 },
       ai: { x: boardSize - 1, y: boardSize - 1 }
@@ -100,20 +108,29 @@ const GameBoard = ({
     setDefenseTiles([]);
     setDefensesUsed({ human: 0, ai: 0 });
     setDefenseMode(false);
-    setHumanHasMoved(false); // <-- important: reset on game start
-
-    // Announce starting player with translation and Start Game instruction
-    const toastKey =
-      startingPlayer === "human"
-        ? "game.startingPlayer.human"
-        : "game.startingPlayer.ai";
-    toast({
-      title: t("game.title"),
-      description: t(toastKey),
-      duration: 3500,
-    });
+    setHumanHasMoved(false);
+    setDisableInput(true); // Block interactions until "Start Game"
+    // Remove toast here!
     // eslint-disable-next-line
-  }, [boardSize, numSurprises, numDefenses, setPositions, setWinner, setTurn, setHumanPoints, setAIPoints, setBoardPoints, setSurpriseTiles, setDefenseTiles, setDefensesUsed, setDefenseMode, setHumanHasMoved, getRandomStartingPlayer, t, toast]);
+  }, [boardSize, numSurprises, numDefenses, setPositions, setWinner, setTurn, setHumanPoints, setAIPoints, setBoardPoints, setSurpriseTiles, setDefenseTiles, setDefensesUsed, setDefenseMode, setHumanHasMoved, getRandomStartingPlayer]);
+
+  // On "Start Game" click:
+  const handleStartGame = () => {
+    setGameStarted(true);
+    setDisableInput(false);
+    // Show toast after button pressed (not on mount)!
+    if (startingPlayer) {
+      const toastKey =
+        startingPlayer === "human"
+          ? "game.startingPlayer.human"
+          : "game.startingPlayer.ai";
+      toast({
+        title: t("game.title"),
+        description: t(toastKey),
+        duration: 3500,
+      });
+    }
+  };
 
   useEffect(() => {
     if (winner) {
@@ -338,73 +355,105 @@ const GameBoard = ({
     console.log("[GAMEBOARD] Turn changed:", turn, "Winner:", winner);
   }, [turn, winner]);
 
+  // START GAME ANNOUNCEMENT OVERLAY (visible only before game actually starts)
+  const announcementKey =
+    startingPlayer === "human"
+      ? "game.startingPlayer.human"
+      : "game.startingPlayer.ai";
+  const announcementText = t(announcementKey);
+
   return (
-    <GameBoardArea
-      language={language}
-      t={t}
-      sound={sound}
-      turn={turn}
-      winner={winner}
-      difficulty={difficulty}
-      humanPoints={humanPoints}
-      aiPoints={aiPoints}
-      numDefenses={numDefenses}
-      defensesUsed={defensesUsed}
-      onPlaceDefense={startDefensePlacement}
-      defenseMode={defenseMode}
-      boardSize={BOARD_SIZE}
-      boardPoints={boardPoints}
-      positions={positions}
-      humanTarget={humanTarget}
-      aiTarget={aiTarget}
-      disableInput={disableInput}
-      handleTileClick={handleTileClick}
-      getValidMoves={(pos) =>
-        getValidMoves(
-          pos,
-          BOARD_SIZE,
-          defenseTiles,
-          pos === positions.human ? positions.ai : positions.human
-        )
-      }
-      positionsEqual={positionsEqual}
-      surpriseTiles={surpriseTiles}
-      defenseTiles={defenseTiles}
-      aiPendingTarget={aiModalState ? aiModalState.targetTile : null}
-      moveState={moveState}
-      isModalOpen={isModalOpen}
-      aiModalState={aiModalState}
-      questionTime={questionTime}
-      onHumanSubmit={moveState?.resolve}
-      onAISubmit={handleAIModalSubmit}
-      onRestart={handleRestart}
-      settingsOpen={settingsOpen}
-      setSettingsOpen={setSettingsOpen}
-      soundEnabled={soundEnabled}
-      setSoundEnabled={setSoundEnabled}
-      onBoardSizeChange={v => setBoardSize(Math.max(5, Math.min(12, v || DEFAULT_BOARD_SIZE)))}
-      onQuestionTimeChange={v => setQuestionTime(Math.max(6, Math.min(40, v || DEFAULT_QUESTION_TIME)))}
-      onSurpriseCountChange={setNumSurprises}
-      onNumDefensesChange={setNumDefenses}
-      onDifficultyChange={setDifficulty}
-      surpriseCount={numSurprises}
-      playerName={playerName}
-    >
-      {/* Inject modals for human/ai turn based on current move/question type */}
-      <GameBoardModals
-        moveState={moveState}
-        isModalOpen={isModalOpen}
-        aiModalState={aiModalState}
-        winner={winner}
-        questionTime={questionTime}
-        onHumanSubmit={moveState?.resolve}
-        onAISubmit={handleAIModalSubmit}
-        questionType={questionType}
-      />
-    </GameBoardArea>
+    <div className="relative w-full">
+      {/* Show overlay modal before game starts */}
+      {!gameStarted && startingPlayer && (
+        <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black/40">
+          <div className="bg-white rounded-2xl shadow-xl p-8 flex flex-col items-center gap-5 min-w-[320px] max-w-xs mx-auto">
+            <h2 className="text-xl font-bold mb-0">{t("game.title")}</h2>
+            <div className="text-base text-center text-gray-700 mb-3">
+              {announcementText}
+            </div>
+            <button
+              className="bg-primary text-primary-foreground px-8 py-3 rounded-xl font-semibold text-lg shadow hover:bg-primary/90 transition"
+              onClick={handleStartGame}
+              autoFocus
+              data-testid="start-game-btn"
+            >
+              {t("welcome.startGame") || "Start Game"}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Only show board UI if game has started */}
+      {gameStarted && (
+        <GameBoardArea
+          language={language}
+          t={t}
+          sound={sound}
+          turn={turn}
+          winner={winner}
+          difficulty={difficulty}
+          humanPoints={humanPoints}
+          aiPoints={aiPoints}
+          numDefenses={numDefenses}
+          defensesUsed={defensesUsed}
+          onPlaceDefense={startDefensePlacement}
+          defenseMode={defenseMode}
+          boardSize={BOARD_SIZE}
+          boardPoints={boardPoints}
+          positions={positions}
+          humanTarget={humanTarget}
+          aiTarget={aiTarget}
+          disableInput={disableInput}
+          handleTileClick={handleTileClick}
+          getValidMoves={(pos) =>
+            getValidMoves(
+              pos,
+              BOARD_SIZE,
+              defenseTiles,
+              pos === positions.human ? positions.ai : positions.human
+            )
+          }
+          positionsEqual={positionsEqual}
+          surpriseTiles={surpriseTiles}
+          defenseTiles={defenseTiles}
+          aiPendingTarget={aiModalState ? aiModalState.targetTile : null}
+          moveState={moveState}
+          isModalOpen={isModalOpen}
+          aiModalState={aiModalState}
+          questionTime={questionTime}
+          onHumanSubmit={moveState?.resolve}
+          onAISubmit={handleAIModalSubmit}
+          onRestart={handleRestart}
+          settingsOpen={settingsOpen}
+          setSettingsOpen={setSettingsOpen}
+          soundEnabled={soundEnabled}
+          setSoundEnabled={setSoundEnabled}
+          onBoardSizeChange={v => setBoardSize(Math.max(5, Math.min(12, v || DEFAULT_BOARD_SIZE)))}
+          onQuestionTimeChange={v => setQuestionTime(Math.max(6, Math.min(40, v || DEFAULT_QUESTION_TIME)))}
+          onSurpriseCountChange={setNumSurprises}
+          onNumDefensesChange={setNumDefenses}
+          onDifficultyChange={setDifficulty}
+          surpriseCount={numSurprises}
+          playerName={playerName}
+        >
+          {/* Inject modals for human/ai turn based on current move/question type */}
+          <GameBoardModals
+            moveState={moveState}
+            isModalOpen={isModalOpen}
+            aiModalState={aiModalState}
+            winner={winner}
+            questionTime={questionTime}
+            onHumanSubmit={moveState?.resolve}
+            onAISubmit={handleAIModalSubmit}
+            questionType={questionType}
+          />
+        </GameBoardArea>
+      )}
+    </div>
   );
 };
 
 export default GameBoard;
 
-// NOTE: This file is now much smaller and delegates logic via hooks and separated files.
+// NOTE: This file is now much longer and may need to be refactored into smaller files for maintainability.

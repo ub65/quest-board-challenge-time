@@ -102,13 +102,15 @@ const GameBoard = ({
     setDefenseMode(false);
     setHumanHasMoved(false); // <-- important: reset on game start
 
-    // Announce starting player
+    // Announce starting player with translation and Start Game instruction
+    const toastKey =
+      startingPlayer === "human"
+        ? "game.startingPlayer.human"
+        : "game.startingPlayer.ai";
     toast({
-      title: t("game.startingPlayer") || "Game Start",
-      description: startingPlayer === "human"
-        ? t("game.humanStarts") || "You start the game! 🚶"
-        : t("game.aiStarts") || "AI starts the game! 🤖",
-      duration: 2500,
+      title: t("game.title"),
+      description: t(toastKey),
+      duration: 3500,
     });
     // eslint-disable-next-line
   }, [boardSize, numSurprises, numDefenses, setPositions, setWinner, setTurn, setHumanPoints, setAIPoints, setBoardPoints, setSurpriseTiles, setDefenseTiles, setDefensesUsed, setDefenseMode, setHumanHasMoved, getRandomStartingPlayer, t, toast]);

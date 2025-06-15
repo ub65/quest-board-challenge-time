@@ -105,8 +105,6 @@ const GameSettingsModal = ({
     onSurpriseCountChange(pendingSurpriseCount);
     onNumDefensesChange(pendingNumDefenses);
     onDifficultyChange(pendingDifficulty);
-    onQuestionTypeChange(pendingQuestionType);
-
     onOpenChange(false);
   };
 
@@ -132,26 +130,6 @@ const GameSettingsModal = ({
           </DialogHeader>
           <div className="py-2 flex flex-col gap-7 w-full">
             <LanguageSelector />
-            {/* QUESTION TYPE SELECTOR */}
-            <div className="flex flex-col items-center gap-2 w-full">
-              <Label className="text-base font-semibold mb-2 block text-center w-full">
-                {t("settings.questionType")}
-              </Label>
-              <div className="flex gap-3 justify-center w-full">
-                {QUESTION_TYPE_OPTIONS.map(opt => (
-                  <button
-                    key={opt.value}
-                    type="button"
-                    onClick={() => setPendingQuestionType(opt.value as QuestionType)}
-                    className={`flex-1 px-2 py-2 rounded-md font-bold shadow border select-none transition-all text-xs
-                      ${pendingQuestionType === opt.value ? "bg-blue-600 text-white border-blue-700 scale-105" : "bg-gray-100 border-gray-300 hover:bg-blue-200"}
-                    `}
-                  >
-                    {t(opt.labelKey)}
-                  </button>
-                ))}
-              </div>
-            </div>
             <GameSettingsDifficultySelector
               difficulty={pendingDifficulty}
               onDifficultyChange={setPendingDifficulty}

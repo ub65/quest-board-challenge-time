@@ -132,6 +132,20 @@ const GameBoard = ({
     return q;
   }
 
+  // Helper for AI to get question of correct type:
+  function getQuestionForAiTurn() {
+    // same logic as getQuestionForTurn, but can be refactored to a single function
+    const qtype = questionType;
+    let q;
+    if (qtype === "math") {
+      q = getRandomMathQuestion(difficulty);
+    } else {
+      q = getRandomQuestion(difficulty);
+    }
+    console.log("[QUESTION GENERATOR][AI]", { qtype, result: q });
+    return q;
+  }
+
   // AI turn (with defense/board state passed)
   useAITurn({
     turn,
@@ -154,7 +168,18 @@ const GameBoard = ({
     toast,
     setTurn,
     setAIModalState,
-    aiMovingRef
+    aiMovingRef,
+    setAIModalState: (val) => {
+      // OVERRIDE: always pass a question of the selected type!
+      if (val && val.targetTile) {
+        setAIModalState({
+          ...val,
+          question: getQuestionForAiTurn()
+        });
+      } else {
+        setAIModalState(val);
+      }
+    }
   });
 
   // SURPRISE logic

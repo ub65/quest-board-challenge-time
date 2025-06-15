@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { SlidersHorizontal, Save } from "lucide-react";
@@ -14,7 +15,6 @@ const useKeyboardPadding = () => {
   const [keyboardPad, setKeyboardPad] = useState(0);
   useEffect(() => {
     const handler = () => {
-      // If window.innerHeight shrinks, assume keyboard open
       if (window.visualViewport) {
         setKeyboardPad(Math.max(0, window.outerHeight - window.visualViewport.height));
       } else {
@@ -67,9 +67,7 @@ const GameSettingsModal = ({
   questionType,
   onQuestionTypeChange
 }: GameSettingsModalProps) => {
-  const {
-    t
-  } = useLocalization();
+  const { t } = useLocalization();
 
   // Local state for "pending" settings
   const [pendingSound, setPendingSound] = useState(soundEnabled);
@@ -109,22 +107,26 @@ const GameSettingsModal = ({
     onOpenChange(false);
   };
 
-  // Add extra bottom padding if keyboard is open (for iOS esp.)
-  const keyboardPad = useKeyboardPadding();
-  return <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent style={{
-      padding: 0,
-      display: "flex",
-      flexDirection: "column",
-      minHeight: "60vh",
-      maxHeight: "95vh"
-    }} className="\n          bg-gradient-to-br from-background to-secondary p-0 shadow-2xl rounded-2xl border-0 \n          max-w-[500px] max-h-[95vh] sm:max-h-[700px] w-full\n          flex flex-col senter\n        ">
-        <ScrollArea className="flex-1 px-6 pt-7 pb-4 max-h-[88vh] sm:max-h-[630px] w-full" style={{
-        minHeight: 0,
-        maxHeight: "calc(95vh - 0px)",
-        // Keyboard-aware bottom pad for iOS/Android if needed
-        paddingBottom: (keyboardPad || 96) + "px" // At least enough for buttons
-      }}>
+  // Remove keyboardPad from ScrollArea and Footer, now handled by full-height container
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent
+        style={{
+          padding: 0,
+          display: "flex",
+          flexDirection: "column",
+          minHeight: "60vh",
+          maxHeight: "95vh",
+          height: "95vh", // Make content fill the dialog
+        }}
+        className="bg-gradient-to-br from-background to-secondary p-0 shadow-2xl rounded-2xl border-0 max-w-[500px] max-h-[95vh] sm:max-h-[700px] w-full flex flex-col"
+      >
+        <ScrollArea
+          className="flex-1 px-6 pt-7 pb-4 w-full overflow-y-auto"
+          style={{
+            minHeight: 0,
+          }}
+        >
           <DialogHeader>
             <div className="flex flex-col items-center gap-1 mb-2">
               <SlidersHorizontal size={32} className="text-primary" />
@@ -145,13 +147,8 @@ const GameSettingsModal = ({
             <GameSettingsSlider id="surprise-count-slider" labelKey="settings.surpriseCount" min={1} max={8} step={1} value={pendingSurpriseCount} onValueChange={setPendingSurpriseCount} minLabelKey="settings.surpriseMin" maxLabelKey="settings.surpriseMax" />
             <GameSettingsSlider id="defense-count-slider" labelKey="settings.defenseCount" min={1} max={4} step={1} value={pendingNumDefenses} onValueChange={setPendingNumDefenses} minLabelKey="settings.defenseMin" maxLabelKey="settings.defenseMax" />
           </div>
-          {/* Reserve vertical space at bottom to always allow scrolling to buttons */}
-          <div id="bottom-spacer" style={{
-          height: keyboardPad || 96
-        }} />
         </ScrollArea>
-        {/* Footer is now outside scroll, always reachable at bottom */}
-        <DialogFooter className="pt-3 pb-4 px-6 flex flex-col gap-2 bg-gradient-to-b from-transparent to-white/95 w-full z-10 sticky bottom-0">
+        <DialogFooter className="pt-3 pb-4 px-6 flex flex-col gap-2 bg-gradient-to-b from-transparent to-white/95 w-full z-10">
           <div className="flex gap-2 w-full">
             <Button className="flex-1 font-semibold" onClick={handleSave} variant="default">
               <Save className="w-4 h-4 mr-2" />
@@ -163,6 +160,7 @@ const GameSettingsModal = ({
           </div>
         </DialogFooter>
       </DialogContent>
-    </Dialog>;
+    </Dialog>
+  );
 };
 export default GameSettingsModal;

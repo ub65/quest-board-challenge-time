@@ -184,6 +184,7 @@ const GameSettingsModal = ({
               minLabelKey="settings.defenseMin"
               maxLabelKey="settings.defenseMax"
             />
+            {/* Question type selector removed per user request */}
           </div>
         </ScrollArea>
         <DialogFooter className="pt-2 flex flex-col gap-2">

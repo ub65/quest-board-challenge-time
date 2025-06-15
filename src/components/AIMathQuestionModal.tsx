@@ -30,7 +30,7 @@ function shuffle<T>(arr: T[]): T[] {
 }
 
 const AIMathQuestionModal: React.FC<AIMathQuestionModalProps> = ({ isOpen, question, onSubmit }) => {
-  const { t } = useLocalization();
+  const { t, language } = useLocalization();
   const [shuffled, setShuffled] = useState<ShuffledAnswer[]>([]);
   const [aiChoice, setAIChoice] = useState<number | null>(null);
   const [showFeedback, setShowFeedback] = useState(false);
@@ -61,6 +61,9 @@ const AIMathQuestionModal: React.FC<AIMathQuestionModalProps> = ({ isOpen, quest
     return () => clearTimeout(thinkTimer);
   }, [isOpen, aiChoice, shuffled, question, onSubmit]);
 
+  // Set direction for Hebrew
+  const direction = language === "he" ? "rtl" : "ltr";
+
   return (
     <div
       className={`
@@ -72,7 +75,11 @@ const AIMathQuestionModal: React.FC<AIMathQuestionModalProps> = ({ isOpen, quest
         <div className="mb-2 text-lg font-bold flex items-center gap-2">
           <span>{t('ai.answering')}</span>
         </div>
-        <div className="mb-6 text-2xl text-primary font-semibold select-none">
+        <div
+          className="mb-6 text-2xl text-primary font-semibold select-none"
+          dir="ltr" // Always render the math LTR
+          style={{ textAlign: language === "he" ? "right" : undefined }}
+        >
           {question.prompt}
         </div>
         <div className="flex flex-col gap-4 w-full">
@@ -93,8 +100,11 @@ const AIMathQuestionModal: React.FC<AIMathQuestionModalProps> = ({ isOpen, quest
                 ${aiChoice === i ? "opacity-100 font-bold scale-105" : "opacity-70"}
               `}
               tabIndex={-1}
+              style={{ direction }}
             >
-              {answer}
+              <span dir="ltr" style={{ display: "inline-block", minWidth: 40 }}>
+                {answer}
+              </span>
             </button>
           ))}
         </div>

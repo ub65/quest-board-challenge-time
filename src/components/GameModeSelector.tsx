@@ -1,9 +1,9 @@
 
 import React from "react";
-import { Bot, Users } from "lucide-react";
+import { Bot } from "lucide-react";
 
 type GameModeSelectorProps = {
-  onSelect: (mode: "ai" | "online") => void;
+  onSelect: (mode: "ai") => void;
   t: (k: string, params?: any) => string;
 };
 
@@ -20,12 +20,6 @@ const GameModeSelector: React.FC<GameModeSelectorProps> = ({ onSelect, t }) => (
         >
           <Bot className="w-7 h-7" /> {t("welcome.playVsAi") || "Play vs AI"}
         </button>
-        <button
-          className="flex items-center gap-3 justify-center px-6 py-4 bg-blue-600 text-white rounded-lg font-bold text-lg shadow transition hover:bg-blue-700"
-          onClick={() => onSelect("online")}
-        >
-          <Users className="w-7 h-7" /> {t("welcome.playOnline") || "Play Online"}
-        </button>
       </div>
     </div>
     <div className="mt-8 text-xs text-gray-500">
@@ -35,3 +29,4 @@ const GameModeSelector: React.FC<GameModeSelectorProps> = ({ onSelect, t }) => (
 );
 
 export default GameModeSelector;
+

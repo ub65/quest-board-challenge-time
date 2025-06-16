@@ -5,10 +5,8 @@ import { useLocalization } from "@/contexts/LocalizationContext";
 import WelcomeScreen from "@/components/WelcomeScreen";
 import GameSettingsModal from "@/components/GameSettingsModal";
 import useIndexGameFlow from "./useIndexGameFlow";
-import GameModeSelector from "@/components/GameModeSelector";
-import OnlineLobby from "@/components/OnlineLobby";
+// REMOVE: import GameModeSelector, OnlineLobby as unused
 
-// Main Index component
 const Index = () => {
   const { t, language } = useLocalization();
   const flow = useIndexGameFlow();
@@ -18,18 +16,7 @@ const Index = () => {
   const dummyQuestionType = "translate";
   const dummySetQuestionType = () => {};
 
-  // Prepare game settings to pass to online lobby
-  const gameSettings = {
-    boardSize: flow.boardSize,
-    numSurprises: flow.numSurprises,
-    numDefenses: flow.numDefenses,
-    difficulty: flow.difficulty,
-    questionTime: flow.questionTime,
-    questionType: flow.questionType,
-    soundEnabled: flow.soundEnabled,
-  };
-
-  // Show lobby or board based on step/mode
+  // --- Single-player flow only ---
   return (
     <div
       className={`
@@ -54,22 +41,8 @@ const Index = () => {
         onDifficultyChange={flow.setDifficulty}
         questionType={dummyQuestionType}
         onQuestionTypeChange={dummySetQuestionType}
+        // REMOVED: questionType and onQuestionTypeChange (now controlled only from welcome screen)
       />
-      {/* Game mode selection is now first step */}
-      {flow.step === "mode-select" && (
-        <GameModeSelector onSelect={flow.handleModeSelect} t={t} />
-      )}
-      {/* If "online", show the online lobby */}
-      {flow.step === "lobby" && (
-        <OnlineLobby
-          onBack={() => flow.setStep("mode-select")}
-          t={t}
-          onGameStart={flow.handleOnlineGameStart}
-          onVsAISolo={flow.handleVsAISolo}
-          gameSettings={gameSettings}
-        />
-      )}
-      {/* Old single-player welcome screen */}
       {flow.step === "welcome" && (
         <WelcomeScreen
           language={language}
@@ -82,7 +55,6 @@ const Index = () => {
           setQuestionType={flow.setQuestionType}
         />
       )}
-      {/* If in-game, pass all relevant props */}
       {flow.step === "game" && (
         <div className="w-full max-w-3xl animate-fade-in">
           <GameBoard
@@ -90,10 +62,7 @@ const Index = () => {
             difficulty={flow.difficulty}
             onRestart={flow.handleRestart}
             playerName={flow.playerName}
-            gameCode={flow.gameCode}
-            onlineRole={flow.onlineRole}
             questionType={flow.questionType}
-            isOnline={flow.mode === "online"}
           />
         </div>
       )}

@@ -38,11 +38,12 @@ export default function useIndexGameFlow() {
     }
   };
 
-  // "Solo" play (AI)
+  // "Solo" play (AI) - redirect to welcome screen for name entry
   const handleVsAISolo = () => {
     setGameKey(k => k + 1);
     setOnlineRole(null);
     setGameCode(null);
+    setMode("ai");
     setStep("welcome");
   };
 
@@ -50,6 +51,7 @@ export default function useIndexGameFlow() {
   const handleOnlineGameStart = (code: string, role: "host" | "guest") => {
     setGameCode(code);
     setOnlineRole(role);
+    setMode("online");
     setStep("game");
   };
 
@@ -63,10 +65,11 @@ export default function useIndexGameFlow() {
   // Restart: Reset everything except settings
   const handleRestart = () => {
     setGameKey(k => k + 1);
-    setStep(mode === "online" ? "lobby" : "welcome");
+    setStep("mode-select");
     setPlayerName("");
     setOnlineRole(null);
     setGameCode(null);
+    setMode("ai");
   };
 
   return {

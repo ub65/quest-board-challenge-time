@@ -1,24 +1,28 @@
+
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/use-toast";
 import { ToastAction } from "@/components/ui/toast";
+import OnlineGameLobby from "./OnlineGameLobby";
 
 /**
- * Online lobby supporting game creation/joining flows, now allows playing vs AI after joining.
+ * Online lobby supporting game creation/joining flows, now with real multiplayer support.
  */
 const OnlineLobby: React.FC<{
   onBack?: () => void;
   t: (k: string, params?: any) => string;
   onGameStart: (gameCode: string, role: "host" | "guest") => void;
   onVsAISolo?: () => void;
+  gameSettings?: any;
 }> = ({
   onBack,
   t,
   onGameStart,
   onVsAISolo,
+  gameSettings = {},
 }) => {
   const [step, setStep] = useState<
-    "menu" | "create" | "join" | "wait" | "error" | "choose-opponent"
+    "menu" | "create" | "join" | "wait" | "error" | "choose-opponent" | "online-lobby"
   >("menu");
   const [gameCode, setGameCode] = useState<string>("");
   const [isCreating, setIsCreating] = useState(false);
@@ -103,12 +107,22 @@ const OnlineLobby: React.FC<{
     if (onVsAISolo) onVsAISolo();
   };
 
-  // Handler: Play vs Friend
+  // Handler: Play vs Friend (use real multiplayer)
   const handleVsFriend = () => {
-    if (gameCode && currentRole) {
-      onGameStart(gameCode, currentRole);
-    }
+    setStep("online-lobby");
   };
+
+  // Show the online game lobby
+  if (step === "online-lobby") {
+    return (
+      <OnlineGameLobby
+        onGameStart={onGameStart}
+        onBack={handleBackToMenu}
+        gameSettings={gameSettings}
+        t={t}
+      />
+    );
+  }
 
   // Lobby/menu screens
   return (

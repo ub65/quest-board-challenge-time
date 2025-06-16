@@ -18,6 +18,17 @@ const Index = () => {
   const dummyQuestionType = "translate";
   const dummySetQuestionType = () => {};
 
+  // Prepare game settings to pass to online lobby
+  const gameSettings = {
+    boardSize: flow.boardSize,
+    numSurprises: flow.numSurprises,
+    numDefenses: flow.numDefenses,
+    difficulty: flow.difficulty,
+    questionTime: flow.questionTime,
+    questionType: flow.questionType,
+    soundEnabled: flow.soundEnabled,
+  };
+
   // Show lobby or board based on step/mode
   return (
     <div
@@ -55,6 +66,7 @@ const Index = () => {
           t={t}
           onGameStart={flow.handleOnlineGameStart}
           onVsAISolo={flow.handleVsAISolo}
+          gameSettings={gameSettings}
         />
       )}
       {/* Old single-player welcome screen */}

@@ -1,7 +1,7 @@
-
 import React, { useRef, useEffect, useState } from "react";
 import { useLocalization } from "@/contexts/LocalizationContext";
 import { toast } from "@/components/ui/use-toast";
+import { useOnlineGame } from "@/hooks/useOnlineGame";
 import {
   PlayerType,
   DEFAULT_BOARD_SIZE,

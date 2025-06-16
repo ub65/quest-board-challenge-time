@@ -9,16 +9,108 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      game_players: {
+        Row: {
+          game_room_id: string | null
+          id: string
+          is_connected: boolean | null
+          joined_at: string | null
+          player_name: string | null
+          points: number | null
+          position_x: number | null
+          position_y: number | null
+          role: Database["public"]["Enums"]["player_role"]
+          user_id: string | null
+        }
+        Insert: {
+          game_room_id?: string | null
+          id?: string
+          is_connected?: boolean | null
+          joined_at?: string | null
+          player_name?: string | null
+          points?: number | null
+          position_x?: number | null
+          position_y?: number | null
+          role: Database["public"]["Enums"]["player_role"]
+          user_id?: string | null
+        }
+        Update: {
+          game_room_id?: string | null
+          id?: string
+          is_connected?: boolean | null
+          joined_at?: string | null
+          player_name?: string | null
+          points?: number | null
+          position_x?: number | null
+          position_y?: number | null
+          role?: Database["public"]["Enums"]["player_role"]
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "game_players_game_room_id_fkey"
+            columns: ["game_room_id"]
+            isOneToOne: false
+            referencedRelation: "game_rooms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      game_rooms: {
+        Row: {
+          code: string
+          created_at: string | null
+          current_turn: string | null
+          game_state: Json | null
+          guest_id: string | null
+          host_id: string | null
+          id: string
+          settings: Json | null
+          status: Database["public"]["Enums"]["game_status"] | null
+          updated_at: string | null
+          winner: string | null
+        }
+        Insert: {
+          code: string
+          created_at?: string | null
+          current_turn?: string | null
+          game_state?: Json | null
+          guest_id?: string | null
+          host_id?: string | null
+          id?: string
+          settings?: Json | null
+          status?: Database["public"]["Enums"]["game_status"] | null
+          updated_at?: string | null
+          winner?: string | null
+        }
+        Update: {
+          code?: string
+          created_at?: string | null
+          current_turn?: string | null
+          game_state?: Json | null
+          guest_id?: string | null
+          host_id?: string | null
+          id?: string
+          settings?: Json | null
+          status?: Database["public"]["Enums"]["game_status"] | null
+          updated_at?: string | null
+          winner?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      generate_game_code: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
     }
     Enums: {
-      [_ in never]: never
+      game_status: "waiting" | "active" | "finished"
+      player_role: "host" | "guest"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -133,6 +225,9 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      game_status: ["waiting", "active", "finished"],
+      player_role: ["host", "guest"],
+    },
   },
 } as const

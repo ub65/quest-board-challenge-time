@@ -83,18 +83,6 @@ export function useMainGameBoard({
     difficulty
   );
 
-  const modalHandlers = useModalHandlers({
-    winner,
-    BOARD_SIZE,
-    setPositions,
-    setBoardPoints,
-    setAIPoints,
-    setSound,
-    setTurn,
-    setDisableInput,
-    surpriseHandler: null, // Will be set below
-  });
-
   const surpriseHandler = useSurprise({
     boardPoints,
     surpriseTiles,
@@ -107,8 +95,17 @@ export function useMainGameBoard({
     toast,
   });
 
-  // Update modal handlers with surprise handler
-  modalHandlers.surpriseHandler = surpriseHandler;
+  const modalHandlers = useModalHandlers({
+    winner,
+    BOARD_SIZE,
+    setPositions,
+    setBoardPoints,
+    setAIPoints,
+    setSound,
+    setTurn,
+    setDisableInput,
+    surpriseHandler,
+  });
 
   useAITurn({
     turn,
@@ -249,6 +246,9 @@ export function useMainGameBoard({
   }, [turn, winner]);
 
   return {
+    // Localization
+    t,
+    
     // Settings
     difficulty, setDifficulty,
     settingsOpen, setSettingsOpen,

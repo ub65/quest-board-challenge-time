@@ -189,12 +189,7 @@ export function useMainGameBoard({
     if (problem) {
       toast({
         title: t("game.defense_fail") || "Invalid defense placement",
-        description: (
-          <span className="flex items-center gap-2">
-            <span className="font-semibold">⛔ Defense! </span>
-            {problem}
-          </span>
-        ),
+        description: `⛔ Defense! ${problem}`,
         duration: 2500,
       });
       return;
@@ -204,12 +199,7 @@ export function useMainGameBoard({
     setDefenseMode(false);
     toast({
       title: t("game.defense_placed") || "Defense Placed",
-      description: (
-        <span className="flex items-center gap-2">
-          <span className="font-semibold">🛡️ Defense! </span>
-          {t("game.defense_success") || "AI cannot move to this tile!"}
-        </span>
-      ),
+      description: `🛡️ Defense! ${t("game.defense_success") || "AI cannot move to this tile!"}`,
       duration: 2000,
     });
   }

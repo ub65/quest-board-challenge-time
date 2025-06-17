@@ -5,7 +5,6 @@ import { useLocalization } from "@/contexts/LocalizationContext";
 import WelcomeScreen from "@/components/WelcomeScreen";
 import GameSettingsModal from "@/components/GameSettingsModal";
 import useIndexGameFlow from "./useIndexGameFlow";
-// REMOVE: import GameModeSelector, OnlineLobby as unused
 
 const Index = () => {
   const { t, language } = useLocalization();
@@ -29,6 +28,8 @@ const Index = () => {
         onOpenChange={flow.setSettingsOpen}
         soundEnabled={flow.soundEnabled}
         onSoundChange={flow.setSoundEnabled}
+        volume={flow.volume}
+        onVolumeChange={flow.setVolume}
         boardSize={flow.boardSize}
         onBoardSizeChange={flow.setBoardSize}
         questionTime={flow.questionTime}
@@ -41,7 +42,6 @@ const Index = () => {
         onDifficultyChange={flow.setDifficulty}
         questionType={dummyQuestionType}
         onQuestionTypeChange={dummySetQuestionType}
-        // REMOVED: questionType and onQuestionTypeChange (now controlled only from welcome screen)
       />
       {flow.step === "welcome" && (
         <WelcomeScreen
@@ -63,6 +63,8 @@ const Index = () => {
             onRestart={flow.handleRestart}
             playerName={flow.playerName}
             questionType={flow.questionType}
+            soundEnabled={flow.soundEnabled}
+            volume={flow.volume}
           />
         </div>
       )}

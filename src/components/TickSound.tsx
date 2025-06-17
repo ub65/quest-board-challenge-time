@@ -2,13 +2,13 @@
 import { useEffect, useRef } from "react";
 
 // Very soft tick using Web Audio API, customizable for future tweaking
-function playTick() {
+function playTick(volume: number) {
   const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
   const o = ctx.createOscillator();
   o.type = "sine";
   o.frequency.value = 940;
   const gain = ctx.createGain();
-  gain.gain.value = 0.04;
+  gain.gain.value = 0.04 * volume;
   o.connect(gain);
   gain.connect(ctx.destination);
   o.start();
@@ -16,7 +16,13 @@ function playTick() {
   setTimeout(() => ctx.close(), 120); // cleanup
 }
 
-const TickSound = ({ tick }: { tick: number }) => {
+type TickSoundProps = {
+  tick: number;
+  enabled?: boolean;
+  volume?: number;
+};
+
+const TickSound = ({ tick, enabled = true, volume = 0.5 }: TickSoundProps) => {
   const first = useRef(true);
   useEffect(() => {
     // Don't play tick sound on first mount (initial render)
@@ -24,8 +30,11 @@ const TickSound = ({ tick }: { tick: number }) => {
       first.current = false;
       return;
     }
-    playTick();
-  }, [tick]);
+    
+    if (!enabled || volume === 0) return;
+    
+    playTick(volume);
+  }, [tick, enabled, volume]);
   return null;
 };
 

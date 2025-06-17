@@ -8,34 +8,17 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import GameSettingsDifficultySelector from "./GameSettingsDifficultySelector";
 import GameSettingsSoundToggle from "./GameSettingsSoundToggle";
 import GameSettingsSlider from "./GameSettingsSlider";
+import GameSettingsVolumeSlider from "./GameSettingsVolumeSlider";
 import { Button } from "@/components/ui/button";
 
-// Utility to detect iOS/keyboard (very basic, best-effort)
-const useKeyboardPadding = () => {
-  const [keyboardPad, setKeyboardPad] = useState(0);
-  useEffect(() => {
-    const handler = () => {
-      if (window.visualViewport) {
-        setKeyboardPad(Math.max(0, window.outerHeight - window.visualViewport.height));
-      } else {
-        setKeyboardPad(0);
-      }
-    };
-    window.visualViewport?.addEventListener("resize", handler);
-    window.visualViewport?.addEventListener("scroll", handler);
-    return () => {
-      window.visualViewport?.removeEventListener("resize", handler);
-      window.visualViewport?.removeEventListener("scroll", handler);
-    };
-  }, []);
-  return keyboardPad;
-};
 type QuestionType = "translate" | "math";
 type GameSettingsModalProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   soundEnabled: boolean;
   onSoundChange: (value: boolean) => void;
+  volume: number;
+  onVolumeChange: (v: number) => void;
   boardSize: number;
   onBoardSizeChange: (v: number) => void;
   questionTime: number;
@@ -49,11 +32,14 @@ type GameSettingsModalProps = {
   questionType: QuestionType;
   onQuestionTypeChange: (q: QuestionType) => void;
 };
+
 const GameSettingsModal = ({
   open,
   onOpenChange,
   soundEnabled,
   onSoundChange,
+  volume,
+  onVolumeChange,
   boardSize,
   onBoardSizeChange,
   questionTime,
@@ -71,6 +57,7 @@ const GameSettingsModal = ({
 
   // Local state for "pending" settings
   const [pendingSound, setPendingSound] = useState(soundEnabled);
+  const [pendingVolume, setPendingVolume] = useState(volume);
   const [pendingBoardSize, setPendingBoardSize] = useState(boardSize);
   const [pendingQuestionTime, setPendingQuestionTime] = useState(questionTime);
   const [pendingSurpriseCount, setPendingSurpriseCount] = useState(surpriseCount);
@@ -82,6 +69,7 @@ const GameSettingsModal = ({
   useEffect(() => {
     if (open) {
       setPendingSound(soundEnabled);
+      setPendingVolume(volume);
       setPendingBoardSize(boardSize);
       setPendingQuestionTime(questionTime);
       setPendingSurpriseCount(surpriseCount);
@@ -89,11 +77,12 @@ const GameSettingsModal = ({
       setPendingDifficulty(difficulty);
       setPendingQuestionType(questionType);
     }
-  }, [open, soundEnabled, boardSize, questionTime, surpriseCount, numDefenses, difficulty, questionType]);
+  }, [open, soundEnabled, volume, boardSize, questionTime, surpriseCount, numDefenses, difficulty, questionType]);
 
   // Save handler
   const handleSave = () => {
     onSoundChange(pendingSound);
+    onVolumeChange(pendingVolume);
     onBoardSizeChange(pendingBoardSize);
     onQuestionTimeChange(pendingQuestionTime);
     onSurpriseCountChange(pendingSurpriseCount);
@@ -107,7 +96,6 @@ const GameSettingsModal = ({
     onOpenChange(false);
   };
 
-  // Remove keyboardPad from ScrollArea and Footer, now handled by full-height container
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
@@ -117,7 +105,7 @@ const GameSettingsModal = ({
           flexDirection: "column",
           minHeight: "60vh",
           maxHeight: "95vh",
-          height: "95vh", // Make content fill the dialog
+          height: "95vh",
         }}
         className="bg-gradient-to-br from-background to-secondary p-0 shadow-2xl rounded-2xl border-0 max-w-[500px] max-h-[95vh] sm:max-h-[700px] w-full flex flex-col"
       >
@@ -142,6 +130,11 @@ const GameSettingsModal = ({
             <LanguageSelector />
             <GameSettingsDifficultySelector difficulty={pendingDifficulty} onDifficultyChange={setPendingDifficulty} />
             <GameSettingsSoundToggle soundEnabled={pendingSound} onSoundChange={setPendingSound} />
+            <GameSettingsVolumeSlider 
+              volume={pendingVolume} 
+              onVolumeChange={setPendingVolume} 
+              disabled={!pendingSound}
+            />
             <GameSettingsSlider id="board-size-slider" labelKey="settings.boardSize" min={5} max={12} step={1} value={pendingBoardSize} onValueChange={setPendingBoardSize} displayValue={`${pendingBoardSize}x${pendingBoardSize}`} minLabelKey="settings.boardMin" maxLabelKey="settings.boardMax" />
             <GameSettingsSlider id="question-time-slider" labelKey="settings.questionTime" min={6} max={40} step={1} value={pendingQuestionTime} onValueChange={setPendingQuestionTime} suffix="s" minLabelKey="settings.timeMin" maxLabelKey="settings.timeMax" />
             <GameSettingsSlider id="surprise-count-slider" labelKey="settings.surpriseCount" min={1} max={8} step={1} value={pendingSurpriseCount} onValueChange={setPendingSurpriseCount} minLabelKey="settings.surpriseMin" maxLabelKey="settings.surpriseMax" />
@@ -163,4 +156,5 @@ const GameSettingsModal = ({
     </Dialog>
   );
 };
+
 export default GameSettingsModal;

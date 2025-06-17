@@ -45,6 +45,8 @@ type GameBoardAreaProps = {
   setSettingsOpen: (b: boolean) => void;
   soundEnabled: boolean;
   setSoundEnabled: (b: boolean) => void;
+  volume: number;
+  setVolume: (v: number) => void;
   onBoardSizeChange: (v: number) => void;
   onQuestionTimeChange: (v: number) => void;
   onSurpriseCountChange: (n: number) => void;
@@ -52,9 +54,6 @@ type GameBoardAreaProps = {
   onDifficultyChange: (d: "easy" | "medium" | "hard") => void;
   surpriseCount: number;
   playerName?: string;
-  /**
-   * Optional children to render inside the area (typically modals, overlays, etc)
-   */
   children?: React.ReactNode;
 };
 
@@ -63,13 +62,12 @@ const GameBoardArea: React.FC<GameBoardAreaProps> = ({
   boardSize, boardPoints, positions, humanTarget, aiTarget, disableInput,
   handleTileClick, getValidMoves, positionsEqual, surpriseTiles, defenseTiles, aiPendingTarget,
   moveState, isModalOpen, aiModalState, questionTime, onHumanSubmit, onAISubmit, onRestart,
-  settingsOpen, setSettingsOpen, soundEnabled, setSoundEnabled,
+  settingsOpen, setSettingsOpen, soundEnabled, setSoundEnabled, volume, setVolume,
   onBoardSizeChange, onQuestionTimeChange, onSurpriseCountChange, onNumDefensesChange, onDifficultyChange, surpriseCount,
   playerName,
-  children, // <- Add
+  children,
 }) => {
   // Dummy placeholder for props no longer used due to question type now controlled from welcome screen only.
-  // We need to pass them to GameSettingsModal due to its required props.
   const dummyQuestionType = "translate";
   const dummySetQuestionType = () => {};
 
@@ -78,7 +76,7 @@ const GameBoardArea: React.FC<GameBoardAreaProps> = ({
       className="flex flex-col items-center"
       dir={language === "he" ? "rtl" : "ltr"}
     >
-      <SoundManager trigger={sound} />
+      <SoundManager trigger={sound} enabled={soundEnabled} volume={volume} />
       <GameHeader
         onSettingsOpen={() => setSettingsOpen(true)}
         onRestart={onRestart}
@@ -141,6 +139,8 @@ const GameBoardArea: React.FC<GameBoardAreaProps> = ({
         onOpenChange={setSettingsOpen}
         soundEnabled={soundEnabled}
         onSoundChange={setSoundEnabled}
+        volume={volume}
+        onVolumeChange={setVolume}
         boardSize={boardSize}
         onBoardSizeChange={onBoardSizeChange}
         questionTime={questionTime}
@@ -160,4 +160,3 @@ const GameBoardArea: React.FC<GameBoardAreaProps> = ({
 };
 
 export default GameBoardArea;
-

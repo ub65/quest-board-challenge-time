@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { DEFAULT_DEFENSES } from "@/components/GameBoard/types";
 
@@ -13,6 +14,7 @@ export default function useIndexGameFlow() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [playerName, setPlayerName] = useState("");
   const [soundEnabled, setSoundEnabled] = useState(true);
+  const [volume, setVolume] = useState<number>(0.5); // Add volume control
   const [questionTime, setQuestionTime] = useState(20);
   const [boardSize, setBoardSize] = useState(8);
   const [numSurprises, setNumSurprises] = useState(4);
@@ -40,6 +42,7 @@ export default function useIndexGameFlow() {
     settingsOpen, setSettingsOpen,
     playerName, setPlayerName,
     soundEnabled, setSoundEnabled,
+    volume, setVolume, // Add volume controls
     questionTime, setQuestionTime,
     boardSize, setBoardSize,
     numSurprises, setNumSurprises,

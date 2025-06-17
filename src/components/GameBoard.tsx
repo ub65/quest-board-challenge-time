@@ -33,6 +33,8 @@ const GameBoard = ({
   gameCode,
   onlineRole,
   questionType = "translate",
+  soundEnabled: externalSoundEnabled,
+  volume: externalVolume,
 }: {
   difficulty: "easy" | "medium" | "hard";
   onRestart: () => void;
@@ -40,6 +42,8 @@ const GameBoard = ({
   gameCode?: string;
   onlineRole?: "host" | "guest";
   questionType?: "translate" | "math";
+  soundEnabled?: boolean;
+  volume?: number;
 }) => {
   const { t, language } = useLocalization();
 
@@ -48,11 +52,16 @@ const GameBoard = ({
     difficulty, setDifficulty,
     settingsOpen, setSettingsOpen,
     soundEnabled, setSoundEnabled,
+    volume, setVolume,
     questionTime, setQuestionTime,
     boardSize, setBoardSize,
     numSurprises, setNumSurprises,
     numDefenses, setNumDefenses,
   } = useGameSettings(initialDifficulty);
+
+  // Use external sound/volume if provided, otherwise use internal state
+  const effectiveSoundEnabled = externalSoundEnabled !== undefined ? externalSoundEnabled : soundEnabled;
+  const effectiveVolume = externalVolume !== undefined ? externalVolume : volume;
 
   // Board/game state
   const {
@@ -433,8 +442,10 @@ const GameBoard = ({
           onRestart={handleRestart}
           settingsOpen={settingsOpen}
           setSettingsOpen={setSettingsOpen}
-          soundEnabled={soundEnabled}
+          soundEnabled={effectiveSoundEnabled}
           setSoundEnabled={setSoundEnabled}
+          volume={effectiveVolume}
+          setVolume={setVolume}
           onBoardSizeChange={v => setBoardSize(Math.max(5, Math.min(12, v || DEFAULT_BOARD_SIZE)))}
           onQuestionTimeChange={v => setQuestionTime(Math.max(6, Math.min(40, v || DEFAULT_QUESTION_TIME)))}
           onSurpriseCountChange={setNumSurprises}

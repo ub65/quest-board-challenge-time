@@ -248,7 +248,7 @@ const translations = {
 };
 
 export const LocalizationProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [language, setLanguage] = useState<Language>("en");
+  const [language, setLanguage] = useState<Language>("he");
 
   // New: support fallbacks for {n} interpolation
   const t = (key: string, vars?: Record<string, string | number>) => {

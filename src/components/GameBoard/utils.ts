@@ -1,3 +1,4 @@
+
 import {
   SURPRISE_TYPES,
   Tile,
@@ -7,6 +8,7 @@ import {
 } from "./types";
 import { getRandomQuestionByDifficulty } from "@/lib/questions";
 import { getRandomMathQuestion } from "@/lib/mathQuestions";
+import { AIDecisionEngine } from "./aiDecisionEngine";
 
 // Tiles and moves
 export function positionsEqual(a: Tile, b: Tile) {
@@ -41,18 +43,39 @@ export function getDistance(a: Tile, b: Tile) {
   return Math.abs(a.x - b.x) + Math.abs(a.y - b.y);
 }
 
-export function getAIMove(pos: Tile, target: Tile, BOARD_SIZE: number, defenseTiles: DefenseTile[]) {
-  const moves = getValidMoves(pos, BOARD_SIZE, defenseTiles);
-  let best = moves[0] || pos; // fallback to current pos
-  let bestDist = getDistance(best, target);
-  for (const move of moves) {
-    const d = getDistance(move, target);
-    if (d < bestDist) {
-      bestDist = d;
-      best = move;
-    }
+// Enhanced AI move selection using the new decision engine
+export function getAIMove(
+  pos: Tile, 
+  target: Tile, 
+  BOARD_SIZE: number, 
+  defenseTiles: DefenseTile[],
+  humanPos: Tile,
+  humanTarget: Tile,
+  surpriseTiles: SurpriseTile[],
+  difficulty: "easy" | "medium" | "hard"
+) {
+  const moves = getValidMoves(pos, BOARD_SIZE, defenseTiles, humanPos);
+  
+  if (moves.length === 0) {
+    return pos; // No valid moves, stay in place
   }
-  return best;
+
+  const aiEngine = new AIDecisionEngine(difficulty);
+  const decision = aiEngine.chooseBestMove({
+    availableMoves: moves,
+    currentPos: pos,
+    target,
+    humanPos,
+    humanTarget,
+    defenseTiles,
+    surpriseTiles,
+    boardSize: BOARD_SIZE
+  });
+
+  console.log(`[AI DECISION] Move: (${decision.move.x}, ${decision.move.y}), Confidence: ${(decision.confidence * 100).toFixed(1)}%`);
+  console.log(`[AI REASONING] ${decision.reasoning.join(", ")}`);
+
+  return decision.move;
 }
 
 export function generateRandomPoints(boardSize: number) {
@@ -85,48 +108,131 @@ export function getRandomSurpriseTiles(boardSize: number, count: number): Surpri
   return chosen;
 }
 
-// New: Best tile for AI to block (closest to straight path, not occupied)
+// Enhanced AI defense placement with strategic thinking
 export function getAIDefenseTile(options: {
   humanPos: Tile,
   humanTarget: Tile,
   boardSize: number,
   defenseTiles: DefenseTile[],
   positions: {human: Tile, ai: Tile},
-  surpriseTiles: SurpriseTile[]
+  surpriseTiles: SurpriseTile[],
+  difficulty: "easy" | "medium" | "hard"
 }): Tile | null {
-  const { humanPos, humanTarget, boardSize, defenseTiles, positions, surpriseTiles } = options;
+  const { humanPos, humanTarget, boardSize, defenseTiles, positions, surpriseTiles, difficulty } = options;
+  
+  const aiEngine = new AIDecisionEngine(difficulty);
+  const defenseDecision = aiEngine.shouldPlaceDefense({
+    humanPos,
+    humanTarget,
+    aiPos: positions.ai,
+    aiTarget: { x: 0, y: 0 },
+    availableDefenses: 1, // Assuming we're checking if we should place one
+    boardSize
+  });
+
+  console.log(`[AI DEFENSE] Should place: ${defenseDecision.shouldPlace}, Urgency: ${(defenseDecision.urgency * 100).toFixed(1)}%, Reason: ${defenseDecision.reasoning}`);
+
+  if (!defenseDecision.shouldPlace) {
+    return null;
+  }
+
+  // Calculate optimal blocking positions
+  const candidates: Array<{tile: Tile, score: number}> = [];
+  
+  // Strategy 1: Block direct path to goal
   const dx = Math.sign(humanTarget.x - humanPos.x);
   const dy = Math.sign(humanTarget.y - humanPos.y);
-  let candidates: Tile[] = [];
-  let px = humanPos.x, py = humanPos.y;
-  for (let i = 1; i < boardSize - 1; i++) {
-    let tx = px + i * dx;
-    let ty = py + i * dy;
-    if (tx < 0 || ty < 0 || tx >= boardSize || ty >= boardSize) continue;
-    candidates.push({ x: tx, y: ty });
+  
+  // Look ahead on human's path
+  for (let i = 1; i <= 3; i++) {
+    const blockX = humanPos.x + i * dx;
+    const blockY = humanPos.y + i * dy;
+    
+    if (blockX >= 0 && blockX < boardSize && blockY >= 0 && blockY < boardSize) {
+      const tile = { x: blockX, y: blockY };
+      if (isValidDefensePosition(tile, boardSize, positions, defenseTiles, surpriseTiles)) {
+        const distanceToHuman = getDistance(tile, humanPos);
+        const distanceToGoal = getDistance(tile, humanTarget);
+        // Higher score for positions closer to human and on path to goal
+        const score = 20 - distanceToHuman + (10 - distanceToGoal);
+        candidates.push({ tile, score });
+      }
+    }
   }
-  candidates.push(
-    ...[
-      {x: humanPos.x+1, y: humanPos.y},
-      {x: humanPos.x-1, y: humanPos.y},
-      {x: humanPos.x, y: humanPos.y+1},
-      {x: humanPos.x, y: humanPos.y-1}
-    ].filter(
-      t=> t.x >=0 && t.x < boardSize && t.y >=0 && t.y < boardSize
-    )
-  );
-  for (const c of candidates) {
-    if (
-      (c.x === 0 && c.y === 0) ||
-      (c.x === boardSize - 1 && c.y === boardSize - 1) ||
-      (positionsEqual(positions.human, c)) ||
-      (positionsEqual(positions.ai, c)) ||
-      defenseTiles.some(dt => dt.x === c.x && dt.y === c.y) ||
-      surpriseTiles.some(st => st.x === c.x && st.y === c.y && !st.used)
-    ) continue;
-    return c;
+
+  // Strategy 2: Block adjacent to human current position
+  const adjacentPositions = [
+    { x: humanPos.x + 1, y: humanPos.y },
+    { x: humanPos.x - 1, y: humanPos.y },
+    { x: humanPos.x, y: humanPos.y + 1 },
+    { x: humanPos.x, y: humanPos.y - 1 }
+  ];
+
+  for (const tile of adjacentPositions) {
+    if (tile.x >= 0 && tile.x < boardSize && tile.y >= 0 && tile.y < boardSize) {
+      if (isValidDefensePosition(tile, boardSize, positions, defenseTiles, surpriseTiles)) {
+        candidates.push({ tile, score: 15 }); // High score for adjacent blocking
+      }
+    }
   }
-  return null;
+
+  // Strategy 3: Block chokepoints near goal
+  const goalApproaches = [
+    { x: humanTarget.x - 1, y: humanTarget.y },
+    { x: humanTarget.x, y: humanTarget.y - 1 },
+    { x: humanTarget.x - 1, y: humanTarget.y - 1 }
+  ];
+
+  for (const tile of goalApproaches) {
+    if (tile.x >= 0 && tile.x < boardSize && tile.y >= 0 && tile.y < boardSize) {
+      if (isValidDefensePosition(tile, boardSize, positions, defenseTiles, surpriseTiles)) {
+        const score = 12 + (defenseDecision.urgency * 5); // Higher score when urgent
+        candidates.push({ tile, score });
+      }
+    }
+  }
+
+  if (candidates.length === 0) {
+    return null;
+  }
+
+  // Sort by score and return best position
+  candidates.sort((a, b) => b.score - a.score);
+  
+  console.log(`[AI DEFENSE] Best position: (${candidates[0].tile.x}, ${candidates[0].tile.y}) with score ${candidates[0].score}`);
+  
+  return candidates[0].tile;
+}
+
+// Helper function to check if a defense position is valid
+function isValidDefensePosition(
+  tile: Tile,
+  boardSize: number,
+  positions: {human: Tile, ai: Tile},
+  defenseTiles: DefenseTile[],
+  surpriseTiles: SurpriseTile[]
+): boolean {
+  // Can't place on corners
+  if ((tile.x === 0 && tile.y === 0) || (tile.x === boardSize - 1 && tile.y === boardSize - 1)) {
+    return false;
+  }
+  
+  // Can't place on players
+  if (positionsEqual(positions.human, tile) || positionsEqual(positions.ai, tile)) {
+    return false;
+  }
+  
+  // Can't place on existing defenses
+  if (defenseTiles.some(dt => positionsEqual(dt, tile))) {
+    return false;
+  }
+  
+  // Can't place on unused surprises
+  if (surpriseTiles.some(st => positionsEqual(st, tile) && !st.used)) {
+    return false;
+  }
+  
+  return true;
 }
 
 // If other code relies on getRandomQuestion, alias it for "translate"

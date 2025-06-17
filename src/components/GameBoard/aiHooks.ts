@@ -1,69 +1,45 @@
+
 import { useEffect, useRef } from "react";
 import { getRandomQuestion, getValidMoves, getAIMove, getAIDefenseTile } from "./utils";
 import { PlayerType, Tile, DefenseTile, SurpriseTile } from "./types";
 
-// פונקציה חדשה - AI עם שיקולים משולבים
-function chooseBetterAIMove(
-  moves: Tile[],
-  current: Tile,
-  aiTarget: Tile,
-  difficulty: "easy" | "medium" | "hard",
-  humanPos: Tile,
-  humanTarget: Tile,
-  defenseTiles: DefenseTile[],
-  surpriseTiles: SurpriseTile[],
-  aiPoints: number[][],
-) {
-  if (moves.length === 0) return current;
-  // פרמטרים של אקראיות לפי קושי
-  const mistakeProb = difficulty === "easy" ? 0.28 : difficulty === "medium" ? 0.13 : 0.05;
-  const randomExtra = difficulty === "easy" ? 0.25 : difficulty === "medium" ? 0.15 : 0.10;
+// Enhanced AI question answering with more sophisticated difficulty scaling
+function getAIAnswer(question: any, difficulty: "easy" | "medium" | "hard") {
+  // Base mistake probabilities
+  const baseMistakeProb = {
+    "easy": 0.32,
+    "medium": 0.16, 
+    "hard": 0.06
+  };
 
-  // כל מהלך יקבל ציון לפי כמה פרמטרים
-  let scored = moves.map(move => {
-    // התקדמות לכיוון המטרה
-    let towardGoal = - (Math.abs(move.x - aiTarget.x) + Math.abs(move.y - aiTarget.y));
-    // להטריד את השחקן - כמה קרוב לשחקן
-    let towardHuman = - (Math.abs(move.x - humanPos.x) + Math.abs(move.y - humanPos.y));
-    // להרחיק מהמגן/חסימה
-    let nearDefense = defenseTiles.some(d => Math.abs(d.x - move.x) + Math.abs(d.y - move.y) <= 1) ? -4 : 0;
-    // לנסות להגיע לסופתעה
-    let onSurprise = surpriseTiles.find(s => s.x === move.x && s.y === move.y && !s.used) ? 4 : 0;
-    // ניסיון ללכת לכיוון מטרה השחקן, שכנים
-    let towardPlayerTarget =
-      - (Math.abs(move.x - humanTarget.x) + Math.abs(move.y - humanTarget.y));
-
-    // ניקוד משוקלל, משקל שונה לכל גישה
-    let score =
-      3 * towardGoal +
-      2 * towardHuman +
-      nearDefense +
-      4 * onSurprise +
-      towardPlayerTarget +
-      Math.random() * randomExtra * 10; // קצת רנדומלי
-
-    return { move, score };
-  });
-
-  // לפעמים בוחר מהלך חלש (טעות)
-  if (Math.random() < mistakeProb) {
-    const randMove = scored[Math.floor(Math.random() * scored.length)];
-    return randMove.move;
+  // Additional factors that increase mistake probability
+  let mistakeProb = baseMistakeProb[difficulty];
+  
+  // Slightly higher mistake rate for math questions (they're harder)
+  if (question.type === "math") {
+    mistakeProb *= 1.2;
   }
-
-  // אחרת בוחר את המהלך עם הניקוד הכי גבוה
-  scored.sort((a, b) => b.score - a.score);
-  return scored[0].move;
-}
-
-// לא נוגעים בלוגיקת תשובה/שאלה -------------------
-function maybeWrongAnswer(question: any, difficulty: "easy" | "medium" | "hard") {
-  const mistakeProb = difficulty === "easy" ? 0.35 : difficulty === "medium" ? 0.18 : 0.05;
+  
+  // Sometimes make smart mistakes (choose second-best answer instead of random)
+  const smartMistakeProb = difficulty === "hard" ? 0.7 : difficulty === "medium" ? 0.5 : 0.3;
+  
   let aiAnswer = question.correct;
+  
   if (question.answers && Array.isArray(question.answers) && Math.random() < mistakeProb) {
-    const wrongs = question.answers.map((_, i) => i).filter(i => i !== question.correct);
-    aiAnswer = wrongs[Math.floor(Math.random() * wrongs.length)];
+    const wrongAnswers = question.answers.map((_, i) => i).filter(i => i !== question.correct);
+    
+    if (Math.random() < smartMistakeProb && wrongAnswers.length > 1) {
+      // Smart mistake: avoid obviously wrong answers when possible
+      // For now, just pick the first wrong answer (could be enhanced further)
+      aiAnswer = wrongAnswers[0];
+    } else {
+      // Random mistake
+      aiAnswer = wrongAnswers[Math.floor(Math.random() * wrongAnswers.length)];
+    }
+    
+    console.log(`[AI MISTAKE] Chose answer ${aiAnswer} instead of correct answer ${question.correct} (difficulty: ${difficulty})`);
   }
+  
   return aiAnswer;
 }
 
@@ -93,6 +69,7 @@ export function useAITurn({
       aiMovingRef.current = true;
       setDisableInput(true);
 
+      // Enhanced defense placement logic
       if (defensesUsed.ai < numDefenses) {
         const aiDefense = getAIDefenseTile({
           humanPos: positions.human,
@@ -101,7 +78,9 @@ export function useAITurn({
           defenseTiles,
           positions,
           surpriseTiles,
+          difficulty, // Pass difficulty for smarter defense decisions
         });
+        
         if (aiDefense) {
           setDefenseTiles(prev => [...prev, { ...aiDefense, owner: "ai" }]);
           setDefensesUsed(d => ({ ...d, ai: d.ai + 1 }));
@@ -119,25 +98,21 @@ export function useAITurn({
         }
       }
 
-      // כאן יבחר את המהלך המשתפר
+      // Enhanced move selection with strategic AI
       const allMoves = getValidMoves(positions.ai, BOARD_SIZE, defenseTiles, positions.human);
-      // new: נוסיף matrix של ניקוד הלוח (כלי), לא חובה, כרגע לפי board size בלבד
-      const fakePoints =
-        Array.isArray(positions.ai) ? positions.ai : Array.from({length: BOARD_SIZE}).map(()=>Array(BOARD_SIZE).fill(0));
-      const move = chooseBetterAIMove(
-        allMoves,
+      const move = getAIMove(
         positions.ai,
         aiTarget,
-        difficulty,
-        positions.human,
-        humanTarget,
+        BOARD_SIZE,
         defenseTiles,
-        surpriseTiles,
-        fakePoints,
+        positions.human, // Pass human position for strategic decisions
+        humanTarget,     // Pass human target for interception strategies
+        surpriseTiles,   // Pass surprise tiles for collection strategy
+        difficulty       // Pass difficulty for behavior scaling
       );
 
       const question = getRandomQuestion(difficulty);
-      const aiAnswer = maybeWrongAnswer(question, difficulty);
+      const aiAnswer = getAIAnswer(question, difficulty);
 
       const aiQuestionWithChoice = { ...question, aiChoice: aiAnswer };
 

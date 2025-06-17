@@ -8,6 +8,7 @@ import GameBoardModals from "./GameBoardModals";
 import GameBoardTurnInfo from "./GameBoardTurnInfo";
 import GameSettingsModal from "../GameSettingsModal";
 import SoundManager from "../SoundManager";
+import TickSound from "../TickSound";
 
 type GameBoardAreaProps = {
   language: string;

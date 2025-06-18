@@ -10,6 +10,17 @@ const config: CapacitorConfig = {
   server: {
     url: "https://4930a47f-5b67-4419-b420-0a01e4623cf8.lovableproject.com?forceHideBadge=true",
     cleartext: true
+  },
+  plugins: {
+    SplashScreen: {
+      launchShowDuration: 2000,
+      backgroundColor: "#ffffff",
+      showSpinner: false
+    },
+    StatusBar: {
+      style: "default",
+      backgroundColor: "#ffffff"
+    }
   }
 };
 

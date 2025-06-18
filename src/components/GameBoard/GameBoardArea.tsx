@@ -1,4 +1,3 @@
-
 import React, { RefObject } from "react";
 import GameHeader from "../GameHeader";
 import GameBoardHud from "./GameBoardHud";
@@ -71,6 +70,8 @@ const GameBoardArea: React.FC<GameBoardAreaProps> = ({
   // Dummy placeholder for props no longer used due to question type now controlled from welcome screen only.
   const dummyQuestionType = "translate";
   const dummySetQuestionType = () => {};
+
+  console.log("[GameBoardArea] Sound settings:", { soundEnabled, volume });
 
   return (
     <div

@@ -88,14 +88,16 @@ const GameSettingsModal = ({
     setTickCounter(prev => prev + 1);
   };
 
-  // Wrapped handlers that trigger sound feedback
+  // Wrapped handlers that trigger sound feedback and immediately apply changes
   const handleSoundChange = (value: boolean) => {
     setPendingSound(value);
+    onSoundChange(value); // Apply immediately
     triggerTick();
   };
 
   const handleVolumeChange = (value: number) => {
     setPendingVolume(value);
+    onVolumeChange(value); // Apply immediately
     triggerTick();
   };
 
@@ -124,10 +126,8 @@ const GameSettingsModal = ({
     triggerTick();
   };
 
-  // Save handler
+  // Save handler - now only saves non-sound settings since sound is applied immediately
   const handleSave = () => {
-    onSoundChange(pendingSound);
-    onVolumeChange(pendingVolume);
     onBoardSizeChange(pendingBoardSize);
     onQuestionTimeChange(pendingQuestionTime);
     onSurpriseCountChange(pendingSurpriseCount);
@@ -137,10 +137,15 @@ const GameSettingsModal = ({
     onOpenChange(false);
   };
 
-  // Cancel handler: just close, discard changes
+  // Cancel handler: revert sound settings and close
   const handleCancel = () => {
+    // Revert sound settings to original values
+    onSoundChange(soundEnabled);
+    onVolumeChange(volume);
     onOpenChange(false);
   };
+
+  console.log("[GameSettingsModal] Current sound state:", { pendingSound, pendingVolume, soundEnabled, volume });
 
   return (
     <>

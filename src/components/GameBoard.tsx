@@ -488,6 +488,8 @@ const GameBoard = ({
             onHumanSubmit={moveState?.resolve}
             onAISubmit={handleAIModalSubmit}
             questionType={questionType}
+            soundEnabled={effectiveSoundEnabled}
+            volume={effectiveVolume}
           />
         </GameBoardArea>
       )}

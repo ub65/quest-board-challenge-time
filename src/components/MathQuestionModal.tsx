@@ -34,11 +34,15 @@ const MathQuestionModal = ({
   question,
   onSubmit,
   timeLimit = 14,
+  soundEnabled = true,
+  volume = 0.5,
 }: {
   isOpen: boolean;
   question: MathQ;
   onSubmit: (isCorrect: boolean) => void;
   timeLimit?: number;
+  soundEnabled?: boolean;
+  volume?: number;
 }) => {
   const { t, language } = useLocalization();
   const [selected, setSelected] = useState<number | null>(null);
@@ -101,9 +105,9 @@ const MathQuestionModal = ({
     `}
       style={{ pointerEvents: isOpen ? "auto" : "none", direction }}
     >
-      <SoundManager trigger={playWinSound ? "win" : null} />
+      <SoundManager trigger={playWinSound ? "win" : null} enabled={soundEnabled} volume={volume} />
       <div className="w-full max-w-lg bg-white rounded-lg shadow-lg p-6 animate-scale-in flex flex-col" style={{ direction }}>
-        {isOpen && !answered && time > 0 && <TickSound tick={time} />}
+        {isOpen && !answered && time > 0 && <TickSound tick={time} enabled={soundEnabled} volume={volume} />}
         <div className="flex flex-col gap-2 mb-5">
           <label className="font-semibold flex items-center justify-between select-none">
             <span>{t('question.timeLeft') || "Time left"}</span>

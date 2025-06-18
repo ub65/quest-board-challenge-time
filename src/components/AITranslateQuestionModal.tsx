@@ -10,6 +10,8 @@ interface AITranslateQuestionModalProps {
   isOpen: boolean;
   question: Question;
   onSubmit: (ok: boolean) => void;
+  soundEnabled?: boolean;
+  volume?: number;
 }
 
 type ShuffledAnswer = { answer: string; idx: number };
@@ -24,7 +26,13 @@ function shuffle<T>(arr: T[]): T[] {
   return a;
 }
 
-const AITranslateQuestionModal: React.FC<AITranslateQuestionModalProps> = ({ isOpen, question, onSubmit }) => {
+const AITranslateQuestionModal: React.FC<AITranslateQuestionModalProps> = ({ 
+  isOpen, 
+  question, 
+  onSubmit,
+  soundEnabled = true,
+  volume = 0.5 
+}) => {
   const { t } = useLocalization();
   const [shuffled, setShuffled] = useState<ShuffledAnswer[]>([]);
   const [aiChoice, setAIChoice] = useState<number | null>(null);

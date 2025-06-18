@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import { useLocalization } from "@/contexts/LocalizationContext";
 import { Slider } from "@/components/ui/slider";
@@ -41,11 +42,15 @@ const TranslateQuestionModal = ({
   question,
   onSubmit,
   timeLimit = 14,
+  soundEnabled = true,
+  volume = 0.5,
 }: {
   isOpen: boolean;
   question: Question;
   onSubmit: (isCorrect: boolean) => void;
   timeLimit?: number;
+  soundEnabled?: boolean;
+  volume?: number;
 }) => {
   const { t, language } = useLocalization();
   const [selected, setSelected] = useState<number | null>(null);
@@ -100,9 +105,6 @@ const TranslateQuestionModal = ({
 
   const sliderColorClass = getTimeSliderColor(time, timeLimit);
 
-  // Remove answerButtonAlign, always center
-  // const answerButtonAlign = language === "he" ? "text-right" : "text-left";
-
   return (
     <div
       className={`
@@ -111,10 +113,10 @@ const TranslateQuestionModal = ({
       style={{ pointerEvents: isOpen ? "auto" : "none" }}
     >
       {/* Sound effect for correct answer */}
-      <SoundManager trigger={playWinSound ? "win" : null} />
+      <SoundManager trigger={playWinSound ? "win" : null} enabled={soundEnabled} volume={volume} />
       <div className="w-full max-w-lg bg-white rounded-lg shadow-lg p-6 animate-scale-in flex flex-col">
         {/* Tick sound triggers on each time change while active */}
-        {isOpen && !answered && time > 0 && <TickSound tick={time} />}
+        {isOpen && !answered && time > 0 && <TickSound tick={time} enabled={soundEnabled} volume={volume} />}
         {/* Time Remaining - show only once as text */}
         <div className="flex flex-col gap-2 mb-5">
           <label className="font-semibold flex items-center justify-between select-none">

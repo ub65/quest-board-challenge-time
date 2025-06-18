@@ -63,6 +63,30 @@ const GameBoard = ({
   const effectiveSoundEnabled = externalSoundEnabled !== undefined ? externalSoundEnabled : soundEnabled;
   const effectiveVolume = externalVolume !== undefined ? externalVolume : volume;
 
+  // Create handlers that update the correct state based on whether external props are provided
+  const handleSoundEnabledChange = (value: boolean) => {
+    if (externalSoundEnabled === undefined) {
+      setSoundEnabled(value);
+    }
+    // If external, the parent should handle this
+  };
+
+  const handleVolumeChange = (value: number) => {
+    if (externalVolume === undefined) {
+      setVolume(value);
+    }
+    // If external, the parent should handle this
+  };
+
+  console.log("[GameBoard] Sound state:", { 
+    effectiveSoundEnabled, 
+    effectiveVolume, 
+    internalSound: soundEnabled, 
+    internalVolume: volume,
+    externalSound: externalSoundEnabled,
+    externalVolume: externalVolume
+  });
+
   // Board/game state
   const {
     boardPoints, setBoardPoints,
@@ -443,9 +467,9 @@ const GameBoard = ({
           settingsOpen={settingsOpen}
           setSettingsOpen={setSettingsOpen}
           soundEnabled={effectiveSoundEnabled}
-          setSoundEnabled={setSoundEnabled}
+          setSoundEnabled={handleSoundEnabledChange}
           volume={effectiveVolume}
-          setVolume={setVolume}
+          setVolume={handleVolumeChange}
           onBoardSizeChange={v => setBoardSize(Math.max(5, Math.min(12, v || DEFAULT_BOARD_SIZE)))}
           onQuestionTimeChange={v => setQuestionTime(Math.max(6, Math.min(40, v || DEFAULT_QUESTION_TIME)))}
           onSurpriseCountChange={setNumSurprises}

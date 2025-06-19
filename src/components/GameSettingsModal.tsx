@@ -56,9 +56,7 @@ const GameSettingsModal = ({
 }: GameSettingsModalProps) => {
   const { t } = useLocalization();
 
-  // Local state for "pending" settings
-  const [pendingSound, setPendingSound] = useState(soundEnabled);
-  const [pendingVolume, setPendingVolume] = useState(volume);
+  // Local state for "pending" settings (non-sound settings only)
   const [pendingBoardSize, setPendingBoardSize] = useState(boardSize);
   const [pendingQuestionTime, setPendingQuestionTime] = useState(questionTime);
   const [pendingSurpriseCount, setPendingSurpriseCount] = useState(surpriseCount);
@@ -72,8 +70,6 @@ const GameSettingsModal = ({
   // Reset local state whenever the modal is opened
   useEffect(() => {
     if (open) {
-      setPendingSound(soundEnabled);
-      setPendingVolume(volume);
       setPendingBoardSize(boardSize);
       setPendingQuestionTime(questionTime);
       setPendingSurpriseCount(surpriseCount);
@@ -81,26 +77,25 @@ const GameSettingsModal = ({
       setPendingDifficulty(difficulty);
       setPendingQuestionType(questionType);
     }
-  }, [open, soundEnabled, volume, boardSize, questionTime, surpriseCount, numDefenses, difficulty, questionType]);
+  }, [open, boardSize, questionTime, surpriseCount, numDefenses, difficulty, questionType]);
 
   // Helper to trigger tick sound
   const triggerTick = () => {
     setTickCounter(prev => prev + 1);
   };
 
-  // Wrapped handlers that trigger sound feedback and immediately apply changes
+  // Sound handlers - apply changes immediately and permanently
   const handleSoundChange = (value: boolean) => {
-    setPendingSound(value);
-    onSoundChange(value); // Apply immediately
+    onSoundChange(value);
     triggerTick();
   };
 
   const handleVolumeChange = (value: number) => {
-    setPendingVolume(value);
-    onVolumeChange(value); // Apply immediately
+    onVolumeChange(value);
     triggerTick();
   };
 
+  // Non-sound setting handlers - only update local state
   const handleBoardSizeChange = (value: number) => {
     setPendingBoardSize(value);
     triggerTick();
@@ -126,7 +121,7 @@ const GameSettingsModal = ({
     triggerTick();
   };
 
-  // Save handler - now only saves non-sound settings since sound is applied immediately
+  // Save handler - only saves non-sound settings
   const handleSave = () => {
     onBoardSizeChange(pendingBoardSize);
     onQuestionTimeChange(pendingQuestionTime);
@@ -137,19 +132,16 @@ const GameSettingsModal = ({
     onOpenChange(false);
   };
 
-  // Cancel handler: revert sound settings and close
+  // Cancel handler - only reverts non-sound settings
   const handleCancel = () => {
-    // Revert sound settings to original values
-    onSoundChange(soundEnabled);
-    onVolumeChange(volume);
     onOpenChange(false);
   };
 
-  console.log("[GameSettingsModal] Current sound state:", { pendingSound, pendingVolume, soundEnabled, volume });
+  console.log("[GameSettingsModal] Current sound state:", { soundEnabled, volume });
 
   return (
     <>
-      <TickSound tick={tickCounter} enabled={pendingSound} volume={pendingVolume} />
+      <TickSound tick={tickCounter} enabled={soundEnabled} volume={volume} />
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent
           style={{
@@ -182,11 +174,11 @@ const GameSettingsModal = ({
             <div className="py-2 flex flex-col gap-7 w-full">
               <LanguageSelector />
               <GameSettingsDifficultySelector difficulty={pendingDifficulty} onDifficultyChange={handleDifficultyChange} />
-              <GameSettingsSoundToggle soundEnabled={pendingSound} onSoundChange={handleSoundChange} />
+              <GameSettingsSoundToggle soundEnabled={soundEnabled} onSoundChange={handleSoundChange} />
               <GameSettingsVolumeSlider 
-                volume={pendingVolume} 
+                volume={volume} 
                 onVolumeChange={handleVolumeChange} 
-                disabled={!pendingSound}
+                disabled={!soundEnabled}
               />
               <GameSettingsSlider id="board-size-slider" labelKey="settings.boardSize" min={5} max={12} step={1} value={pendingBoardSize} onValueChange={handleBoardSizeChange} displayValue={`${pendingBoardSize}x${pendingBoardSize}`} minLabelKey="settings.boardMin" maxLabelKey="settings.boardMax" />
               <GameSettingsSlider id="question-time-slider" labelKey="settings.questionTime" min={6} max={40} step={1} value={pendingQuestionTime} onValueChange={handleQuestionTimeChange} suffix="s" minLabelKey="settings.timeMin" maxLabelKey="settings.timeMax" />

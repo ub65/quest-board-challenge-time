@@ -11,16 +11,20 @@ type Props = {
 
 const GameSettingsSoundToggle = ({ soundEnabled, onSoundChange }: Props) => {
   const { t } = useLocalization();
+  
   return (
-    <div className="flex items-center justify-between gap-4 px-1">
-      <Label htmlFor="sound-toggle" className="text-base cursor-pointer select-none">
+    <div className="flex items-center justify-between gap-4 px-1 py-2">
+      <Label 
+        htmlFor="sound-toggle" 
+        className="text-base cursor-pointer select-none pointer-events-auto"
+      >
         {t('settings.sound')}
       </Label>
       <Switch
         id="sound-toggle"
         checked={soundEnabled}
         onCheckedChange={onSoundChange}
-        className="scale-110"
+        className="scale-110 pointer-events-auto cursor-pointer"
       />
     </div>
   );

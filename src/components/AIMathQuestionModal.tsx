@@ -43,6 +43,8 @@ const AIMathQuestionModal: React.FC<AIMathQuestionModalProps> = ({
   const [aiChoice, setAIChoice] = useState<number | null>(null);
   const [showFeedback, setShowFeedback] = useState(false);
 
+  console.log("[AIMathQuestionModal] Sound settings:", { soundEnabled, volume, isOpen });
+
   // Shuffle and reset state on open
   useEffect(() => {
     if (question && isOpen) {

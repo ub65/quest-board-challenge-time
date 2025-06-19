@@ -51,6 +51,8 @@ const MathQuestionModal = ({
   const [answered, setAnswered] = useState<boolean>(false);
   const [playWinSound, setPlayWinSound] = useState(false);
 
+  console.log("[MathQuestionModal] Sound settings:", { soundEnabled, volume, isOpen });
+
   useEffect(() => {
     if (question) {
       const arr = question.answers.map((answer: string, idx: number) => ({

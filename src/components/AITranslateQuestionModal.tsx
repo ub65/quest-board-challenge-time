@@ -38,6 +38,8 @@ const AITranslateQuestionModal: React.FC<AITranslateQuestionModalProps> = ({
   const [aiChoice, setAIChoice] = useState<number | null>(null);
   const [showFeedback, setShowFeedback] = useState(false);
 
+  console.log("[AITranslateQuestionModal] Sound settings:", { soundEnabled, volume, isOpen });
+
   // Shuffle and reset state on open
   useEffect(() => {
     if (question && isOpen) {

@@ -33,10 +33,10 @@ const GameBoardModals: React.FC<GameBoardModalsProps> = ({
   volume = 0.5,
 }) => {
   if (moveState) {
-    console.log("[MODAL/HUMAN] Showing modal with question:", moveState.question);
+    console.log("[MODAL/HUMAN] Showing modal with question:", moveState.question, "Sound settings:", { soundEnabled, volume });
   }
   if (aiModalState) {
-    console.log("[MODAL/AI] Showing modal with question:", aiModalState.question);
+    console.log("[MODAL/AI] Showing modal with question:", aiModalState.question, "Sound settings:", { soundEnabled, volume });
   }
 
   return (

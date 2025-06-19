@@ -59,6 +59,8 @@ const TranslateQuestionModal = ({
   const [answered, setAnswered] = useState<boolean>(false);
   const [playWinSound, setPlayWinSound] = useState(false);
 
+  console.log("[TranslateQuestionModal] Sound settings:", { soundEnabled, volume, isOpen });
+
   useEffect(() => {
     if (question) {
       const arr = question.answers.map((answer: string, idx: number) => ({

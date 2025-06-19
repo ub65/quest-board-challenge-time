@@ -1,3 +1,4 @@
+
 import React, { RefObject } from "react";
 import GameHeader from "../GameHeader";
 import GameBoardHud from "./GameBoardHud";
@@ -129,6 +130,8 @@ const GameBoardArea: React.FC<GameBoardAreaProps> = ({
         questionTime={questionTime}
         onHumanSubmit={onHumanSubmit}
         onAISubmit={onAISubmit}
+        soundEnabled={soundEnabled}
+        volume={volume}
       />
       <GameBoardTurnInfo
         winner={winner}

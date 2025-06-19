@@ -64,10 +64,10 @@ const GameSettingsModal = ({
   const [pendingDifficulty, setPendingDifficulty] = useState<"easy" | "medium" | "hard">(difficulty);
   const [pendingQuestionType, setPendingQuestionType] = useState<QuestionType>(questionType);
 
-  // Add tick counter for sound feedback
+  // Tick counter for sound feedback
   const [tickCounter, setTickCounter] = useState(0);
 
-  // Reset local state whenever the modal is opened
+  // Reset local state when modal opens
   useEffect(() => {
     if (open) {
       setPendingBoardSize(boardSize);
@@ -79,13 +79,12 @@ const GameSettingsModal = ({
     }
   }, [open, boardSize, questionTime, surpriseCount, numDefenses, difficulty, questionType]);
 
-  // Helper to trigger tick sound
   const triggerTick = () => {
     setTickCounter(prev => prev + 1);
   };
 
-  // Sound handlers - apply changes immediately and permanently
-  const handleSoundChange = (value: boolean) => {
+  // Sound handlers - apply immediately
+  const handleSoundToggle = (value: boolean) => {
     onSoundChange(value);
     triggerTick();
   };
@@ -95,7 +94,7 @@ const GameSettingsModal = ({
     triggerTick();
   };
 
-  // Non-sound setting handlers - only update local state
+  // Non-sound setting handlers - update local state only
   const handleBoardSizeChange = (value: number) => {
     setPendingBoardSize(value);
     triggerTick();
@@ -121,7 +120,7 @@ const GameSettingsModal = ({
     triggerTick();
   };
 
-  // Save handler - only saves non-sound settings
+  // Save non-sound settings
   const handleSave = () => {
     onBoardSizeChange(pendingBoardSize);
     onQuestionTimeChange(pendingQuestionTime);
@@ -132,34 +131,16 @@ const GameSettingsModal = ({
     onOpenChange(false);
   };
 
-  // Cancel handler - only reverts non-sound settings
   const handleCancel = () => {
     onOpenChange(false);
   };
-
-  console.log("[GameSettingsModal] Current sound state:", { soundEnabled, volume });
 
   return (
     <>
       <TickSound tick={tickCounter} enabled={soundEnabled} volume={volume} />
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent
-          style={{
-            padding: 0,
-            display: "flex",
-            flexDirection: "column",
-            minHeight: "60vh",
-            maxHeight: "95vh",
-            height: "95vh",
-          }}
-          className="bg-gradient-to-br from-background to-secondary p-0 shadow-2xl rounded-2xl border-0 max-w-[500px] max-h-[95vh] sm:max-h-[700px] w-full flex flex-col"
-        >
-          <ScrollArea
-            className="flex-1 px-6 pt-7 pb-4 w-full overflow-y-auto"
-            style={{
-              minHeight: 0,
-            }}
-          >
+        <DialogContent className="bg-gradient-to-br from-background to-secondary p-0 shadow-2xl rounded-2xl border-0 max-w-[500px] max-h-[95vh] sm:max-h-[700px] w-full flex flex-col">
+          <ScrollArea className="flex-1 px-6 pt-7 pb-4 w-full overflow-y-auto">
             <DialogHeader>
               <div className="flex flex-col items-center gap-1 mb-2">
                 <SlidersHorizontal size={32} className="text-primary" />
@@ -173,17 +154,65 @@ const GameSettingsModal = ({
             </DialogHeader>
             <div className="py-2 flex flex-col gap-7 w-full">
               <LanguageSelector />
-              <GameSettingsDifficultySelector difficulty={pendingDifficulty} onDifficultyChange={handleDifficultyChange} />
-              <GameSettingsSoundToggle soundEnabled={soundEnabled} onSoundChange={handleSoundChange} />
+              <GameSettingsDifficultySelector 
+                difficulty={pendingDifficulty} 
+                onDifficultyChange={handleDifficultyChange} 
+              />
+              <GameSettingsSoundToggle 
+                soundEnabled={soundEnabled} 
+                onSoundChange={handleSoundToggle} 
+              />
               <GameSettingsVolumeSlider 
                 volume={volume} 
                 onVolumeChange={handleVolumeChange} 
                 disabled={!soundEnabled}
               />
-              <GameSettingsSlider id="board-size-slider" labelKey="settings.boardSize" min={5} max={12} step={1} value={pendingBoardSize} onValueChange={handleBoardSizeChange} displayValue={`${pendingBoardSize}x${pendingBoardSize}`} minLabelKey="settings.boardMin" maxLabelKey="settings.boardMax" />
-              <GameSettingsSlider id="question-time-slider" labelKey="settings.questionTime" min={6} max={40} step={1} value={pendingQuestionTime} onValueChange={handleQuestionTimeChange} suffix="s" minLabelKey="settings.timeMin" maxLabelKey="settings.timeMax" />
-              <GameSettingsSlider id="surprise-count-slider" labelKey="settings.surpriseCount" min={1} max={8} step={1} value={pendingSurpriseCount} onValueChange={handleSurpriseCountChange} minLabelKey="settings.surpriseMin" maxLabelKey="settings.surpriseMax" />
-              <GameSettingsSlider id="defense-count-slider" labelKey="settings.defenseCount" min={1} max={4} step={1} value={pendingNumDefenses} onValueChange={handleNumDefensesChange} minLabelKey="settings.defenseMin" maxLabelKey="settings.defenseMax" />
+              <GameSettingsSlider 
+                id="board-size-slider" 
+                labelKey="settings.boardSize" 
+                min={5} 
+                max={12} 
+                step={1} 
+                value={pendingBoardSize} 
+                onValueChange={handleBoardSizeChange} 
+                displayValue={`${pendingBoardSize}x${pendingBoardSize}`} 
+                minLabelKey="settings.boardMin" 
+                maxLabelKey="settings.boardMax" 
+              />
+              <GameSettingsSlider 
+                id="question-time-slider" 
+                labelKey="settings.questionTime" 
+                min={6} 
+                max={40} 
+                step={1} 
+                value={pendingQuestionTime} 
+                onValueChange={handleQuestionTimeChange} 
+                suffix="s" 
+                minLabelKey="settings.timeMin" 
+                maxLabelKey="settings.timeMax" 
+              />
+              <GameSettingsSlider 
+                id="surprise-count-slider" 
+                labelKey="settings.surpriseCount" 
+                min={1} 
+                max={8} 
+                step={1} 
+                value={pendingSurpriseCount} 
+                onValueChange={handleSurpriseCountChange} 
+                minLabelKey="settings.surpriseMin" 
+                maxLabelKey="settings.surpriseMax" 
+              />
+              <GameSettingsSlider 
+                id="defense-count-slider" 
+                labelKey="settings.defenseCount" 
+                min={1} 
+                max={4} 
+                step={1} 
+                value={pendingNumDefenses} 
+                onValueChange={handleNumDefensesChange} 
+                minLabelKey="settings.defenseMin" 
+                maxLabelKey="settings.defenseMax" 
+              />
             </div>
           </ScrollArea>
           <DialogFooter className="pt-3 pb-4 px-6 flex flex-col gap-2 bg-gradient-to-b from-transparent to-white/95 w-full z-10">

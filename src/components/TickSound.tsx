@@ -1,19 +1,28 @@
 
 import { useEffect, useRef } from "react";
 
-// Very soft tick using Web Audio API, customizable for future tweaking
 function playTick(volume: number) {
-  const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
-  const o = ctx.createOscillator();
-  o.type = "sine";
-  o.frequency.value = 940;
-  const gain = ctx.createGain();
-  gain.gain.value = 0.04 * volume;
-  o.connect(gain);
-  gain.connect(ctx.destination);
-  o.start();
-  o.stop(ctx.currentTime + 0.07);
-  setTimeout(() => ctx.close(), 120); // cleanup
+  try {
+    const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
+    const oscillator = ctx.createOscillator();
+    const gainNode = ctx.createGain();
+    
+    oscillator.type = "sine";
+    oscillator.frequency.value = 940;
+    gainNode.gain.value = 0.04 * volume;
+    
+    oscillator.connect(gainNode);
+    gainNode.connect(ctx.destination);
+    
+    oscillator.start();
+    oscillator.stop(ctx.currentTime + 0.07);
+    
+    setTimeout(() => {
+      ctx.close().catch(() => {});
+    }, 120);
+  } catch (error) {
+    console.warn("Could not play tick sound:", error);
+  }
 }
 
 type TickSoundProps = {
@@ -23,11 +32,11 @@ type TickSoundProps = {
 };
 
 const TickSound = ({ tick, enabled = true, volume = 0.5 }: TickSoundProps) => {
-  const first = useRef(true);
+  const firstRender = useRef(true);
+  
   useEffect(() => {
-    // Don't play tick sound on first mount (initial render)
-    if (first.current) {
-      first.current = false;
+    if (firstRender.current) {
+      firstRender.current = false;
       return;
     }
     
@@ -35,6 +44,7 @@ const TickSound = ({ tick, enabled = true, volume = 0.5 }: TickSoundProps) => {
     
     playTick(volume);
   }, [tick, enabled, volume]);
+  
   return null;
 };
 

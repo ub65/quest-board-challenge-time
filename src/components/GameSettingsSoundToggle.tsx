@@ -16,7 +16,7 @@ const GameSettingsSoundToggle = ({ soundEnabled, onSoundChange }: Props) => {
     <div className="flex items-center justify-between gap-4 px-1 py-2">
       <Label 
         htmlFor="sound-toggle" 
-        className="text-base cursor-pointer select-none pointer-events-auto"
+        className="text-base cursor-pointer select-none"
       >
         {t('settings.sound')}
       </Label>
@@ -24,7 +24,7 @@ const GameSettingsSoundToggle = ({ soundEnabled, onSoundChange }: Props) => {
         id="sound-toggle"
         checked={soundEnabled}
         onCheckedChange={onSoundChange}
-        className="scale-110 pointer-events-auto cursor-pointer"
+        className="scale-110"
       />
     </div>
   );

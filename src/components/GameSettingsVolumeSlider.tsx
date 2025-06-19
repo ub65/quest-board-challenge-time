@@ -14,7 +14,6 @@ type Props = {
 const GameSettingsVolumeSlider = ({ volume, onVolumeChange, disabled = false }: Props) => {
   const { t } = useLocalization();
 
-  // Choose appropriate volume icon
   const getVolumeIcon = () => {
     if (disabled || volume === 0) return VolumeOff;
     if (volume < 0.33) return Volume;
@@ -26,10 +25,10 @@ const GameSettingsVolumeSlider = ({ volume, onVolumeChange, disabled = false }: 
   const displayVolume = Math.round(volume * 100);
 
   return (
-    <div className={`flex flex-col gap-1 py-2 ${disabled ? 'opacity-50' : ''}`}>
+    <div className={`flex flex-col gap-2 py-2 ${disabled ? 'opacity-50' : ''}`}>
       <Label 
         htmlFor="volume-slider" 
-        className="text-base font-semibold mb-1 select-none flex justify-between items-center pointer-events-auto"
+        className="text-base font-semibold select-none flex justify-between items-center"
       >
         <div className="flex items-center gap-2">
           <VolumeIcon size={18} />
@@ -44,10 +43,10 @@ const GameSettingsVolumeSlider = ({ volume, onVolumeChange, disabled = false }: 
         step={0.01}
         value={[volume]}
         onValueChange={([val]) => onVolumeChange(val)}
-        className="w-full pointer-events-auto cursor-pointer"
+        className="w-full"
         disabled={disabled}
       />
-      <div className="flex justify-between text-xs text-gray-400 mt-1 pointer-events-none">
+      <div className="flex justify-between text-xs text-gray-400 mt-1">
         <span>0%</span>
         <span>100%</span>
       </div>

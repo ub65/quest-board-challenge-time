@@ -2,16 +2,12 @@
 import React, { useEffect, useState } from "react";
 import { useLocalization } from "@/contexts/LocalizationContext";
 import { Slider } from "@/components/ui/slider";
-import TickSound from "@/components/TickSound";
-import SoundManager from "@/components/SoundManager";
 
 type BaseModalProps = {
   isOpen: boolean;
   question: any;
   onSubmit: (isCorrect: boolean) => void;
   timeLimit?: number;
-  soundEnabled?: boolean;
-  volume?: number;
   children: React.ReactNode;
   onAnswerSelect?: (selectedIdx: number, correct: boolean) => void;
 };
@@ -38,7 +34,6 @@ export const useQuestionModal = (question: any, timeLimit: number, isOpen: boole
   const [shuffled, setShuffled] = useState<{ answer: string; idx: number }[]>([]);
   const [time, setTime] = useState(timeLimit);
   const [answered, setAnswered] = useState(false);
-  const [playWinSound, setPlayWinSound] = useState(false);
 
   useEffect(() => {
     if (question) {
@@ -47,7 +42,6 @@ export const useQuestionModal = (question: any, timeLimit: number, isOpen: boole
       setSelected(null);
       setTime(timeLimit);
       setAnswered(false);
-      setPlayWinSound(false);
     }
   }, [question, timeLimit]);
 
@@ -68,23 +62,14 @@ export const useQuestionModal = (question: any, timeLimit: number, isOpen: boole
     const originalIdx = shuffled[pickedIdx].idx;
     const correct = originalIdx === question.correct;
     setAnswered(true);
-    if (correct) setPlayWinSound(true);
     setTimeout(() => onSubmit(correct), 800);
   };
-
-  useEffect(() => {
-    if (playWinSound) {
-      const t = setTimeout(() => setPlayWinSound(false), 400);
-      return () => clearTimeout(t);
-    }
-  }, [playWinSound]);
 
   return {
     selected,
     shuffled,
     time,
     answered,
-    playWinSound,
     handlePick,
     sliderColorClass: getTimeSliderColor(time, timeLimit)
   };
@@ -95,8 +80,6 @@ const BaseModal: React.FC<BaseModalProps> = ({
   question,
   onSubmit,
   timeLimit = 14,
-  soundEnabled = true,
-  volume = 0.5,
   children
 }) => {
   const { t, language } = useLocalization();
@@ -108,12 +91,7 @@ const BaseModal: React.FC<BaseModalProps> = ({
       className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 animate-fade-in"
       style={{ pointerEvents: isOpen ? "auto" : "none", direction }}
     >
-      <SoundManager trigger={modalState.playWinSound ? "win" : null} enabled={soundEnabled} volume={volume} />
       <div className="w-full max-w-lg bg-white rounded-lg shadow-lg p-6 animate-scale-in flex flex-col" style={{ direction }}>
-        {isOpen && !modalState.answered && modalState.time > 0 && (
-          <TickSound tick={modalState.time} enabled={soundEnabled} volume={volume} />
-        )}
-        
         <div className="flex flex-col gap-2 mb-5">
           <label className="font-semibold flex items-center justify-between select-none">
             <span>{t('question.timeLeft') || "Time left"}</span>

@@ -7,13 +7,10 @@ import GameBoardWinnerOverlay from "./GameBoardWinnerOverlay";
 import GameBoardModals from "./GameBoardModals";
 import GameBoardTurnInfo from "./GameBoardTurnInfo";
 import GameSettingsModal from "../GameSettingsModal";
-import SoundManager from "../SoundManager";
-import TickSound from "../TickSound";
 
 type GameBoardAreaProps = {
   language: string;
   t: (key: string, params?: any) => string;
-  sound: "move" | "wrong" | "win" | null;
   turn: "human" | "ai";
   winner: "human" | "ai" | null;
   difficulty: "easy" | "medium" | "hard";
@@ -44,10 +41,6 @@ type GameBoardAreaProps = {
   onRestart: () => void;
   settingsOpen: boolean;
   setSettingsOpen: (b: boolean) => void;
-  soundEnabled: boolean;
-  setSoundEnabled: (b: boolean) => void;
-  volume: number;
-  setVolume: (v: number) => void;
   onBoardSizeChange: (v: number) => void;
   onQuestionTimeChange: (v: number) => void;
   onSurpriseCountChange: (n: number) => void;
@@ -59,11 +52,11 @@ type GameBoardAreaProps = {
 };
 
 const GameBoardArea: React.FC<GameBoardAreaProps> = ({
-  language, t, sound, turn, winner, difficulty, humanPoints, aiPoints, numDefenses, defensesUsed, onPlaceDefense, defenseMode,
+  language, t, turn, winner, difficulty, humanPoints, aiPoints, numDefenses, defensesUsed, onPlaceDefense, defenseMode,
   boardSize, boardPoints, positions, humanTarget, aiTarget, disableInput,
   handleTileClick, getValidMoves, positionsEqual, surpriseTiles, defenseTiles, aiPendingTarget,
   moveState, isModalOpen, aiModalState, questionTime, onHumanSubmit, onAISubmit, onRestart,
-  settingsOpen, setSettingsOpen, soundEnabled, setSoundEnabled, volume, setVolume,
+  settingsOpen, setSettingsOpen,
   onBoardSizeChange, onQuestionTimeChange, onSurpriseCountChange, onNumDefensesChange, onDifficultyChange, surpriseCount,
   playerName,
   children,
@@ -72,14 +65,11 @@ const GameBoardArea: React.FC<GameBoardAreaProps> = ({
   const dummyQuestionType = "translate";
   const dummySetQuestionType = () => {};
 
-  console.log("[GameBoardArea] Sound settings:", { soundEnabled, volume });
-
   return (
     <div
       className="flex flex-col items-center"
       dir={language === "he" ? "rtl" : "ltr"}
     >
-      <SoundManager trigger={sound} enabled={soundEnabled} volume={volume} />
       <GameHeader
         onSettingsOpen={() => setSettingsOpen(true)}
         onRestart={onRestart}
@@ -130,8 +120,6 @@ const GameBoardArea: React.FC<GameBoardAreaProps> = ({
         questionTime={questionTime}
         onHumanSubmit={onHumanSubmit}
         onAISubmit={onAISubmit}
-        soundEnabled={soundEnabled}
-        volume={volume}
       />
       <GameBoardTurnInfo
         winner={winner}
@@ -142,10 +130,6 @@ const GameBoardArea: React.FC<GameBoardAreaProps> = ({
       <GameSettingsModal
         open={settingsOpen}
         onOpenChange={setSettingsOpen}
-        soundEnabled={soundEnabled}
-        onSoundChange={setSoundEnabled}
-        volume={volume}
-        onVolumeChange={setVolume}
         boardSize={boardSize}
         onBoardSizeChange={onBoardSizeChange}
         questionTime={questionTime}

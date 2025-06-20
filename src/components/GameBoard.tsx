@@ -225,7 +225,7 @@ const GameBoard = ({
     handleDefenseClick,
   });
 
-  // Human move handler
+  // Human move handler (removed setSound parameter)
   const { handleTileClick } = useHumanMoveHandler({
     winner,
     disableInput,

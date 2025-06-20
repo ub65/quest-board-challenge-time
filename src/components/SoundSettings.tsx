@@ -12,7 +12,7 @@ type Props = {
 
 const SoundSettings = ({ soundEnabled, onSoundChange, volume, onVolumeChange }: Props) => {
   return (
-    <>
+    <div className="flex flex-col gap-4 pointer-events-auto">
       <GameSettingsSoundToggle 
         soundEnabled={soundEnabled} 
         onSoundChange={onSoundChange} 
@@ -22,7 +22,7 @@ const SoundSettings = ({ soundEnabled, onSoundChange, volume, onVolumeChange }: 
         onVolumeChange={onVolumeChange} 
         disabled={!soundEnabled}
       />
-    </>
+    </div>
   );
 };
 

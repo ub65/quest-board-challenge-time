@@ -24,17 +24,21 @@ const GameSettingsVolumeSlider = ({ volume, onVolumeChange, disabled = false }: 
   const VolumeIcon = getVolumeIcon();
   const displayVolume = Math.round(volume * 100);
 
+  const handleVolumeChange = (values: number[]) => {
+    onVolumeChange(values[0]);
+  };
+
   return (
-    <div className={`flex flex-col gap-2 py-2 pointer-events-auto relative z-10 ${disabled ? 'opacity-50 pointer-events-none' : ''}`}>
+    <div className={`flex flex-col gap-3 py-2 pointer-events-auto relative z-10 ${disabled ? 'opacity-50' : ''}`}>
       <Label 
         htmlFor="volume-slider" 
-        className="text-base font-semibold select-none flex justify-between items-center pointer-events-auto"
+        className="text-base font-medium select-none flex justify-between items-center pointer-events-auto"
       >
         <div className="flex items-center gap-2">
           <VolumeIcon size={18} />
           <span>{t('settings.volume') || 'Volume'}</span>
         </div>
-        <span className="text-primary">{displayVolume}%</span>
+        <span className="text-primary font-semibold">{displayVolume}%</span>
       </Label>
       <Slider
         id="volume-slider"
@@ -42,11 +46,11 @@ const GameSettingsVolumeSlider = ({ volume, onVolumeChange, disabled = false }: 
         max={1}
         step={0.01}
         value={[volume]}
-        onValueChange={([val]) => onVolumeChange(val)}
-        className="w-full pointer-events-auto relative z-10"
+        onValueChange={handleVolumeChange}
+        className="w-full pointer-events-auto relative z-20 cursor-pointer"
         disabled={disabled}
       />
-      <div className="flex justify-between text-xs text-gray-400 mt-1 pointer-events-none">
+      <div className="flex justify-between text-xs text-gray-400 mt-1 pointer-events-none select-none">
         <span>0%</span>
         <span>100%</span>
       </div>

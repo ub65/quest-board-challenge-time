@@ -26,10 +26,6 @@ const Index = () => {
       <GameSettingsModal
         open={flow.settingsOpen}
         onOpenChange={flow.setSettingsOpen}
-        soundEnabled={flow.soundEnabled}
-        onSoundChange={flow.setSoundEnabled}
-        volume={flow.volume}
-        onVolumeChange={flow.setVolume}
         boardSize={flow.boardSize}
         onBoardSizeChange={flow.setBoardSize}
         questionTime={flow.questionTime}
@@ -63,8 +59,6 @@ const Index = () => {
             onRestart={flow.handleRestart}
             playerName={flow.playerName}
             questionType={flow.questionType}
-            soundEnabled={flow.soundEnabled}
-            volume={flow.volume}
           />
         </div>
       )}

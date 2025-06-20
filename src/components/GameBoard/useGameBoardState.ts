@@ -30,7 +30,6 @@ export function useGameBoardState(boardSize: number, numSurprises: number, numDe
   const [turn, setTurn] = useState<PlayerType>("human");
   const [moveState, setMoveState] = useState<null | { tile: any; question: any; resolve: (ok: boolean) => void }>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [sound, setSound] = useState<"move" | "wrong" | "win" | null>(null);
   const [disableInput, setDisableInput] = useState(false);
   const [humanHasMoved, setHumanHasMoved] = useState(false);
 
@@ -47,9 +46,8 @@ export function useGameBoardState(boardSize: number, numSurprises: number, numDe
     turn, setTurn,
     moveState, setMoveState,
     isModalOpen, setIsModalOpen,
-    sound, setSound,
     disableInput, setDisableInput,
     humanHasMoved, setHumanHasMoved,
-    getRandomStartingPlayer, // <-- expose for GameBoard.tsx
+    getRandomStartingPlayer,
   }
 }

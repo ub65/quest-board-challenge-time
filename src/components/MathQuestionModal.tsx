@@ -56,15 +56,11 @@ const MathQuestionModal = ({
   question,
   onSubmit,
   timeLimit = 14,
-  soundEnabled = true,
-  volume = 0.5,
 }: {
   isOpen: boolean;
   question: MathQ;
   onSubmit: (isCorrect: boolean) => void;
   timeLimit?: number;
-  soundEnabled?: boolean;
-  volume?: number;
 }) => {
   return (
     <BaseModal
@@ -72,8 +68,6 @@ const MathQuestionModal = ({
       question={question}
       onSubmit={onSubmit}
       timeLimit={timeLimit}
-      soundEnabled={soundEnabled}
-      volume={volume}
     >
       <MathQuestionContent question={question} />
     </BaseModal>

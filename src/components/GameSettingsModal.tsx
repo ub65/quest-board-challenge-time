@@ -6,19 +6,13 @@ import LanguageSelector from "./LanguageSelector";
 import { useLocalization } from "@/contexts/LocalizationContext";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import GameSettingsDifficultySelector from "./GameSettingsDifficultySelector";
-import SoundSettings from "./SoundSettings";
 import GameSettingsSliderGroup from "./GameSettingsSliderGroup";
 import { Button } from "@/components/ui/button";
-import TickSound from "./TickSound";
 
 type QuestionType = "translate" | "math";
 type GameSettingsModalProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  soundEnabled: boolean;
-  onSoundChange: (value: boolean) => void;
-  volume: number;
-  onVolumeChange: (v: number) => void;
   boardSize: number;
   onBoardSizeChange: (v: number) => void;
   questionTime: number;
@@ -36,10 +30,6 @@ type GameSettingsModalProps = {
 const GameSettingsModal = ({
   open,
   onOpenChange,
-  soundEnabled,
-  onSoundChange,
-  volume,
-  onVolumeChange,
   boardSize,
   onBoardSizeChange,
   questionTime,
@@ -53,13 +43,12 @@ const GameSettingsModal = ({
 }: GameSettingsModalProps) => {
   const { t } = useLocalization();
 
-  // Local state for "pending" settings (non-sound settings only)
+  // Local state for "pending" settings
   const [pendingBoardSize, setPendingBoardSize] = useState(boardSize);
   const [pendingQuestionTime, setPendingQuestionTime] = useState(questionTime);
   const [pendingSurpriseCount, setPendingSurpriseCount] = useState(surpriseCount);
   const [pendingNumDefenses, setPendingNumDefenses] = useState(numDefenses);
   const [pendingDifficulty, setPendingDifficulty] = useState<"easy" | "medium" | "hard">(difficulty);
-  const [tickCounter, setTickCounter] = useState(0);
 
   // Reset local state when modal opens
   useEffect(() => {
@@ -72,18 +61,6 @@ const GameSettingsModal = ({
     }
   }, [open, boardSize, questionTime, surpriseCount, numDefenses, difficulty]);
 
-  const triggerTick = () => setTickCounter(prev => prev + 1);
-
-  const handleSoundToggle = (value: boolean) => {
-    onSoundChange(value);
-    triggerTick();
-  };
-
-  const handleVolumeChange = (value: number) => {
-    onVolumeChange(value);
-    triggerTick();
-  };
-
   const sliders = [
     {
       id: "board-size-slider",
@@ -92,7 +69,7 @@ const GameSettingsModal = ({
       max: 12,
       step: 1,
       value: pendingBoardSize,
-      onValueChange: (v: number) => { setPendingBoardSize(v); triggerTick(); },
+      onValueChange: (v: number) => { setPendingBoardSize(v); },
       displayValue: `${pendingBoardSize}x${pendingBoardSize}`,
       minLabelKey: "settings.boardMin",
       maxLabelKey: "settings.boardMax"
@@ -104,7 +81,7 @@ const GameSettingsModal = ({
       max: 40,
       step: 1,
       value: pendingQuestionTime,
-      onValueChange: (v: number) => { setPendingQuestionTime(v); triggerTick(); },
+      onValueChange: (v: number) => { setPendingQuestionTime(v); },
       suffix: "s",
       minLabelKey: "settings.timeMin",
       maxLabelKey: "settings.timeMax"
@@ -116,7 +93,7 @@ const GameSettingsModal = ({
       max: 8,
       step: 1,
       value: pendingSurpriseCount,
-      onValueChange: (v: number) => { setPendingSurpriseCount(v); triggerTick(); },
+      onValueChange: (v: number) => { setPendingSurpriseCount(v); },
       minLabelKey: "settings.surpriseMin",
       maxLabelKey: "settings.surpriseMax"
     },
@@ -127,7 +104,7 @@ const GameSettingsModal = ({
       max: 4,
       step: 1,
       value: pendingNumDefenses,
-      onValueChange: (v: number) => { setPendingNumDefenses(v); triggerTick(); },
+      onValueChange: (v: number) => { setPendingNumDefenses(v); },
       minLabelKey: "settings.defenseMin",
       maxLabelKey: "settings.defenseMax"
     }
@@ -139,56 +116,46 @@ const GameSettingsModal = ({
     onSurpriseCountChange(pendingSurpriseCount);
     onNumDefensesChange(pendingNumDefenses);
     onDifficultyChange(pendingDifficulty);
-    triggerTick();
     onOpenChange(false);
   };
 
   return (
-    <>
-      <TickSound tick={tickCounter} enabled={soundEnabled} volume={volume} />
-      <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="bg-gradient-to-br from-background to-secondary p-0 shadow-2xl rounded-2xl border-0 max-w-[500px] max-h-[95vh] sm:max-h-[700px] w-full flex flex-col">
-          <ScrollArea className="flex-1 px-6 pt-7 pb-4 w-full overflow-y-auto">
-            <DialogHeader>
-              <div className="flex flex-col items-center gap-1 mb-2">
-                <SlidersHorizontal size={32} className="text-primary" />
-                <DialogTitle className="text-2xl font-bold tracking-tight">
-                  {t('settings.title')}
-                </DialogTitle>
-                <DialogDescription className="mb-0 text-center">
-                  {t('settings.desc')}
-                </DialogDescription>
-              </div>
-            </DialogHeader>
-            <div className="py-2 flex flex-col gap-7 w-full">
-              <LanguageSelector />
-              <GameSettingsDifficultySelector 
-                difficulty={pendingDifficulty} 
-                onDifficultyChange={(d) => { setPendingDifficulty(d); triggerTick(); }} 
-              />
-              <SoundSettings
-                soundEnabled={soundEnabled}
-                onSoundChange={handleSoundToggle}
-                volume={volume}
-                onVolumeChange={handleVolumeChange}
-              />
-              <GameSettingsSliderGroup sliders={sliders} />
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="bg-gradient-to-br from-background to-secondary p-0 shadow-2xl rounded-2xl border-0 max-w-[500px] max-h-[95vh] sm:max-h-[700px] w-full flex flex-col">
+        <ScrollArea className="flex-1 px-6 pt-7 pb-4 w-full overflow-y-auto">
+          <DialogHeader>
+            <div className="flex flex-col items-center gap-1 mb-2">
+              <SlidersHorizontal size={32} className="text-primary" />
+              <DialogTitle className="text-2xl font-bold tracking-tight">
+                {t('settings.title')}
+              </DialogTitle>
+              <DialogDescription className="mb-0 text-center">
+                {t('settings.desc')}
+              </DialogDescription>
             </div>
-          </ScrollArea>
-          <DialogFooter className="pt-3 pb-4 px-6 flex flex-col gap-2 bg-gradient-to-b from-transparent to-white/95 w-full z-10">
-            <div className="flex gap-2 w-full">
-              <Button className="flex-1 font-semibold" onClick={handleSave} variant="default">
-                <Save className="w-4 h-4 mr-2" />
-                {t('settings.save') || "Save"}
-              </Button>
-              <Button className="flex-1" variant="secondary" onClick={() => onOpenChange(false)} type="button">
-                {t('settings.cancel') || "Cancel"}
-              </Button>
-            </div>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </>
+          </DialogHeader>
+          <div className="py-2 flex flex-col gap-7 w-full">
+            <LanguageSelector />
+            <GameSettingsDifficultySelector 
+              difficulty={pendingDifficulty} 
+              onDifficultyChange={(d) => { setPendingDifficulty(d); }} 
+            />
+            <GameSettingsSliderGroup sliders={sliders} />
+          </div>
+        </ScrollArea>
+        <DialogFooter className="pt-3 pb-4 px-6 flex flex-col gap-2 bg-gradient-to-b from-transparent to-white/95 w-full z-10">
+          <div className="flex gap-2 w-full">
+            <Button className="flex-1 font-semibold" onClick={handleSave} variant="default">
+              <Save className="w-4 h-4 mr-2" />
+              {t('settings.save') || "Save"}
+            </Button>
+            <Button className="flex-1" variant="secondary" onClick={() => onOpenChange(false)} type="button">
+              {t('settings.cancel') || "Cancel"}
+            </Button>
+          </div>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 };
 

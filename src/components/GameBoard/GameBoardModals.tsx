@@ -16,8 +16,6 @@ type GameBoardModalsProps = {
   onHumanSubmit: (value: boolean) => void;
   onAISubmit: () => void;
   questionType?: "translate" | "math";
-  soundEnabled?: boolean;
-  volume?: number;
 };
 
 const GameBoardModals: React.FC<GameBoardModalsProps> = ({
@@ -29,14 +27,12 @@ const GameBoardModals: React.FC<GameBoardModalsProps> = ({
   onHumanSubmit,
   onAISubmit,
   questionType = "translate",
-  soundEnabled = true,
-  volume = 0.5,
 }) => {
   if (moveState) {
-    console.log("[MODAL/HUMAN] Showing modal with question:", moveState.question, "Sound settings:", { soundEnabled, volume });
+    console.log("[MODAL/HUMAN] Showing modal with question:", moveState.question);
   }
   if (aiModalState) {
-    console.log("[MODAL/AI] Showing modal with question:", aiModalState.question, "Sound settings:", { soundEnabled, volume });
+    console.log("[MODAL/AI] Showing modal with question:", aiModalState.question);
   }
 
   return (
@@ -49,8 +45,6 @@ const GameBoardModals: React.FC<GameBoardModalsProps> = ({
             timeLimit={questionTime}
             key={moveState.tile.x + "-" + moveState.tile.y + "-human-math"}
             onSubmit={onHumanSubmit}
-            soundEnabled={soundEnabled}
-            volume={volume}
           />
         ) : (
           <TranslateQuestionModal
@@ -59,8 +53,6 @@ const GameBoardModals: React.FC<GameBoardModalsProps> = ({
             timeLimit={questionTime}
             key={moveState.tile.x + "-" + moveState.tile.y + "-human"}
             onSubmit={onHumanSubmit}
-            soundEnabled={soundEnabled}
-            volume={volume}
           />
         )
       )}
@@ -71,8 +63,6 @@ const GameBoardModals: React.FC<GameBoardModalsProps> = ({
             question={aiModalState.question}
             key={aiModalState.targetTile.x + "-" + aiModalState.targetTile.y + "-ai-math"}
             onSubmit={onAISubmit}
-            soundEnabled={soundEnabled}
-            volume={volume}
           />
         ) : (
           <AITranslateQuestionModal
@@ -80,8 +70,6 @@ const GameBoardModals: React.FC<GameBoardModalsProps> = ({
             question={aiModalState.question}
             key={aiModalState.targetTile.x + "-" + aiModalState.targetTile.y + "-ai"}
             onSubmit={onAISubmit}
-            soundEnabled={soundEnabled}
-            volume={volume}
           />
         )
       )}

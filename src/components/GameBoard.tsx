@@ -1,3 +1,4 @@
+
 // Refactored GameBoard: uses split files for state and logic
 import React, { useRef, useEffect, useState } from "react";
 import { useLocalization } from "@/contexts/LocalizationContext";
@@ -33,8 +34,6 @@ const GameBoard = ({
   gameCode,
   onlineRole,
   questionType = "translate",
-  soundEnabled: externalSoundEnabled,
-  volume: externalVolume,
 }: {
   difficulty: "easy" | "medium" | "hard";
   onRestart: () => void;
@@ -42,8 +41,6 @@ const GameBoard = ({
   gameCode?: string;
   onlineRole?: "host" | "guest";
   questionType?: "translate" | "math";
-  soundEnabled?: boolean;
-  volume?: number;
 }) => {
   const { t, language } = useLocalization();
 
@@ -51,41 +48,11 @@ const GameBoard = ({
   const {
     difficulty, setDifficulty,
     settingsOpen, setSettingsOpen,
-    soundEnabled, setSoundEnabled,
-    volume, setVolume,
     questionTime, setQuestionTime,
     boardSize, setBoardSize,
     numSurprises, setNumSurprises,
     numDefenses, setNumDefenses,
   } = useGameSettings(initialDifficulty);
-
-  // Use external sound/volume if provided, otherwise use internal state
-  const effectiveSoundEnabled = externalSoundEnabled !== undefined ? externalSoundEnabled : soundEnabled;
-  const effectiveVolume = externalVolume !== undefined ? externalVolume : volume;
-
-  // Create handlers that update the correct state based on whether external props are provided
-  const handleSoundEnabledChange = (value: boolean) => {
-    if (externalSoundEnabled === undefined) {
-      setSoundEnabled(value);
-    }
-    // If external, the parent should handle this
-  };
-
-  const handleVolumeChange = (value: number) => {
-    if (externalVolume === undefined) {
-      setVolume(value);
-    }
-    // If external, the parent should handle this
-  };
-
-  console.log("[GameBoard] Sound state:", { 
-    effectiveSoundEnabled, 
-    effectiveVolume, 
-    internalSound: soundEnabled, 
-    internalVolume: volume,
-    externalSound: externalSoundEnabled,
-    externalVolume: externalVolume
-  });
 
   // Board/game state
   const {
@@ -101,10 +68,9 @@ const GameBoard = ({
     turn, setTurn,
     moveState, setMoveState,
     isModalOpen, setIsModalOpen,
-    sound, setSound,
     disableInput, setDisableInput,
     humanHasMoved, setHumanHasMoved,
-    getRandomStartingPlayer, // <-- get helper
+    getRandomStartingPlayer,
   } = useGameBoardState(boardSize, numSurprises, numDefenses);
 
   // --- Derived targets
@@ -143,7 +109,6 @@ const GameBoard = ({
     setDefenseMode(false);
     setHumanHasMoved(false);
     setDisableInput(true); // Block interactions until "Start Game"
-    // Remove toast here!
     // eslint-disable-next-line
   }, [boardSize, numSurprises, numDefenses, setPositions, setWinner, setTurn, setHumanPoints, setAIPoints, setBoardPoints, setSurpriseTiles, setDefenseTiles, setDefensesUsed, setDefenseMode, setHumanHasMoved, getRandomStartingPlayer]);
 
@@ -157,18 +122,6 @@ const GameBoard = ({
     } else {
       setHumanHasMoved(false);
     }
-    // Removed: Show toast after button pressed (not on mount)!
-    // if (startingPlayer) {
-    //   const toastKey =
-    //     startingPlayer === "human"
-    //       ? "game.startingPlayer.human"
-    //       : "game.startingPlayer.ai";
-    //   toast({
-    //     title: t("game.title"),
-    //     description: t(toastKey),
-    //     duration: 3500,
-    //   });
-    // }
   };
 
   useEffect(() => {
@@ -185,12 +138,10 @@ const GameBoard = ({
   useEffect(() => {
     if (positions.human.x === humanTarget.x && positions.human.y === humanTarget.y) {
       setWinner("human");
-      setSound("win");
     } else if (positions.ai.x === aiTarget.x && positions.ai.y === aiTarget.y) {
       setWinner("ai");
-      setSound("win");
     }
-  }, [positions, humanTarget.x, humanTarget.y, aiTarget.x, aiTarget.y, setWinner, setSound]);
+  }, [positions, humanTarget.x, humanTarget.y, aiTarget.x, aiTarget.y, setWinner]);
 
   // This change allows using math/translate Qs as per setting
   function getQuestionForTurn() {
@@ -240,10 +191,8 @@ const GameBoard = ({
     toast,
     setTurn,
     aiMovingRef,
-    humanHasMoved, // <-- pass flag to AI hook!
-    // Only pass this setAIModalState override ONCE!
+    humanHasMoved,
     setAIModalState: (val) => {
-      // OVERRIDE: always pass a question of the selected type!
       if (val && val.targetTile) {
         setAIModalState({
           ...val,
@@ -287,7 +236,6 @@ const GameBoard = ({
     difficulty,
     defenseMode,
     handleDefenseClick,
-    setSound,
     setPositions,
     setBoardPoints,
     setIsModalOpen,
@@ -297,14 +245,13 @@ const GameBoard = ({
     handleSurprise: surpriseHandler,
     questionType,
     getQuestionForTurn,
-    setHumanHasMoved, // <-- ensure human move handler sets this!
-    humanHasMoved, // <-- optional, not needed here but if future logic,
+    setHumanHasMoved,
+    humanHasMoved,
   });
 
   // AI move modal submit handler
   const handleAIModalSubmit = () => {
     if (!aiModalState || winner) return;
-    setSound("move");
     setPositions((p) => {
       const { x, y } = aiModalState.targetTile;
       setBoardPoints((prev) => {
@@ -428,7 +375,6 @@ const GameBoard = ({
         <GameBoardArea
           language={language}
           t={t}
-          sound={sound}
           turn={turn}
           winner={winner}
           difficulty={difficulty}
@@ -466,10 +412,6 @@ const GameBoard = ({
           onRestart={handleRestart}
           settingsOpen={settingsOpen}
           setSettingsOpen={setSettingsOpen}
-          soundEnabled={effectiveSoundEnabled}
-          setSoundEnabled={handleSoundEnabledChange}
-          volume={effectiveVolume}
-          setVolume={handleVolumeChange}
           onBoardSizeChange={v => setBoardSize(Math.max(5, Math.min(12, v || DEFAULT_BOARD_SIZE)))}
           onQuestionTimeChange={v => setQuestionTime(Math.max(6, Math.min(40, v || DEFAULT_QUESTION_TIME)))}
           onSurpriseCountChange={setNumSurprises}
@@ -488,8 +430,6 @@ const GameBoard = ({
             onHumanSubmit={moveState?.resolve}
             onAISubmit={handleAIModalSubmit}
             questionType={questionType}
-            soundEnabled={effectiveSoundEnabled}
-            volume={effectiveVolume}
           />
         </GameBoardArea>
       )}
@@ -498,5 +438,3 @@ const GameBoard = ({
 };
 
 export default GameBoard;
-
-// NOTE: This file is now much longer and may need to be refactored into smaller files for maintainability.

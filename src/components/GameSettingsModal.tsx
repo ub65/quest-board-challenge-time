@@ -6,9 +6,8 @@ import LanguageSelector from "./LanguageSelector";
 import { useLocalization } from "@/contexts/LocalizationContext";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import GameSettingsDifficultySelector from "./GameSettingsDifficultySelector";
-import GameSettingsSoundToggle from "./GameSettingsSoundToggle";
-import GameSettingsSlider from "./GameSettingsSlider";
-import GameSettingsVolumeSlider from "./GameSettingsVolumeSlider";
+import SoundSettings from "./SoundSettings";
+import GameSettingsSliderGroup from "./GameSettingsSliderGroup";
 import { Button } from "@/components/ui/button";
 import TickSound from "./TickSound";
 
@@ -51,8 +50,6 @@ const GameSettingsModal = ({
   onNumDefensesChange,
   difficulty,
   onDifficultyChange,
-  questionType,
-  onQuestionTypeChange
 }: GameSettingsModalProps) => {
   const { t } = useLocalization();
 
@@ -62,9 +59,6 @@ const GameSettingsModal = ({
   const [pendingSurpriseCount, setPendingSurpriseCount] = useState(surpriseCount);
   const [pendingNumDefenses, setPendingNumDefenses] = useState(numDefenses);
   const [pendingDifficulty, setPendingDifficulty] = useState<"easy" | "medium" | "hard">(difficulty);
-  const [pendingQuestionType, setPendingQuestionType] = useState<QuestionType>(questionType);
-
-  // Tick counter for sound feedback
   const [tickCounter, setTickCounter] = useState(0);
 
   // Reset local state when modal opens
@@ -75,15 +69,11 @@ const GameSettingsModal = ({
       setPendingSurpriseCount(surpriseCount);
       setPendingNumDefenses(numDefenses);
       setPendingDifficulty(difficulty);
-      setPendingQuestionType(questionType);
     }
-  }, [open, boardSize, questionTime, surpriseCount, numDefenses, difficulty, questionType]);
+  }, [open, boardSize, questionTime, surpriseCount, numDefenses, difficulty]);
 
-  const triggerTick = () => {
-    setTickCounter(prev => prev + 1);
-  };
+  const triggerTick = () => setTickCounter(prev => prev + 1);
 
-  // Sound handlers - apply immediately
   const handleSoundToggle = (value: boolean) => {
     onSoundChange(value);
     triggerTick();
@@ -94,33 +84,55 @@ const GameSettingsModal = ({
     triggerTick();
   };
 
-  // Non-sound setting handlers - update local state only
-  const handleBoardSizeChange = (value: number) => {
-    setPendingBoardSize(value);
-    triggerTick();
-  };
+  const sliders = [
+    {
+      id: "board-size-slider",
+      labelKey: "settings.boardSize",
+      min: 5,
+      max: 12,
+      step: 1,
+      value: pendingBoardSize,
+      onValueChange: (v: number) => { setPendingBoardSize(v); triggerTick(); },
+      displayValue: `${pendingBoardSize}x${pendingBoardSize}`,
+      minLabelKey: "settings.boardMin",
+      maxLabelKey: "settings.boardMax"
+    },
+    {
+      id: "question-time-slider",
+      labelKey: "settings.questionTime",
+      min: 6,
+      max: 40,
+      step: 1,
+      value: pendingQuestionTime,
+      onValueChange: (v: number) => { setPendingQuestionTime(v); triggerTick(); },
+      suffix: "s",
+      minLabelKey: "settings.timeMin",
+      maxLabelKey: "settings.timeMax"
+    },
+    {
+      id: "surprise-count-slider",
+      labelKey: "settings.surpriseCount",
+      min: 1,
+      max: 8,
+      step: 1,
+      value: pendingSurpriseCount,
+      onValueChange: (v: number) => { setPendingSurpriseCount(v); triggerTick(); },
+      minLabelKey: "settings.surpriseMin",
+      maxLabelKey: "settings.surpriseMax"
+    },
+    {
+      id: "defense-count-slider",
+      labelKey: "settings.defenseCount",
+      min: 1,
+      max: 4,
+      step: 1,
+      value: pendingNumDefenses,
+      onValueChange: (v: number) => { setPendingNumDefenses(v); triggerTick(); },
+      minLabelKey: "settings.defenseMin",
+      maxLabelKey: "settings.defenseMax"
+    }
+  ];
 
-  const handleQuestionTimeChange = (value: number) => {
-    setPendingQuestionTime(value);
-    triggerTick();
-  };
-
-  const handleSurpriseCountChange = (value: number) => {
-    setPendingSurpriseCount(value);
-    triggerTick();
-  };
-
-  const handleNumDefensesChange = (value: number) => {
-    setPendingNumDefenses(value);
-    triggerTick();
-  };
-
-  const handleDifficultyChange = (value: "easy" | "medium" | "hard") => {
-    setPendingDifficulty(value);
-    triggerTick();
-  };
-
-  // Save non-sound settings
   const handleSave = () => {
     onBoardSizeChange(pendingBoardSize);
     onQuestionTimeChange(pendingQuestionTime);
@@ -128,10 +140,6 @@ const GameSettingsModal = ({
     onNumDefensesChange(pendingNumDefenses);
     onDifficultyChange(pendingDifficulty);
     triggerTick();
-    onOpenChange(false);
-  };
-
-  const handleCancel = () => {
     onOpenChange(false);
   };
 
@@ -156,63 +164,15 @@ const GameSettingsModal = ({
               <LanguageSelector />
               <GameSettingsDifficultySelector 
                 difficulty={pendingDifficulty} 
-                onDifficultyChange={handleDifficultyChange} 
+                onDifficultyChange={(d) => { setPendingDifficulty(d); triggerTick(); }} 
               />
-              <GameSettingsSoundToggle 
-                soundEnabled={soundEnabled} 
-                onSoundChange={handleSoundToggle} 
+              <SoundSettings
+                soundEnabled={soundEnabled}
+                onSoundChange={handleSoundToggle}
+                volume={volume}
+                onVolumeChange={handleVolumeChange}
               />
-              <GameSettingsVolumeSlider 
-                volume={volume} 
-                onVolumeChange={handleVolumeChange} 
-                disabled={!soundEnabled}
-              />
-              <GameSettingsSlider 
-                id="board-size-slider" 
-                labelKey="settings.boardSize" 
-                min={5} 
-                max={12} 
-                step={1} 
-                value={pendingBoardSize} 
-                onValueChange={handleBoardSizeChange} 
-                displayValue={`${pendingBoardSize}x${pendingBoardSize}`} 
-                minLabelKey="settings.boardMin" 
-                maxLabelKey="settings.boardMax" 
-              />
-              <GameSettingsSlider 
-                id="question-time-slider" 
-                labelKey="settings.questionTime" 
-                min={6} 
-                max={40} 
-                step={1} 
-                value={pendingQuestionTime} 
-                onValueChange={handleQuestionTimeChange} 
-                suffix="s" 
-                minLabelKey="settings.timeMin" 
-                maxLabelKey="settings.timeMax" 
-              />
-              <GameSettingsSlider 
-                id="surprise-count-slider" 
-                labelKey="settings.surpriseCount" 
-                min={1} 
-                max={8} 
-                step={1} 
-                value={pendingSurpriseCount} 
-                onValueChange={handleSurpriseCountChange} 
-                minLabelKey="settings.surpriseMin" 
-                maxLabelKey="settings.surpriseMax" 
-              />
-              <GameSettingsSlider 
-                id="defense-count-slider" 
-                labelKey="settings.defenseCount" 
-                min={1} 
-                max={4} 
-                step={1} 
-                value={pendingNumDefenses} 
-                onValueChange={handleNumDefensesChange} 
-                minLabelKey="settings.defenseMin" 
-                maxLabelKey="settings.defenseMax" 
-              />
+              <GameSettingsSliderGroup sliders={sliders} />
             </div>
           </ScrollArea>
           <DialogFooter className="pt-3 pb-4 px-6 flex flex-col gap-2 bg-gradient-to-b from-transparent to-white/95 w-full z-10">
@@ -221,7 +181,7 @@ const GameSettingsModal = ({
                 <Save className="w-4 h-4 mr-2" />
                 {t('settings.save') || "Save"}
               </Button>
-              <Button className="flex-1" variant="secondary" onClick={handleCancel} type="button">
+              <Button className="flex-1" variant="secondary" onClick={() => onOpenChange(false)} type="button">
                 {t('settings.cancel') || "Cancel"}
               </Button>
             </div>

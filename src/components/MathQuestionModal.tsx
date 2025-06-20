@@ -1,9 +1,6 @@
 
-import React, { useEffect, useState } from "react";
-import { useLocalization } from "@/contexts/LocalizationContext";
-import { Slider } from "@/components/ui/slider";
-import TickSound from "@/components/TickSound";
-import SoundManager from "@/components/SoundManager";
+import React from "react";
+import BaseModal from "@/components/ui/base-modal";
 
 type MathQ = {
   prompt: string;
@@ -11,23 +8,48 @@ type MathQ = {
   correct: number;
 };
 
-const shuffle = (arr: any[]) => {
-  // Fisher-Yates
-  const a = [...arr];
-  for (let i = a.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [a[i], a[j]] = [a[j], a[i]];
-  }
-  return a;
-};
-
-const getTimeSliderColor = (timeLeft: number, timeLimit: number) => {
-  const percent = timeLeft / timeLimit;
-  if (percent > 2 / 3) { return "bg-green-500"; }
-  else if (percent > 1 / 3) { return "bg-yellow-400"; }
-  else if (percent > 0.15) { return "bg-orange-400"; }
-  else { return "bg-red-500"; }
-};
+const MathQuestionContent = ({ question, modalState, direction, language, t }: any) => (
+  <>
+    <div className="mb-2 text-lg font-bold">{t('question.answerMath') || "Solve the math problem"}</div>
+    <div
+      className="mb-6 text-2xl text-primary font-semibold select-none"
+      dir="ltr"
+      style={{ textAlign: language === "he" ? "right" : undefined }}
+    >
+      {question.prompt}
+    </div>
+    <div className="flex flex-col gap-4">
+      {modalState.shuffled.map(({ answer }: any, i: number) => (
+        <button
+          key={i}
+          className={`
+            border px-5 py-3 rounded-lg text-lg text-left
+            transition-all duration-150
+            ${
+              modalState.answered
+                ? modalState.shuffled[i].idx === question.correct
+                  ? "bg-green-200 border-green-600"
+                  : modalState.selected === i
+                  ? "bg-red-200 border-red-400"
+                  : "bg-gray-100 border-gray-300"
+                : modalState.selected === i
+                ? "border-blue-400 bg-blue-100"
+                : "bg-gray-50 border-gray-200 hover:bg-blue-200 hover:border-blue-500"
+            }
+            ${modalState.answered ? "opacity-75" : ""}
+          `}
+          disabled={modalState.answered}
+          onClick={() => modalState.handlePick(i)}
+          style={{ direction }}
+        >
+          <span dir="ltr" style={{ display: "inline-block", minWidth: 40 }}>
+            {answer}
+          </span>
+        </button>
+      ))}
+    </div>
+  </>
+);
 
 const MathQuestionModal = ({
   isOpen,
@@ -44,135 +66,17 @@ const MathQuestionModal = ({
   soundEnabled?: boolean;
   volume?: number;
 }) => {
-  const { t, language } = useLocalization();
-  const [selected, setSelected] = useState<number | null>(null);
-  const [shuffled, setShuffled] = useState<{ answer: string; idx: number }[]>([]);
-  const [time, setTime] = useState(timeLimit);
-  const [answered, setAnswered] = useState<boolean>(false);
-  const [playWinSound, setPlayWinSound] = useState(false);
-
-  console.log("[MathQuestionModal] Sound settings:", { soundEnabled, volume, isOpen });
-
-  useEffect(() => {
-    if (question) {
-      const arr = question.answers.map((answer: string, idx: number) => ({
-        answer,
-        idx,
-      }));
-      setShuffled(shuffle(arr));
-      setSelected(null);
-      setTime(timeLimit);
-      setAnswered(false);
-      setPlayWinSound(false);
-    }
-  }, [question, timeLimit]);
-
-  useEffect(() => {
-    if (!isOpen || answered) return;
-    if (time <= 0) {
-      setAnswered(true);
-      setTimeout(() => onSubmit(false), 800);
-      return;
-    }
-    const tmo = setTimeout(() => setTime((s) => s - 1), 1000);
-    return () => clearTimeout(tmo);
-  }, [time, isOpen, answered, onSubmit]);
-
-  const handlePick = (pickedIdx: number) => {
-    if (answered) return;
-    setSelected(pickedIdx);
-    const originalIdx = shuffled[pickedIdx].idx;
-    const correct = originalIdx === question.correct;
-    setAnswered(true);
-    if (correct) setPlayWinSound(true);
-    setTimeout(() => onSubmit(correct), 800);
-  };
-
-  useEffect(() => {
-    if (playWinSound) {
-      const t = setTimeout(() => setPlayWinSound(false), 400);
-      return () => clearTimeout(t);
-    }
-  }, [playWinSound]);
-
-  const sliderColorClass = getTimeSliderColor(time, timeLimit);
-
-  // Set direction for Hebrew
-  const direction = language === "he" ? "rtl" : "ltr";
-
   return (
-    <div
-      className={`
-      fixed inset-0 z-[100] flex items-center justify-center bg-black/60 animate-fade-in
-    `}
-      style={{ pointerEvents: isOpen ? "auto" : "none", direction }}
+    <BaseModal
+      isOpen={isOpen}
+      question={question}
+      onSubmit={onSubmit}
+      timeLimit={timeLimit}
+      soundEnabled={soundEnabled}
+      volume={volume}
     >
-      <SoundManager trigger={playWinSound ? "win" : null} enabled={soundEnabled} volume={volume} />
-      <div className="w-full max-w-lg bg-white rounded-lg shadow-lg p-6 animate-scale-in flex flex-col" style={{ direction }}>
-        {isOpen && !answered && time > 0 && <TickSound tick={time} enabled={soundEnabled} volume={volume} />}
-        <div className="flex flex-col gap-2 mb-5">
-          <label className="font-semibold flex items-center justify-between select-none">
-            <span>{t('question.timeLeft') || "Time left"}</span>
-            <span className="ml-2 text-primary">{time}s</span>
-          </label>
-          <Slider
-            min={0}
-            max={timeLimit}
-            value={[time]}
-            hideThumb
-            className="mt-1"
-            aria-label={t('question.timeLeft')}
-            rangeClassName={sliderColorClass}
-          />
-        </div>
-        {/* Math question prompt */}
-        <div className="mb-2 text-lg font-bold">{t('question.answerMath') || "Solve the math problem"}</div>
-        <div
-          className="mb-6 text-2xl text-primary font-semibold select-none"
-          dir="ltr" // Force the math prompt to render LTR
-          style={{ textAlign: language === "he" ? "right" : undefined }}
-        >
-          {question.prompt}
-        </div>
-        <div className="flex flex-col gap-4">
-          {shuffled.map(({ answer }, i) => (
-            <button
-              key={i}
-              className={`
-                border px-5 py-3 rounded-lg text-lg text-left
-                transition-all duration-150
-                ${
-                  answered
-                    ? shuffled[i].idx === question.correct
-                      ? "bg-green-200 border-green-600"
-                      : selected === i
-                      ? "bg-red-200 border-red-400"
-                      : "bg-gray-100 border-gray-300"
-                    : selected === i
-                    ? "border-blue-400 bg-blue-100"
-                    : "bg-gray-50 border-gray-200 hover:bg-blue-200 hover:border-blue-500"
-                }
-                ${answered ? "opacity-75" : ""}
-              `}
-              disabled={answered}
-              onClick={() => handlePick(i)}
-              style={{ direction }}
-            >
-              <span dir="ltr" style={{ display: "inline-block", minWidth: 40 }}>
-                {answer}
-              </span>
-            </button>
-          ))}
-        </div>
-        {answered && (
-          <div className="mt-4 text-center text-lg font-bold">
-            {selected !== null && shuffled[selected].idx === question.correct
-              ? t('question.correct')
-              : t('question.wrong')}
-          </div>
-        )}
-      </div>
-    </div>
+      <MathQuestionContent question={question} />
+    </BaseModal>
   );
 };
 

@@ -48,6 +48,14 @@ const GameBoardGrid: React.FC<GameBoardGridProps> = ({
     getValidMoves,
   });
 
+  // Calculate responsive gap and padding based on board size
+  const getResponsiveSpacing = (boardSize: number) => {
+    if (boardSize <= 5) return "gap-3 md:gap-4 p-4 md:p-6";
+    if (boardSize <= 7) return "gap-2 md:gap-3 p-3 md:p-4";
+    if (boardSize <= 9) return "gap-1 md:gap-2 p-2 md:p-3";
+    return "gap-0.5 md:gap-1 p-1 md:p-2";
+  };
+
   // Modern frosted glass+gradient effect for the board background
   return (
     <div
@@ -57,24 +65,22 @@ const GameBoardGrid: React.FC<GameBoardGridProps> = ({
       }}
     >
       <div
-        className={
-          `
-          grid gap-[2.6vw] md:gap-2
-          rounded-[2.6rem] md:rounded-2xl p-[3vw] md:p-4
+        className={`
+          grid ${getResponsiveSpacing(BOARD_SIZE)}
+          rounded-[2.6rem] md:rounded-2xl
           shadow-2xl
           bg-gradient-to-br from-blue-100/85 via-white/85 to-violet-200/80
           border border-blue-100/60 backdrop-blur-xl
           relative
           ring-2 ring-sky-100/60
           transition-all
-        `
-        }
+        `}
         style={{
           gridTemplateRows: `repeat(${BOARD_SIZE}, minmax(0, 1fr))`,
           gridTemplateColumns: `repeat(${BOARD_SIZE}, minmax(0, 1fr))`,
           width: "100%",
-          maxWidth: "460px",
-          minWidth: "min(99vw, 380px)",
+          maxWidth: "min(95vw, 460px)",
+          minWidth: "min(95vw, 280px)",
         }}
       >
         {Array.from({ length: BOARD_SIZE }).map((_, y) =>
@@ -121,4 +127,3 @@ const GameBoardGrid: React.FC<GameBoardGridProps> = ({
 };
 
 export default GameBoardGrid;
-

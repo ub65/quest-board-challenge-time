@@ -1,3 +1,4 @@
+
 import React, { useEffect, useRef, useState } from "react";
 import { Gift, Shield } from "lucide-react";
 import { Tile, SurpriseTile, DefenseTile } from "./types";
@@ -47,6 +48,33 @@ const GameTile: React.FC<Props> = ({
   const isHumanTarget = x === humanTarget.x && y === humanTarget.y;
   let isAITarget = !aiPendingTarget && x === aiTarget.x && y === aiTarget.y;
 
+  // Calculate responsive tile size based on board size
+  const getTileSize = (boardSize: number) => {
+    if (boardSize <= 5) return "w-14 h-14 md:w-16 md:h-16";
+    if (boardSize <= 7) return "w-12 h-12 md:w-14 md:h-14";
+    if (boardSize <= 9) return "w-10 h-10 md:w-12 md:h-12";
+    if (boardSize <= 11) return "w-8 h-8 md:w-10 md:h-10";
+    return "w-6 h-6 md:w-8 md:h-8";
+  };
+
+  // Calculate responsive font size based on board size
+  const getFontSize = (boardSize: number) => {
+    if (boardSize <= 5) return "text-lg md:text-xl";
+    if (boardSize <= 7) return "text-base md:text-lg";
+    if (boardSize <= 9) return "text-sm md:text-base";
+    if (boardSize <= 11) return "text-xs md:text-sm";
+    return "text-xs";
+  };
+
+  // Calculate responsive icon size based on board size
+  const getIconSize = (boardSize: number) => {
+    if (boardSize <= 5) return 20;
+    if (boardSize <= 7) return 18;
+    if (boardSize <= 9) return 16;
+    if (boardSize <= 11) return 14;
+    return 12;
+  };
+
   // KEYBOARD KEY STYLE
   let bg =
     "bg-white dark:bg-neutral-900"; // light/white key background, dark mode support
@@ -57,7 +85,7 @@ const GameTile: React.FC<Props> = ({
   let boxShadow =
     "shadow-lg shadow-neutral-400/25 dark:shadow-neutral-950/50"; // outer shadow
   let fontClass =
-    "font-mono tracking-widest"; // monospaced keyboard text
+    `font-mono tracking-widest ${getFontSize(BOARD_SIZE)}`; // monospaced keyboard text
 
   let content = "";
 
@@ -70,7 +98,7 @@ const GameTile: React.FC<Props> = ({
     boxShadow =
       "shadow-[0_2px_10px_-3px_rgba(37,99,235,0.22)] dark:shadow-[0_2px_24px_-6px_rgba(56,189,248,0.22)]";
     fontClass =
-      "font-mono font-bold text-blue-800 dark:text-blue-200 tracking-widest";
+      `font-mono font-bold text-blue-800 dark:text-blue-200 tracking-widest ${getFontSize(BOARD_SIZE)}`;
     content = t("game.youLabel"); // Use translated value
   } else if (isAI) {
     bg =
@@ -80,32 +108,32 @@ const GameTile: React.FC<Props> = ({
     boxShadow =
       "shadow-[0_2px_10px_-3px_rgba(249,115,22,0.2)] dark:shadow-[0_2px_24px_-6px_rgba(251,146,60,0.18)]";
     fontClass =
-      "font-mono font-bold text-orange-700 dark:text-orange-200 tracking-widest";
+      `font-mono font-bold text-orange-700 dark:text-orange-200 tracking-widest ${getFontSize(BOARD_SIZE)}`;
     content = "AI";
   } else if (isHumanTarget) {
     bg =
       "bg-green-50 dark:bg-green-900";
     border = "border-2 border-green-400 dark:border-green-700";
     fontClass =
-      "font-mono font-bold text-green-600 dark:text-green-200 tracking-widest";
+      `font-mono font-bold text-green-600 dark:text-green-200 tracking-widest ${getFontSize(BOARD_SIZE)}`;
     content = "";
   } else if (isAITarget) {
     bg =
       "bg-yellow-50 dark:bg-yellow-900";
     border = "border-2 border-yellow-300 dark:border-yellow-600";
     fontClass =
-      "font-mono font-bold text-yellow-600 dark:text-yellow-200 tracking-widest";
+      `font-mono font-bold text-yellow-600 dark:text-yellow-200 tracking-widest ${getFontSize(BOARD_SIZE)}`;
     content = "";
   } else if (surprise && !defense) {
     bg =
       "bg-pink-50 dark:bg-pink-900";
     border = "border-2 border-pink-200 dark:border-pink-600";
-    fontClass = "font-mono tracking-widest";
+    fontClass = `font-mono tracking-widest ${getFontSize(BOARD_SIZE)}`;
   } else if (defense) {
     bg =
       "bg-gray-50 dark:bg-gray-800";
     border = "border-2 border-gray-400 dark:border-gray-500";
-    fontClass = "font-mono tracking-widest";
+    fontClass = `font-mono tracking-widest ${getFontSize(BOARD_SIZE)}`;
   }
 
   // Border for targets (see above logic)
@@ -164,6 +192,8 @@ const GameTile: React.FC<Props> = ({
   // "Key" highlight for anything with user interaction
   const isSpecial = isHuman || isAI || isHumanTarget || isAITarget || defense || surprise;
 
+  const iconSize = getIconSize(BOARD_SIZE);
+
   return (
     <button
       key={x + "-" + y}
@@ -171,12 +201,10 @@ const GameTile: React.FC<Props> = ({
       data-tile-y={y}
       className={`
         relative select-none
-        w-[10vw] h-[10vw] min-w-[40px] min-h-[40px] max-w-[54px] max-h-[54px]
-        md:w-[54px] md:h-[54px]
-        lg:w-16 lg:h-16
-        text-[4.2vw] md:text-[1.1rem] font-extrabold flex items-center justify-center
+        ${getTileSize(BOARD_SIZE)}
+        ${fontClass} font-extrabold flex items-center justify-center
         rounded-xl
-        ${bg} ${border} ${innerShadow} ${boxShadow} ${fontClass}
+        ${bg} ${border} ${innerShadow} ${boxShadow}
         ${highlight ? "cursor-pointer hover:ring-2 hover:ring-indigo-400/60 transition-transform duration-150" : "cursor-default"}
         ${raisedClass} ${activeClass}
         ${glowAnimClass}
@@ -218,19 +246,19 @@ const GameTile: React.FC<Props> = ({
         ) &&
         boardPoints[y] &&
         boardPoints[y][x] > 0) && (
-          <span className="absolute bottom-[3px] right-[10px] text-xs md:text-base text-orange-700 font-black bg-white/80 dark:bg-black/70 px-2 py-0.5 rounded pointer-events-none select-none border border-amber-100">
+          <span className={`absolute bottom-0 right-0 ${BOARD_SIZE > 9 ? 'text-xs' : 'text-xs md:text-sm'} text-orange-700 font-black bg-white/80 dark:bg-black/70 px-1 py-0.5 rounded pointer-events-none select-none border border-amber-100`}>
             {boardPoints[y][x]}
           </span>
         )}
       {surprise && !isHuman && !isAI && !isHumanTarget && !isAITarget && !defense && (
-        <span className="absolute top-2 left-2 z-20">
-          <Gift size={20} className="text-pink-500 drop-shadow-glow animate-bounce" />
+        <span className={`absolute ${BOARD_SIZE > 9 ? 'top-0 left-0' : 'top-1 left-1'} z-20`}>
+          <Gift size={iconSize} className="text-pink-500 drop-shadow-glow animate-bounce" />
         </span>
       )}
       {defense && !isHuman && !isAI && (
-        <span className={`absolute top-2 right-2 z-20`}>
+        <span className={`absolute ${BOARD_SIZE > 9 ? 'top-0 right-0' : 'top-1 right-1'} z-20`}>
           <Shield
-            size={20}
+            size={iconSize}
             className={defense.owner === "human"
               ? "text-blue-900 dark:text-blue-200 drop-shadow-[0_0_7px_rgba(30,140,255,0.18)]"
               : "text-red-800 dark:text-red-400 drop-shadow-[0_0_7px_rgba(230,80,50,0.18)]"}

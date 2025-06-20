@@ -4,7 +4,7 @@ import { getRandomQuestion, getValidMoves } from "./utils";
 
 export function useHumanMoveHandler({
   winner, disableInput, turn, positions, BOARD_SIZE, defenseTiles, difficulty,
-  defenseMode, handleDefenseClick, setSound, setPositions, setBoardPoints,
+  defenseMode, handleDefenseClick, setPositions, setBoardPoints,
   setIsModalOpen, setMoveState, setTurn, setHumanPoints, handleSurprise,
   questionType, getQuestionForTurn,
   setHumanHasMoved, // <-- Accept as prop
@@ -19,7 +19,6 @@ export function useHumanMoveHandler({
   difficulty: string;
   defenseMode: boolean;
   handleDefenseClick: (tile: {x: number, y: number}) => void;
-  setSound: (s: any) => void;
   setPositions: any;
   setBoardPoints: any;
   setIsModalOpen: any;
@@ -46,7 +45,7 @@ export function useHumanMoveHandler({
     if (winner || disableInput || turn !== "human") return;
 
     if (!canMoveTo(tile, positions.ai, defenseTiles, BOARD_SIZE)) {
-      setSound("wrong");
+      // Removed setSound("wrong") call since sound functionality was removed
       return;
     }
 
@@ -55,7 +54,7 @@ export function useHumanMoveHandler({
       tile,
       question,
       resolve: (ok: boolean) => {
-        setSound(ok ? "move" : "wrong");
+        // Removed setSound calls since sound functionality was removed
         setIsModalOpen(false);
         setMoveState(null);
 
@@ -88,7 +87,7 @@ export function useHumanMoveHandler({
       }
     });
     setIsModalOpen(true);
-  }, [BOARD_SIZE, defenseMode, defenseTiles, disableInput, getQuestionForTurn, handleDefenseClick, handleSurprise, positions.ai, positions.human, setBoardPoints, setHumanPoints, setIsModalOpen, setMoveState, setPositions, setSound, setTurn, setHumanHasMoved, winner]);
+  }, [BOARD_SIZE, defenseMode, defenseTiles, disableInput, getQuestionForTurn, handleDefenseClick, handleSurprise, positions.ai, positions.human, setBoardPoints, setHumanPoints, setIsModalOpen, setMoveState, setPositions, setTurn, setHumanHasMoved, winner]);
 
   return { handleTileClick };
 }

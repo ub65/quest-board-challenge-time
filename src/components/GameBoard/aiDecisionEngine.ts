@@ -20,16 +20,16 @@ export class AIDecisionEngine {
     // Configure AI behavior based on difficulty
     switch (difficulty) {
       case "easy":
-        this.randomnessFactor = 0.4;
-        this.mistakeProbability = 0.25;
+        this.randomnessFactor = 0.3; // Reduced randomness for better goal focus
+        this.mistakeProbability = 0.2; // Reduced mistakes
         break;
       case "medium":
-        this.randomnessFactor = 0.25;
-        this.mistakeProbability = 0.12;
+        this.randomnessFactor = 0.2; // Reduced randomness
+        this.mistakeProbability = 0.1;
         break;
       case "hard":
-        this.randomnessFactor = 0.15;
-        this.mistakeProbability = 0.05;
+        this.randomnessFactor = 0.1; // Reduced randomness
+        this.mistakeProbability = 0.03; // Very few mistakes
         break;
     }
   }
@@ -54,8 +54,16 @@ export class AIDecisionEngine {
       };
     }
 
+    // Emergency goal-seeking mode: if we're behind, be more focused
+    const humanDistanceToGoal = getDistance(humanPos, humanTarget);
+    const aiDistanceToGoal = getDistance(currentPos, target);
+    const emergencyMode = humanDistanceToGoal <= aiDistanceToGoal && humanDistanceToGoal <= 5;
+
+    // Reduce mistakes in emergency mode
+    const adjustedMistakeProbability = emergencyMode ? this.mistakeProbability * 0.5 : this.mistakeProbability;
+
     // Sometimes make a random move (simulating mistakes)
-    if (Math.random() < this.mistakeProbability) {
+    if (Math.random() < adjustedMistakeProbability) {
       const randomMove = availableMoves[Math.floor(Math.random() * availableMoves.length)];
       return {
         move: randomMove,
@@ -82,19 +90,27 @@ export class AIDecisionEngine {
       const strategyScores: string[] = [];
 
       for (const strategy of ALL_STRATEGIES) {
-        const score = strategy.evaluate(evalOptions);
+        let score = strategy.evaluate(evalOptions);
+        
+        // In emergency mode, boost goal-seeking strategy further
+        if (emergencyMode && strategy.name === "goal-seeking") {
+          score *= 1.5;
+          strategyScores.push(`${strategy.name}: +${score.toFixed(1)} (EMERGENCY BOOST)`);
+        } else {
+          if (score > 0) {
+            strategyScores.push(`${strategy.name}: +${score.toFixed(1)}`);
+          } else if (score < 0) {
+            strategyScores.push(`${strategy.name}: ${score.toFixed(1)}`);
+          }
+        }
+        
         const weightedScore = score * strategy.weight;
         totalScore += weightedScore;
-        
-        if (score > 0) {
-          strategyScores.push(`${strategy.name}: +${score.toFixed(1)}`);
-        } else if (score < 0) {
-          strategyScores.push(`${strategy.name}: ${score.toFixed(1)}`);
-        }
       }
 
-      // Add some randomness to prevent completely predictable behavior
-      const randomBonus = (Math.random() - 0.5) * this.randomnessFactor * 10;
+      // Reduce randomness in emergency mode
+      const adjustedRandomness = emergencyMode ? this.randomnessFactor * 0.5 : this.randomnessFactor;
+      const randomBonus = (Math.random() - 0.5) * adjustedRandomness * 10;
       totalScore += randomBonus;
 
       return {
@@ -116,12 +132,12 @@ export class AIDecisionEngine {
     const confidence = Math.min(1, Math.max(0.1, scoreDifference / 20));
 
     // Emergency situation detection
-    const humanDistanceToGoal = getDistance(humanPos, humanTarget);
-    const aiDistanceToGoal = getDistance(currentPos, target);
-    
     let emergencyReasoning: string[] = [];
+    if (emergencyMode) {
+      emergencyReasoning.push("🚨 EMERGENCY MODE: Prioritizing goal!");
+    }
     if (humanDistanceToGoal <= 2) {
-      emergencyReasoning.push("EMERGENCY: Human very close to winning!");
+      emergencyReasoning.push("CRITICAL: Human very close to winning!");
     } else if (humanDistanceToGoal <= aiDistanceToGoal && humanDistanceToGoal <= 4) {
       emergencyReasoning.push("WARNING: Human ahead in race to goal");
     }
@@ -153,37 +169,31 @@ export class AIDecisionEngine {
     let urgency = 0;
     let reasoning = "";
 
-    // Critical situation: human is very close to winning
+    // Only place defense if human is significantly ahead or very close to winning
     if (humanDistanceToGoal <= 2) {
       urgency = 1.0;
       reasoning = "CRITICAL: Human about to win, must block!";
     }
-    // High urgency: human is ahead
-    else if (humanDistanceToGoal < aiDistanceToGoal) {
-      urgency = 0.7;
-      reasoning = "HIGH: Human is ahead in the race";
+    // Be more selective about defense placement to focus on goal
+    else if (humanDistanceToGoal < aiDistanceToGoal - 2) {
+      urgency = 0.6;
+      reasoning = "HIGH: Human significantly ahead";
     }
-    // Medium urgency: human making good progress
-    else if (humanDistanceToGoal <= 4) {
-      urgency = 0.4;
-      reasoning = "MEDIUM: Human making progress toward goal";
+    // Reduce early game defensive play
+    else if (humanDistanceToGoal <= 3 && aiDistanceToGoal > 6) {
+      urgency = 0.3;
+      reasoning = "MEDIUM: Human close, but we're far from goal";
     }
-    // Low urgency: early game strategic placement
     else {
-      urgency = 0.2;
-      reasoning = "LOW: Strategic early defense placement";
+      urgency = 0.1;
+      reasoning = "LOW: Focus on reaching our goal instead";
     }
 
-    // Adjust based on difficulty
-    const difficultyMultiplier = this.difficulty === "hard" ? 1.2 : this.difficulty === "medium" ? 1.0 : 0.8;
+    // Be less defensive on easier difficulties to focus more on goal
+    const difficultyMultiplier = this.difficulty === "hard" ? 1.0 : this.difficulty === "medium" ? 0.8 : 0.6;
     urgency *= difficultyMultiplier;
 
-    // Don't place defense too early on easy mode
-    if (this.difficulty === "easy" && humanDistanceToGoal > 6) {
-      urgency *= 0.3;
-    }
-
-    const shouldPlace = urgency > 0.5 || (urgency > 0.3 && Math.random() < urgency);
+    const shouldPlace = urgency > 0.6 || (urgency > 0.4 && Math.random() < urgency);
 
     return { shouldPlace, urgency, reasoning };
   }

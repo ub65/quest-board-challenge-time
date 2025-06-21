@@ -20,62 +20,87 @@ export interface AIEvaluationOptions {
   difficulty: "easy" | "medium" | "hard";
 }
 
-// Strategy: Move toward AI's goal
+// Strategy: Move toward AI's goal - ENHANCED for better goal-seeking
 export const goalSeekingStrategy: AIStrategy = {
   name: "goal-seeking",
-  weight: 1.0,
-  evaluate: ({ move, target }) => {
-    const distance = getDistance(move, target);
-    // Higher score for closer positions to goal
-    return Math.max(0, 20 - distance);
-  }
-};
-
-// Strategy: Block or intercept human player
-export const playerInterceptionStrategy: AIStrategy = {
-  name: "player-interception",
-  weight: 0.8,
-  evaluate: ({ move, humanPos, humanTarget, difficulty }) => {
-    const distanceToHuman = getDistance(move, humanPos);
+  weight: 1.5, // Increased weight to prioritize goal-seeking
+  evaluate: ({ move, target, currentPos, humanPos, humanTarget }) => {
+    const currentDistance = getDistance(currentPos, target);
+    const moveDistance = getDistance(move, target);
     const humanToGoalDistance = getDistance(humanPos, humanTarget);
     
-    // More aggressive on harder difficulties
-    const aggressionMultiplier = difficulty === "hard" ? 1.5 : difficulty === "medium" ? 1.2 : 1.0;
+    // Base score: heavily reward moves that get closer to goal
+    let score = Math.max(0, 25 - moveDistance * 1.5);
     
-    // Prefer positions that are close to human's path to goal
-    let score = 0;
-    
-    // If human is close to winning, prioritize blocking
-    if (humanToGoalDistance <= 3) {
-      score += 15 * aggressionMultiplier;
+    // Bonus for making progress toward goal
+    if (moveDistance < currentDistance) {
+      score += 10; // Big bonus for getting closer
     }
     
-    // Prefer being close to human (within 2-3 tiles)
-    if (distanceToHuman >= 2 && distanceToHuman <= 4) {
-      score += 8;
-    } else if (distanceToHuman <= 1) {
-      score += 12; // Very close is valuable for blocking
+    // Emergency boost if human is close to winning
+    if (humanToGoalDistance <= 3 && moveDistance < currentDistance) {
+      score += 15; // Extra urgency to reach goal
+    }
+    
+    // Penalty for moving away from goal
+    if (moveDistance > currentDistance) {
+      score -= 8;
     }
     
     return score;
   }
 };
 
-// Strategy: Collect surprise tiles
+// Strategy: Block or intercept human player - REDUCED weight
+export const playerInterceptionStrategy: AIStrategy = {
+  name: "player-interception",
+  weight: 0.5, // Reduced from 0.8 to focus more on goal
+  evaluate: ({ move, humanPos, humanTarget, difficulty, currentPos, target }) => {
+    const distanceToHuman = getDistance(move, humanPos);
+    const humanToGoalDistance = getDistance(humanPos, humanTarget);
+    const aiToGoalDistance = getDistance(currentPos, target);
+    
+    // Only intercept if human is very close to winning AND we're not close to our goal
+    if (humanToGoalDistance <= 2 && aiToGoalDistance > 3) {
+      const aggressionMultiplier = difficulty === "hard" ? 1.2 : difficulty === "medium" ? 1.0 : 0.8;
+      return 12 * aggressionMultiplier;
+    }
+    
+    // Light blocking if human is ahead but we're also making progress
+    if (humanToGoalDistance < aiToGoalDistance && humanToGoalDistance <= 4 && distanceToHuman <= 2) {
+      return 5;
+    }
+    
+    return 0;
+  }
+};
+
+// Strategy: Collect surprise tiles - REDUCED weight
 export const surpriseCollectionStrategy: AIStrategy = {
   name: "surprise-collection",
-  weight: 0.6,
-  evaluate: ({ move, surpriseTiles }) => {
+  weight: 0.4, // Reduced from 0.6 to focus more on goal
+  evaluate: ({ move, surpriseTiles, currentPos, target }) => {
+    const aiToGoalDistance = getDistance(currentPos, target);
+    
     // Check if this move lands on an unused surprise
     const onSurprise = surpriseTiles.find(
       s => s.x === move.x && s.y === move.y && !s.used
     );
     
     if (onSurprise) {
-      return 25; // High reward for landing on surprise
+      // Reduce surprise priority if we're close to goal
+      if (aiToGoalDistance <= 3) {
+        return 8; // Reduced reward when close to goal
+      }
+      return 15; // Reduced from 25
     }
     
-    // Bonus for being close to surprises
+    // Don't chase distant surprises if we're making good progress to goal
+    if (aiToGoalDistance <= 4) {
+      return 0;
+    }
+    
+    // Bonus for being close to surprises (only when far from goal)
     const closestSurprise = surpriseTiles
       .filter(s => !s.used)
       .reduce((closest, s) => {
@@ -83,27 +108,32 @@ export const surpriseCollectionStrategy: AIStrategy = {
         return dist < closest.distance ? { distance: dist, tile: s } : closest;
       }, { distance: Infinity, tile: null as SurpriseTile | null });
     
-    if (closestSurprise.tile && closestSurprise.distance <= 2) {
-      return Math.max(0, 8 - closestSurprise.distance * 2);
+    if (closestSurprise.tile && closestSurprise.distance <= 1) {
+      return 4; // Reduced from 8
     }
     
     return 0;
   }
 };
 
-// Strategy: Avoid getting trapped near defenses
+// Strategy: Avoid getting trapped near defenses - REDUCED weight
 export const defenseAvoidanceStrategy: AIStrategy = {
   name: "defense-avoidance",
-  weight: 0.4,
-  evaluate: ({ move, defenseTiles }) => {
+  weight: 0.3, // Reduced from 0.4
+  evaluate: ({ move, defenseTiles, currentPos, target }) => {
+    const aiToGoalDistance = getDistance(currentPos, target);
     let penalty = 0;
     
     for (const defense of defenseTiles) {
       const distance = getDistance(move, defense);
       if (distance <= 1) {
-        penalty -= 8; // Penalize being adjacent to defenses
-      } else if (distance <= 2) {
-        penalty -= 3; // Light penalty for being near defenses
+        // Less penalty if the move still gets us closer to goal
+        const moveToGoalDistance = getDistance(move, target);
+        if (moveToGoalDistance < aiToGoalDistance) {
+          penalty -= 3; // Reduced penalty when making progress
+        } else {
+          penalty -= 6; // Reduced from 8
+        }
       }
     }
     
@@ -111,24 +141,38 @@ export const defenseAvoidanceStrategy: AIStrategy = {
   }
 };
 
-// Strategy: Control center positions
+// Strategy: Control center positions - SIGNIFICANTLY REDUCED
 export const boardControlStrategy: AIStrategy = {
   name: "board-control",
-  weight: 0.3,
-  evaluate: ({ move, boardSize }) => {
+  weight: 0.1, // Reduced from 0.3
+  evaluate: ({ move, boardSize, currentPos, target }) => {
+    const aiToGoalDistance = getDistance(currentPos, target);
+    
+    // Don't care about center control if we're close to goal
+    if (aiToGoalDistance <= 4) {
+      return 0;
+    }
+    
     const center = (boardSize - 1) / 2;
     const distanceFromCenter = Math.abs(move.x - center) + Math.abs(move.y - center);
     
-    // Prefer positions closer to center (more mobility options)
-    return Math.max(0, 6 - distanceFromCenter);
+    // Very light preference for center positions
+    return Math.max(0, 3 - distanceFromCenter);
   }
 };
 
-// Strategy: Maintain flexible positioning
+// Strategy: Maintain flexible positioning - REDUCED weight
 export const mobilityStrategy: AIStrategy = {
   name: "mobility",
-  weight: 0.5,
-  evaluate: ({ move, boardSize, defenseTiles, humanPos }) => {
+  weight: 0.2, // Reduced from 0.5
+  evaluate: ({ move, boardSize, defenseTiles, humanPos, currentPos, target }) => {
+    const aiToGoalDistance = getDistance(currentPos, target);
+    
+    // Mobility is less important when close to goal
+    if (aiToGoalDistance <= 2) {
+      return 0;
+    }
+    
     let openMoves = 0;
     const directions = [
       { x: 0, y: 1 }, { x: 0, y: -1 },
@@ -146,7 +190,7 @@ export const mobilityStrategy: AIStrategy = {
       }
     }
     
-    return openMoves * 2; // Reward mobility
+    return openMoves; // Reduced from openMoves * 2
   }
 };
 

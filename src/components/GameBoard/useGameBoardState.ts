@@ -7,7 +7,7 @@ function getRandomStartingPlayer(): PlayerType {
   return Math.random() < 0.5 ? "human" : "ai";
 }
 
-export function useGameBoardState(boardSize: number, numSurprises: number, numDefenses: number) {
+export function useGameBoardState(boardSize: number, numSurprises: number) {
   const [boardPoints, setBoardPoints] = useState<number[][]>(() => generateRandomPoints(boardSize));
   const [humanPoints, setHumanPoints] = useState(0);
   const [aiPoints, setAIPoints] = useState(0);
@@ -15,12 +15,10 @@ export function useGameBoardState(boardSize: number, numSurprises: number, numDe
   const [defenseTiles, setDefenseTiles] = useState<DefenseTile[]>([]);
   const [defensesUsed, setDefensesUsed] = useState<{human: number; ai: number}>({human: 0, ai: 0});
   const [defenseMode, setDefenseMode] = useState(false);
-
   const [positions, setPositions] = useState(() => ({
     human: { x: 0, y: 0 },
     ai: { x: boardSize - 1, y: boardSize - 1 }
   }));
-
   const [winner, setWinner] = useState<null | PlayerType>(null);
   const [turn, setTurn] = useState<PlayerType>("human");
   const [moveState, setMoveState] = useState<null | { tile: any; question: any; resolve: (ok: boolean) => void }>(null);

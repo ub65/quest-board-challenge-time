@@ -3,7 +3,7 @@ import React, { useRef, useEffect, useState } from "react";
 import { useLocalization } from "@/contexts/LocalizationContext";
 import { toast } from "@/components/ui/use-toast";
 import { PlayerType, DEFAULT_BOARD_SIZE, DEFAULT_QUESTION_TIME } from "./GameBoard/types";
-import { getValidMoves, positionsEqual, generateRandomPoints, getRandomSurpriseTiles, getRandomQuestion } from "./GameBoard/utils";
+import { getValidMoves, positionsEqual, generateRandomPoints, getRandomSurpriseTiles } from "./GameBoard/utils";
 import { useAITurn } from "./GameBoard/aiHooks";
 import { useHumanMoveHandler } from "./GameBoard/humanHooks";
 import { useSurprise } from "./GameBoard/useSurprise";
@@ -13,8 +13,8 @@ import { useGameSettings } from "./GameBoard/useGameSettings";
 import { useGameBoardState } from "./GameBoard/useGameBoardState";
 import GameBoardArea from "./GameBoard/GameBoardArea";
 import { useDefenseModeHandler } from "./GameBoard/useDefenseModeHandler";
-import { getRandomMathQuestion } from "@/lib/mathQuestions";
 import GameBoardModals from "./GameBoard/GameBoardModals";
+import { generateQuestion } from "./GameBoard/questionGenerator";
 
 const GameBoard = ({
   difficulty: initialDifficulty,
@@ -58,15 +58,13 @@ const GameBoard = ({
     disableInput, setDisableInput,
     humanHasMoved, setHumanHasMoved,
     getRandomStartingPlayer,
-  } = useGameBoardState(boardSize, numSurprises, numDefenses);
+  } = useGameBoardState(boardSize, numSurprises);
 
   const BOARD_SIZE = boardSize;
   const aiTarget = { x: 0, y: 0 };
   const humanTarget = { x: BOARD_SIZE - 1, y: BOARD_SIZE - 1 };
-
   const [aiModalState, setAIModalState] = useState<null | { question: any; targetTile: any }>(null);
   const aiMovingRef = useRef(false);
-
   const [gameStarted, setGameStarted] = useState(false);
   const [startingPlayer, setStartingPlayer] = useState<"human" | "ai" | null>(null);
 
@@ -90,16 +88,12 @@ const GameBoard = ({
     setHumanHasMoved(false);
     setDisableInput(true);
     // eslint-disable-next-line
-  }, [boardSize, numSurprises, numDefenses, setPositions, setWinner, setTurn, setHumanPoints, setAIPoints, setBoardPoints, setSurpriseTiles, setDefenseTiles, setDefensesUsed, setDefenseMode, setHumanHasMoved, getRandomStartingPlayer]);
+  }, [boardSize, numSurprises, numDefenses]);
 
   const handleStartGame = () => {
     setGameStarted(true);
     setDisableInput(false);
-    if (startingPlayer === "ai") {
-      setHumanHasMoved(true);
-    } else {
-      setHumanHasMoved(false);
-    }
+    setHumanHasMoved(startingPlayer === "ai");
   };
 
   useEffect(() => {
@@ -111,7 +105,7 @@ const GameBoard = ({
       aiMovingRef.current = false;
       setDefenseMode(false);
     }
-  }, [winner, setMoveState, setAIModalState, setIsModalOpen, setDisableInput, setDefenseMode]);
+  }, [winner]);
 
   useEffect(() => {
     if (positions.human.x === humanTarget.x && positions.human.y === humanTarget.y) {
@@ -119,31 +113,7 @@ const GameBoard = ({
     } else if (positions.ai.x === aiTarget.x && positions.ai.y === aiTarget.y) {
       setWinner("ai");
     }
-  }, [positions, humanTarget.x, humanTarget.y, aiTarget.x, aiTarget.y, setWinner]);
-
-  function getQuestionForTurn() {
-    const qtype = questionType;
-    let q;
-    if (qtype === "math") {
-      q = getRandomMathQuestion(difficulty);
-    } else {
-      q = getRandomQuestion(difficulty);
-    }
-    console.log("[QUESTION GENERATOR]", { qtype, result: q });
-    return q;
-  }
-
-  function getQuestionForAiTurn() {
-    const qtype = questionType;
-    let q;
-    if (qtype === "math") {
-      q = getRandomMathQuestion(difficulty);
-    } else {
-      q = getRandomQuestion(difficulty);
-    }
-    console.log("[QUESTION GENERATOR][AI]", { qtype, result: q });
-    return q;
-  }
+  }, [positions, humanTarget.x, humanTarget.y, aiTarget.x, aiTarget.y]);
 
   useAITurn({
     turn,
@@ -171,7 +141,7 @@ const GameBoard = ({
       if (val && val.targetTile) {
         setAIModalState({
           ...val,
-          question: getQuestionForAiTurn()
+          question: generateQuestion(questionType, difficulty)
         });
       } else {
         setAIModalState(val);
@@ -216,7 +186,7 @@ const GameBoard = ({
     setHumanPoints,
     handleSurprise: surpriseHandler,
     questionType,
-    getQuestionForTurn,
+    getQuestionForTurn: () => generateQuestion(questionType, difficulty),
     setHumanHasMoved,
     humanHasMoved,
   });
@@ -305,15 +275,10 @@ const GameBoard = ({
     setDefenseMode,
   });
 
-  useEffect(() => {
-    console.log("[GAMEBOARD] Turn changed:", turn, "Winner:", winner);
-  }, [turn, winner]);
-
   const announcementKey =
     startingPlayer === "human"
       ? "game.startingPlayer.human"
       : "game.startingPlayer.ai";
-  const announcementText = t(announcementKey);
 
   return (
     <div className="relative w-full">
@@ -322,7 +287,7 @@ const GameBoard = ({
           <div className="bg-white rounded-2xl shadow-xl p-8 flex flex-col items-center gap-5 min-w-[320px] max-w-xs mx-auto">
             <h2 className="text-xl font-bold mb-0">{t("game.title")}</h2>
             <div className="text-base text-center text-gray-700 mb-3">
-              {announcementText}
+              {t(announcementKey)}
             </div>
             <button
               className="bg-primary text-primary-foreground px-8 py-3 rounded-xl font-semibold text-lg shadow hover:bg-primary/90 transition"

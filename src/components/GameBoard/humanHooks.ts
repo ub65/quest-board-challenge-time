@@ -6,9 +6,7 @@ export function useHumanMoveHandler({
   winner, disableInput, turn, positions, BOARD_SIZE, defenseTiles, difficulty,
   defenseMode, handleDefenseClick, setPositions, setBoardPoints,
   setIsModalOpen, setMoveState, setTurn, setHumanPoints, handleSurprise,
-  questionType, getQuestionForTurn,
-  setHumanHasMoved,
-  humanHasMoved,
+  questionType, getQuestionForTurn, setHumanHasMoved, humanHasMoved,
 }: {
   winner: any;
   disableInput: boolean;

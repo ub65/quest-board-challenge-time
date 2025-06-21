@@ -9,7 +9,7 @@ const GameBoardContext = createContext<any>(undefined);
 export function GameBoardProvider({ children, settings }: { children: React.ReactNode; settings: any }) {
   // Settings state and board state brought together
   const settingsState = useGameSettings(settings.initialDifficulty);
-  const boardState = useGameBoardState(settingsState.boardSize, settingsState.numSurprises, settingsState.numDefenses);
+  const boardState = useGameBoardState(settingsState.boardSize, settingsState.numSurprises);
 
   return (
     <GameBoardContext.Provider

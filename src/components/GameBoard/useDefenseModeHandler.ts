@@ -43,23 +43,5 @@ export function useDefenseModeHandler({
     }, 100);
   }
 
-  function cancelDefensePlacement() {
-    setDefenseMode(false);
-    setDefenseActive(false);
-    toast({
-      title: t("game.defense_mode_off") || "Defense mode canceled",
-      description: t("game.defense_mode_off_desc") || "Defense placement has been canceled",
-      duration: 2000,
-    });
-  }
-
-  function toggleDefensePlacement() {
-    if (defenseActive) {
-      cancelDefensePlacement();
-    } else {
-      startDefensePlacement();
-    }
-  }
-
-  return { defenseActive, startDefensePlacement, cancelDefensePlacement, toggleDefensePlacement };
+  return { defenseActive, startDefensePlacement };
 }

@@ -1,7 +1,6 @@
-
 import React from "react";
 import GameScoreboard from "../GameScoreboard";
-import { Shield, X } from "lucide-react";
+import { Shield } from "lucide-react";
 import { PlayerType, DefenseTile } from "./types";
 
 type GameBoardHudProps = {
@@ -48,26 +47,11 @@ const GameBoardHud: React.FC<GameBoardHudProps> = ({
         {!winner && turn === "human" && (numDefenses - defensesUsed.human > 0) && (
           <button
             onClick={onPlaceDefense}
-            className={`${
-              defenseMode 
-                ? "bg-red-500 hover:bg-red-700" 
-                : "bg-blue-500 hover:bg-blue-700"
-            } text-white font-semibold px-4 py-2 rounded-lg shadow transition-all ${
-              defenseMode ? "" : "animate-pulse"
-            }`}
+            className="bg-blue-500 text-white font-semibold px-4 py-2 rounded-lg shadow hover:bg-blue-700 transition-all animate-pulse"
             type="button"
           >
-            {defenseMode ? (
-              <>
-                <X size={20} className="inline-block mr-1" />
-                {t("game.defense_cancel_btn") || "Cancel Defense"}
-              </>
-            ) : (
-              <>
-                <Shield size={20} className="inline-block mr-1" />
-                {t("game.defense_place_btn")}
-              </>
-            )}
+            <Shield size={20} className="inline-block mr-1" />
+            {t("game.defense_place_btn")}
           </button>
         )}
       </div>

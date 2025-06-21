@@ -161,7 +161,7 @@ const GameBoard = ({
     toast,
   });
 
-  const { toggleDefensePlacement } = useDefenseModeHandler({
+  const { startDefensePlacement } = useDefenseModeHandler({
     t,
     toast,
     setDefenseMode,
@@ -312,7 +312,7 @@ const GameBoard = ({
           aiPoints={aiPoints}
           numDefenses={numDefenses}
           defensesUsed={defensesUsed}
-          onPlaceDefense={toggleDefensePlacement}
+          onPlaceDefense={startDefensePlacement}
           defenseMode={defenseMode}
           boardSize={BOARD_SIZE}
           boardPoints={boardPoints}

@@ -48,7 +48,6 @@ const GameBoardGrid: React.FC<GameBoardGridProps> = ({
     getValidMoves,
   });
 
-  // Calculate responsive gap and padding based on board size
   const getResponsiveSpacing = (boardSize: number) => {
     if (boardSize <= 5) return "gap-3 md:gap-4 p-4 md:p-6";
     if (boardSize <= 7) return "gap-2 md:gap-3 p-3 md:p-4";
@@ -56,13 +55,10 @@ const GameBoardGrid: React.FC<GameBoardGridProps> = ({
     return "gap-0.5 md:gap-1 p-1 md:p-2";
   };
 
-  // Modern frosted glass+gradient effect for the board background
   return (
     <div
       className="w-full flex justify-center items-center"
-      style={{
-        WebkitOverflowScrolling: "touch"
-      }}
+      style={{ WebkitOverflowScrolling: "touch" }}
     >
       <div
         className={`
@@ -85,11 +81,9 @@ const GameBoardGrid: React.FC<GameBoardGridProps> = ({
       >
         {Array.from({ length: BOARD_SIZE }).map((_, y) =>
           Array.from({ length: BOARD_SIZE }).map((_, x) => {
-            const surprise =
-              surpriseTiles?.find(st => st.x === x && st.y === y && !st.used);
+            const surprise = surpriseTiles?.find(st => st.x === x && st.y === y && !st.used);
             const defense = defenseTiles?.find(dt => dt.x === x && dt.y === y);
 
-            // Highlight only if tile is in validMovesSet and turn is human
             const highlight =
               !winner &&
               turn === "human" &&

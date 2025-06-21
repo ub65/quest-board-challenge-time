@@ -1,14 +1,14 @@
 
 import { useCallback } from "react";
-import { getRandomQuestion, getValidMoves } from "./utils";
+import { getValidMoves } from "./utils";
 
 export function useHumanMoveHandler({
   winner, disableInput, turn, positions, BOARD_SIZE, defenseTiles, difficulty,
   defenseMode, handleDefenseClick, setPositions, setBoardPoints,
   setIsModalOpen, setMoveState, setTurn, setHumanPoints, handleSurprise,
   questionType, getQuestionForTurn,
-  setHumanHasMoved, // <-- Accept as prop
-  humanHasMoved, // <-- Accept as prop (optional, not used here but for clarity)
+  setHumanHasMoved,
+  humanHasMoved,
 }: {
   winner: any;
   disableInput: boolean;
@@ -31,7 +31,6 @@ export function useHumanMoveHandler({
   setHumanHasMoved: (b: boolean) => void;
   humanHasMoved?: boolean;
 }) {
-  // Helper function to determine if human can move to a tile
   function canMoveTo(tile: { x: number; y: number }, aiPos: { x: number; y: number }, defenseTiles: any[], BOARD_SIZE: number) {
     const valid = getValidMoves(positions.human, BOARD_SIZE, defenseTiles, aiPos);
     return valid.some((t: { x: number; y: number }) => t.x === tile.x && t.y === tile.y);
@@ -45,7 +44,6 @@ export function useHumanMoveHandler({
     if (winner || disableInput || turn !== "human") return;
 
     if (!canMoveTo(tile, positions.ai, defenseTiles, BOARD_SIZE)) {
-      // Removed setSound("wrong") call since sound functionality was removed
       return;
     }
 
@@ -54,7 +52,6 @@ export function useHumanMoveHandler({
       tile,
       question,
       resolve: (ok: boolean) => {
-        // Removed setSound calls since sound functionality was removed
         setIsModalOpen(false);
         setMoveState(null);
 
@@ -74,7 +71,7 @@ export function useHumanMoveHandler({
           return { ...p, human: { x: tile.x, y: tile.y } };
         });
 
-        setHumanHasMoved(true); // <-- Set this on *first* valid move
+        setHumanHasMoved(true);
 
         setTimeout(() => {
           handleSurprise(tile, "human");

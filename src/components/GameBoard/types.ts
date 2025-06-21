@@ -1,3 +1,4 @@
+
 export type PlayerType = "human" | "ai";
 
 export const DEFAULT_BOARD_SIZE = 7;

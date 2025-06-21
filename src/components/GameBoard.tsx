@@ -1,20 +1,9 @@
 
-// Refactored GameBoard: uses split files for state and logic
 import React, { useRef, useEffect, useState } from "react";
 import { useLocalization } from "@/contexts/LocalizationContext";
 import { toast } from "@/components/ui/use-toast";
-import {
-  PlayerType,
-  DEFAULT_BOARD_SIZE,
-  DEFAULT_QUESTION_TIME,
-} from "./GameBoard/types";
-import {
-  getValidMoves,
-  positionsEqual,
-  generateRandomPoints,
-  getRandomSurpriseTiles,
-  getRandomQuestion
-} from "./GameBoard/utils";
+import { PlayerType, DEFAULT_BOARD_SIZE, DEFAULT_QUESTION_TIME } from "./GameBoard/types";
+import { getValidMoves, positionsEqual, generateRandomPoints, getRandomSurpriseTiles, getRandomQuestion } from "./GameBoard/utils";
 import { useAITurn } from "./GameBoard/aiHooks";
 import { useHumanMoveHandler } from "./GameBoard/humanHooks";
 import { useSurprise } from "./GameBoard/useSurprise";
@@ -44,7 +33,6 @@ const GameBoard = ({
 }) => {
   const { t, language } = useLocalization();
 
-  // Settings
   const {
     difficulty, setDifficulty,
     settingsOpen, setSettingsOpen,
@@ -54,7 +42,6 @@ const GameBoard = ({
     numDefenses, setNumDefenses,
   } = useGameSettings(initialDifficulty);
 
-  // Board/game state
   const {
     boardPoints, setBoardPoints,
     humanPoints, setHumanPoints,
@@ -73,27 +60,20 @@ const GameBoard = ({
     getRandomStartingPlayer,
   } = useGameBoardState(boardSize, numSurprises, numDefenses);
 
-  // --- Derived targets
   const BOARD_SIZE = boardSize;
   const aiTarget = { x: 0, y: 0 };
   const humanTarget = { x: BOARD_SIZE - 1, y: BOARD_SIZE - 1 };
 
-  // Modal management for AI
   const [aiModalState, setAIModalState] = useState<null | { question: any; targetTile: any }>(null);
   const aiMovingRef = useRef(false);
 
-  // NEW: State to track if the game proper has started.
   const [gameStarted, setGameStarted] = useState(false);
-
-  // Store starting player and announcement, but do not proceed till "Start Game" button is clicked.
   const [startingPlayer, setStartingPlayer] = useState<"human" | "ai" | null>(null);
 
-  // Randomize starting player and show a message on new game
   useEffect(() => {
-    // On mount or relevant setting changes: pick starting player, but do not start game immediately
     const randomStartingPlayer = getRandomStartingPlayer();
     setStartingPlayer(randomStartingPlayer);
-    setGameStarted(false); // Block normal gameplay
+    setGameStarted(false);
     setTurn(randomStartingPlayer);
     setPositions({
       human: { x: 0, y: 0 },
@@ -108,15 +88,13 @@ const GameBoard = ({
     setDefensesUsed({ human: 0, ai: 0 });
     setDefenseMode(false);
     setHumanHasMoved(false);
-    setDisableInput(true); // Block interactions until "Start Game"
+    setDisableInput(true);
     // eslint-disable-next-line
   }, [boardSize, numSurprises, numDefenses, setPositions, setWinner, setTurn, setHumanPoints, setAIPoints, setBoardPoints, setSurpriseTiles, setDefenseTiles, setDefensesUsed, setDefenseMode, setHumanHasMoved, getRandomStartingPlayer]);
 
-  // On "Start Game" click:
   const handleStartGame = () => {
     setGameStarted(true);
     setDisableInput(false);
-    // If AI is starting player, flag as "human has moved" so AI can actually move:
     if (startingPlayer === "ai") {
       setHumanHasMoved(true);
     } else {
@@ -143,7 +121,6 @@ const GameBoard = ({
     }
   }, [positions, humanTarget.x, humanTarget.y, aiTarget.x, aiTarget.y, setWinner]);
 
-  // This change allows using math/translate Qs as per setting
   function getQuestionForTurn() {
     const qtype = questionType;
     let q;
@@ -156,7 +133,6 @@ const GameBoard = ({
     return q;
   }
 
-  // Helper for AI to get question of correct type:
   function getQuestionForAiTurn() {
     const qtype = questionType;
     let q;
@@ -169,7 +145,6 @@ const GameBoard = ({
     return q;
   }
 
-  // AI turn (with defense/board state passed)
   useAITurn({
     turn,
     winner,
@@ -204,7 +179,6 @@ const GameBoard = ({
     }
   });
 
-  // SURPRISE logic
   const surpriseHandler = useSurprise({
     boardPoints,
     surpriseTiles,
@@ -217,7 +191,6 @@ const GameBoard = ({
     toast,
   });
 
-  // HUD Actions (defense mode)
   const { startDefensePlacement } = useDefenseModeHandler({
     t,
     toast,
@@ -225,7 +198,6 @@ const GameBoard = ({
     handleDefenseClick,
   });
 
-  // Human move handler - removed setSound parameter since sound functionality was removed
   const { handleTileClick } = useHumanMoveHandler({
     winner,
     disableInput,
@@ -249,7 +221,6 @@ const GameBoard = ({
     humanHasMoved,
   });
 
-  // AI move modal submit handler
   const handleAIModalSubmit = () => {
     if (!aiModalState || winner) return;
     setPositions((p) => {
@@ -276,7 +247,6 @@ const GameBoard = ({
     }, 100);
   };
 
-  // Defense placement
   function handleDefenseClick(tile: { x: number; y: number }) {
     const problem = canPlaceDefenseHere({
       tile,
@@ -316,7 +286,6 @@ const GameBoard = ({
     });
   }
 
-  // Restart game
   const handleRestart = useGameRestart({
     boardSize,
     numSurprises,
@@ -336,12 +305,10 @@ const GameBoard = ({
     setDefenseMode,
   });
 
-  // Debug: log turns to help trace
   useEffect(() => {
     console.log("[GAMEBOARD] Turn changed:", turn, "Winner:", winner);
   }, [turn, winner]);
 
-  // START GAME ANNOUNCEMENT OVERLAY (visible only before game actually starts)
   const announcementKey =
     startingPlayer === "human"
       ? "game.startingPlayer.human"
@@ -350,7 +317,6 @@ const GameBoard = ({
 
   return (
     <div className="relative w-full">
-      {/* Show overlay modal before game starts */}
       {!gameStarted && startingPlayer && (
         <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black/40">
           <div className="bg-white rounded-2xl shadow-xl p-8 flex flex-col items-center gap-5 min-w-[320px] max-w-xs mx-auto">
@@ -370,7 +336,6 @@ const GameBoard = ({
         </div>
       )}
 
-      {/* Only show board UI if game has started */}
       {gameStarted && (
         <GameBoardArea
           language={language}
@@ -420,7 +385,6 @@ const GameBoard = ({
           surpriseCount={numSurprises}
           playerName={playerName}
         >
-          {/* Inject modals for human/ai turn based on current move/question type */}
           <GameBoardModals
             moveState={moveState}
             isModalOpen={isModalOpen}

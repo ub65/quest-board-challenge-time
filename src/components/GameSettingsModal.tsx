@@ -43,14 +43,12 @@ const GameSettingsModal = ({
 }: GameSettingsModalProps) => {
   const { t } = useLocalization();
 
-  // Local state for "pending" settings
   const [pendingBoardSize, setPendingBoardSize] = useState(boardSize);
   const [pendingQuestionTime, setPendingQuestionTime] = useState(questionTime);
   const [pendingSurpriseCount, setPendingSurpriseCount] = useState(surpriseCount);
   const [pendingNumDefenses, setPendingNumDefenses] = useState(numDefenses);
   const [pendingDifficulty, setPendingDifficulty] = useState<"easy" | "medium" | "hard">(difficulty);
 
-  // Reset local state when modal opens
   useEffect(() => {
     if (open) {
       setPendingBoardSize(boardSize);

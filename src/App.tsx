@@ -11,7 +11,6 @@ import React from "react";
 
 const queryClient = new QueryClient();
 
-// Direction/font wrapper that respects localization
 function DirectionWrapper({ children }: { children: React.ReactNode }) {
   const { language } = useLocalization();
   return (
@@ -35,7 +34,6 @@ const App = () => (
           <BrowserRouter>
             <Routes>
               <Route path="/" element={<Index />} />
-              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>

@@ -1,22 +1,17 @@
 
 import { useState } from "react";
 import { generateRandomPoints, getRandomSurpriseTiles } from "./utils";
-import { DEFAULT_BOARD_SIZE, DEFAULT_DEFENSES, PlayerType, Tile, SurpriseTile, DefenseTile } from "./types";
+import { PlayerType, Tile, SurpriseTile, DefenseTile } from "./types";
 
-// Helper to pick random starting player
 function getRandomStartingPlayer(): PlayerType {
   return Math.random() < 0.5 ? "human" : "ai";
 }
 
 export function useGameBoardState(boardSize: number, numSurprises: number, numDefenses: number) {
-  const [boardPoints, setBoardPoints] = useState<number[][]>(
-    () => generateRandomPoints(boardSize)
-  );
+  const [boardPoints, setBoardPoints] = useState<number[][]>(() => generateRandomPoints(boardSize));
   const [humanPoints, setHumanPoints] = useState(0);
   const [aiPoints, setAIPoints] = useState(0);
-  const [surpriseTiles, setSurpriseTiles] = useState<SurpriseTile[]>(
-    () => getRandomSurpriseTiles(boardSize, numSurprises)
-  );
+  const [surpriseTiles, setSurpriseTiles] = useState<SurpriseTile[]>(() => getRandomSurpriseTiles(boardSize, numSurprises));
   const [defenseTiles, setDefenseTiles] = useState<DefenseTile[]>([]);
   const [defensesUsed, setDefensesUsed] = useState<{human: number; ai: number}>({human: 0, ai: 0});
   const [defenseMode, setDefenseMode] = useState(false);

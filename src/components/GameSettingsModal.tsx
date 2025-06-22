@@ -143,8 +143,8 @@ const GameSettingsModal = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="bg-gradient-to-br from-background to-secondary shadow-2xl rounded-2xl border-0 max-w-[500px] max-h-[90vh] w-full flex flex-col overflow-hidden">
-        <DialogHeader className="px-6 pt-6 pb-2 shrink-0">
+      <DialogContent className="bg-gradient-to-br from-background to-secondary shadow-2xl rounded-2xl border-0 max-w-[500px] h-screen max-h-screen w-full overflow-y-auto p-0">
+        <div className="sticky top-0 bg-gradient-to-br from-background to-secondary px-6 pt-6 pb-4 z-10">
           <div className="flex flex-col items-center gap-1">
             <SlidersHorizontal size={32} className="text-primary" />
             <DialogTitle className="text-2xl font-bold tracking-tight">
@@ -154,26 +154,24 @@ const GameSettingsModal = ({
               {t("settings.desc")}
             </DialogDescription>
           </div>
-        </DialogHeader>
+        </div>
         
-        <ScrollArea className="flex-1 px-6 min-h-0">
-          <div className="py-4 flex flex-col gap-6 pb-6">
-            <LanguageSelector />
-            <GameSettingsDifficultySelector
-              difficulty={pendingDifficulty}
-              onDifficultyChange={setPendingDifficulty}
-            />
-            <GameSettingsSliderGroup sliders={sliders} />
-            <SoundControls
-              soundEnabled={pendingSoundEnabled}
-              onSoundEnabledChange={setPendingSoundEnabled}
-              volume={pendingVolume}
-              onVolumeChange={setPendingVolume}
-            />
-          </div>
-        </ScrollArea>
+        <div className="px-6 py-4 flex flex-col gap-6">
+          <LanguageSelector />
+          <GameSettingsDifficultySelector
+            difficulty={pendingDifficulty}
+            onDifficultyChange={setPendingDifficulty}
+          />
+          <GameSettingsSliderGroup sliders={sliders} />
+          <SoundControls
+            soundEnabled={pendingSoundEnabled}
+            onSoundEnabledChange={setPendingSoundEnabled}
+            volume={pendingVolume}
+            onVolumeChange={setPendingVolume}
+          />
+        </div>
         
-        <DialogFooter className="px-6 py-4 shrink-0 border-t bg-gradient-to-b from-transparent to-white/50">
+        <div className="sticky bottom-0 bg-gradient-to-t from-background to-transparent px-6 py-4 border-t z-10">
           <div className="flex gap-3 w-full">
             <Button 
               className="flex-1 font-semibold" 
@@ -191,7 +189,7 @@ const GameSettingsModal = ({
               {t("settings.cancel")}
             </Button>
           </div>
-        </DialogFooter>
+        </div>
       </DialogContent>
     </Dialog>
   );

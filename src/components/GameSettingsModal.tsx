@@ -143,8 +143,8 @@ const GameSettingsModal = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="bg-gradient-to-br from-background to-secondary shadow-2xl rounded-2xl border-0 max-w-[500px] max-h-[90vh] w-full flex flex-col overflow-hidden">
-        <DialogHeader className="px-6 pt-6 pb-2 shrink-0">
+      <DialogContent className="bg-gradient-to-br from-background to-secondary shadow-2xl rounded-2xl border-0 max-w-[500px] w-full h-[600px] sm:h-[700px] flex flex-col">
+        <DialogHeader className="px-6 pt-6 pb-4 flex-shrink-0">
           <div className="flex flex-col items-center gap-1">
             <SlidersHorizontal size={32} className="text-primary" />
             <DialogTitle className="text-2xl font-bold tracking-tight">
@@ -156,8 +156,8 @@ const GameSettingsModal = ({
           </div>
         </DialogHeader>
         
-        <ScrollArea className="flex-1 px-6 min-h-0">
-          <div className="py-4 flex flex-col gap-6 pb-6">
+        <div className="flex-1 overflow-y-auto px-6">
+          <div className="py-2 flex flex-col gap-6 pb-4">
             <LanguageSelector />
             <SoundControls
               soundEnabled={pendingSoundEnabled}
@@ -171,9 +171,9 @@ const GameSettingsModal = ({
             />
             <GameSettingsSliderGroup sliders={sliders} />
           </div>
-        </ScrollArea>
+        </div>
         
-        <DialogFooter className="px-6 py-4 shrink-0 border-t bg-gradient-to-b from-transparent to-white/50">
+        <DialogFooter className="px-6 py-4 flex-shrink-0 border-t bg-gradient-to-b from-transparent to-white/50">
           <div className="flex gap-3 w-full">
             <Button 
               className="flex-1 font-semibold" 

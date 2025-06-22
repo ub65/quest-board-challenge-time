@@ -143,20 +143,21 @@ const GameSettingsModal = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="bg-gradient-to-br from-background to-secondary p-0 shadow-2xl rounded-2xl border-0 max-w-[500px] max-h-[95vh] sm:max-h-[700px] w-full flex flex-col">
-        <ScrollArea className="flex-1 px-6 pt-7 pb-4 w-full overflow-y-auto">
-          <DialogHeader>
-            <div className="flex flex-col items-center gap-1 mb-2">
-              <SlidersHorizontal size={32} className="text-primary" />
-              <DialogTitle className="text-2xl font-bold tracking-tight">
-                {t("settings.title")}
-              </DialogTitle>
-              <DialogDescription className="text-center">
-                {t("settings.desc")}
-              </DialogDescription>
-            </div>
-          </DialogHeader>
-          <div className="py-2 flex flex-col gap-7 w-full">
+      <DialogContent className="bg-gradient-to-br from-background to-secondary shadow-2xl rounded-2xl border-0 max-w-[500px] max-h-[90vh] w-full flex flex-col overflow-hidden">
+        <DialogHeader className="px-6 pt-6 pb-2 shrink-0">
+          <div className="flex flex-col items-center gap-1">
+            <SlidersHorizontal size={32} className="text-primary" />
+            <DialogTitle className="text-2xl font-bold tracking-tight">
+              {t("settings.title")}
+            </DialogTitle>
+            <DialogDescription className="text-center">
+              {t("settings.desc")}
+            </DialogDescription>
+          </div>
+        </DialogHeader>
+        
+        <ScrollArea className="flex-1 px-6 min-h-0">
+          <div className="py-4 flex flex-col gap-6 pb-6">
             <LanguageSelector />
             <SoundControls
               soundEnabled={pendingSoundEnabled}
@@ -171,13 +172,22 @@ const GameSettingsModal = ({
             <GameSettingsSliderGroup sliders={sliders} />
           </div>
         </ScrollArea>
-        <DialogFooter className="pt-3 pb-4 px-6 flex flex-col gap-2 bg-gradient-to-b from-transparent to-white/95 w-full z-10">
-          <div className="flex gap-2 w-full">
-            <Button className="flex-1 font-semibold" onClick={handleSave} variant="default">
+        
+        <DialogFooter className="px-6 py-4 shrink-0 border-t bg-gradient-to-b from-transparent to-white/50">
+          <div className="flex gap-3 w-full">
+            <Button 
+              className="flex-1 font-semibold" 
+              onClick={handleSave} 
+              variant="default"
+            >
               <Save className="w-4 h-4 mr-2" />
               {t("settings.save")}
             </Button>
-            <Button className="flex-1" variant="secondary" onClick={() => onOpenChange(false)}>
+            <Button 
+              className="flex-1" 
+              variant="secondary" 
+              onClick={() => onOpenChange(false)}
+            >
               {t("settings.cancel")}
             </Button>
           </div>

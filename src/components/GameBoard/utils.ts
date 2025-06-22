@@ -1,4 +1,3 @@
-
 import { SURPRISE_TYPES, Tile, SurpriseTile, DefenseTile } from "./types";
 import { getRandomQuestionByDifficulty } from "@/lib/questions";
 import { AIDecisionEngine } from "./aiDecisionEngine";
@@ -24,10 +23,6 @@ export function getValidMoves(
   if (pos.y > 0 && !isBlocked(pos.x, pos.y - 1)) moves.push({ x: pos.x, y: pos.y - 1 });
   if (pos.y < BOARD_SIZE - 1 && !isBlocked(pos.x, pos.y + 1)) moves.push({ x: pos.x, y: pos.y + 1 });
   return moves;
-}
-
-export function getRandomTranslationQuestion(difficulty: "easy" | "medium" | "hard") {
-  return getRandomQuestionByDifficulty(difficulty);
 }
 
 export function getDistance(a: Tile, b: Tile) {
@@ -212,4 +207,4 @@ function isValidDefensePosition(
   return true;
 }
 
-export const getRandomQuestion = getRandomTranslationQuestion;
+export const getRandomQuestion = getRandomQuestionByDifficulty;

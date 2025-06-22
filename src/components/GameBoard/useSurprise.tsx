@@ -1,7 +1,6 @@
 import { Gift } from "lucide-react";
 import { useCallback } from "react";
 import type { Tile, PlayerType, SurpriseTile } from "./types";
-import { toast } from "@/components/ui/use-toast"; // Only import `toast`, not `ToastFn`
 
 type UseSurpriseProps = {
   boardPoints: number[][];
@@ -12,7 +11,7 @@ type UseSurpriseProps = {
   humanPoints: number;
   aiPoints: number;
   t: (s: string, params?: any) => string;
-  toast: typeof toast; // Use the type of the imported `toast` function
+  toast: (args: any) => void;
 };
 
 export function useSurprise({

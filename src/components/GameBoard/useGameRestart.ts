@@ -1,4 +1,3 @@
-
 import { generateRandomPoints, getRandomSurpriseTiles } from "./utils";
 import type { Tile, DefenseTile, SurpriseTile } from "./types";
 

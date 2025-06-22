@@ -1,26 +1,20 @@
-
 import { useEffect, useRef } from "react";
 import { getRandomQuestion, getValidMoves, getAIMove, getAIDefenseTile } from "./utils";
-import { PlayerType, Tile, DefenseTile, SurpriseTile } from "./types";
+import { PlayerType } from "./types";
 
-// Enhanced AI question answering with more sophisticated difficulty scaling
 function getAIAnswer(question: any, difficulty: "easy" | "medium" | "hard") {
-  // Base mistake probabilities
   const baseMistakeProb = {
     "easy": 0.32,
     "medium": 0.16, 
     "hard": 0.06
   };
 
-  // Additional factors that increase mistake probability
   let mistakeProb = baseMistakeProb[difficulty];
   
-  // Slightly higher mistake rate for math questions (they're harder)
   if (question.type === "math") {
     mistakeProb *= 1.2;
   }
   
-  // Sometimes make smart mistakes (choose second-best answer instead of random)
   const smartMistakeProb = difficulty === "hard" ? 0.7 : difficulty === "medium" ? 0.5 : 0.3;
   
   let aiAnswer = question.correct;
@@ -29,11 +23,8 @@ function getAIAnswer(question: any, difficulty: "easy" | "medium" | "hard") {
     const wrongAnswers = question.answers.map((_, i) => i).filter(i => i !== question.correct);
     
     if (Math.random() < smartMistakeProb && wrongAnswers.length > 1) {
-      // Smart mistake: avoid obviously wrong answers when possible
-      // For now, just pick the first wrong answer (could be enhanced further)
       aiAnswer = wrongAnswers[0];
     } else {
-      // Random mistake
       aiAnswer = wrongAnswers[Math.floor(Math.random() * wrongAnswers.length)];
     }
     
@@ -51,13 +42,11 @@ export function useAITurn({
   useEffect(() => {
     console.log("[AI TURN HOOK] running", {turn, winner, aiModalState, aiMoving: aiMovingRef.current, disableInput, humanHasMoved});
 
-    // Prevent any AI move until human has moved
     if (!humanHasMoved) {
       aiMovingRef.current = false;
       return;
     }
 
-    // Always reset moving ref when human's turn or game over
     if (winner || turn === "human") {
       if (aiMovingRef.current) console.log("[AI TURN HOOK] Resetting aiMovingRef.current", {winner, turn});
       aiMovingRef.current = false;
@@ -69,7 +58,6 @@ export function useAITurn({
       aiMovingRef.current = true;
       setDisableInput(true);
 
-      // Enhanced defense placement logic
       if (defensesUsed.ai < numDefenses) {
         const aiDefense = getAIDefenseTile({
           humanPos: positions.human,
@@ -78,7 +66,7 @@ export function useAITurn({
           defenseTiles,
           positions,
           surpriseTiles,
-          difficulty, // Pass difficulty for smarter defense decisions
+          difficulty,
         });
         
         if (aiDefense) {
@@ -98,17 +86,16 @@ export function useAITurn({
         }
       }
 
-      // Enhanced move selection with strategic AI
       const allMoves = getValidMoves(positions.ai, BOARD_SIZE, defenseTiles, positions.human);
       const move = getAIMove(
         positions.ai,
         aiTarget,
         BOARD_SIZE,
         defenseTiles,
-        positions.human, // Pass human position for strategic decisions
-        humanTarget,     // Pass human target for interception strategies
-        surpriseTiles,   // Pass surprise tiles for collection strategy
-        difficulty       // Pass difficulty for behavior scaling
+        positions.human,
+        humanTarget,
+        surpriseTiles,
+        difficulty
       );
 
       const question = getRandomQuestion(difficulty);
@@ -122,7 +109,6 @@ export function useAITurn({
         }
       }, 650);
     }
-    // eslint-disable-next-line
   }, [
     turn, winner, aiModalState, disableInput, positions, defensesUsed.ai,
     BOARD_SIZE, numDefenses, t, setDisableInput, setDefenseTiles, setDefensesUsed,

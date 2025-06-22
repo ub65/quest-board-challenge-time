@@ -160,9 +160,7 @@ const GameSettingsModal = ({
             />
             <GameSettingsSliderGroup sliders={sliders} />
           </div>
-        </ScrollArea>
- <DialogFooter className="pt-3 pb-4 px-6 flex flex-col gap-2 bg-gradient-to-b from-transparent to-white/95 w-full z-10">
-          <div className="flex gap-2 w-full">
+           <div className="flex gap-2 w-full">
             <Button className="flex-1 font-semibold" onClick={handleSave} variant="default">
               <Save className="w-4 h-4 mr-2" />
               {t('settings.save') || "Save"}
@@ -171,6 +169,9 @@ const GameSettingsModal = ({
               {t('settings.cancel') || "Cancel"}
             </Button>
           </div>
+        </ScrollArea>
+ <DialogFooter className="pt-3 pb-4 px-6 flex flex-col gap-2 bg-gradient-to-b from-transparent to-white/95 w-full z-10">
+         
         </DialogFooter>
     </Dialog>
   );

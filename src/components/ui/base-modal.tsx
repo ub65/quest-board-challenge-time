@@ -1,7 +1,7 @@
-
 import React, { useEffect, useState } from "react";
 import { useLocalization } from "@/contexts/LocalizationContext";
 import { Slider } from "@/components/ui/slider";
+import { soundManager } from "@/lib/soundManager";
 
 type BaseModalProps = {
   isOpen: boolean;
@@ -49,9 +49,16 @@ export const useQuestionModal = (question: any, timeLimit: number, isOpen: boole
     if (!isOpen || answered) return;
     if (time <= 0) {
       setAnswered(true);
+      soundManager.play('wrong');
       setTimeout(() => onSubmit(false), 800);
       return;
     }
+    
+    // Play tick sound when time is running low
+    if (time <= 5 && time > 0) {
+      soundManager.play('tick');
+    }
+    
     const tmo = setTimeout(() => setTime(s => s - 1), 1000);
     return () => clearTimeout(tmo);
   }, [time, isOpen, answered, onSubmit]);
@@ -62,6 +69,10 @@ export const useQuestionModal = (question: any, timeLimit: number, isOpen: boole
     const originalIdx = shuffled[pickedIdx].idx;
     const correct = originalIdx === question.correct;
     setAnswered(true);
+    
+    // Play correct/wrong sound
+    soundManager.play(correct ? 'correct' : 'wrong');
+    
     setTimeout(() => onSubmit(correct), 800);
   };
 

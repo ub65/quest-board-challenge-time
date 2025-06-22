@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { SlidersHorizontal, Save } from "lucide-react";
@@ -7,6 +6,7 @@ import { useLocalization } from "@/contexts/LocalizationContext";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import GameSettingsDifficultySelector from "./GameSettingsDifficultySelector";
 import GameSettingsSliderGroup from "./GameSettingsSliderGroup";
+import { SoundControls } from "@/components/ui/sound-controls";
 import { Button } from "@/components/ui/button";
 
 type QuestionType = "translate" | "math";
@@ -25,6 +25,10 @@ type GameSettingsModalProps = {
   onDifficultyChange: (d: "easy" | "medium" | "hard") => void;
   questionType: QuestionType;
   onQuestionTypeChange: (q: QuestionType) => void;
+  soundEnabled?: boolean;
+  onSoundEnabledChange?: (enabled: boolean) => void;
+  volume?: number;
+  onVolumeChange?: (volume: number) => void;
 };
 
 const GameSettingsModal = ({
@@ -40,6 +44,10 @@ const GameSettingsModal = ({
   onNumDefensesChange,
   difficulty,
   onDifficultyChange,
+  soundEnabled = true,
+  onSoundEnabledChange = () => {},
+  volume = 0.5,
+  onVolumeChange = () => {},
 }: GameSettingsModalProps) => {
   const { t } = useLocalization();
 
@@ -48,6 +56,8 @@ const GameSettingsModal = ({
   const [pendingSurpriseCount, setPendingSurpriseCount] = useState(surpriseCount);
   const [pendingNumDefenses, setPendingNumDefenses] = useState(numDefenses);
   const [pendingDifficulty, setPendingDifficulty] = useState<"easy" | "medium" | "hard">(difficulty);
+  const [pendingSoundEnabled, setPendingSoundEnabled] = useState(soundEnabled);
+  const [pendingVolume, setPendingVolume] = useState(volume);
 
   useEffect(() => {
     if (open) {
@@ -56,8 +66,10 @@ const GameSettingsModal = ({
       setPendingSurpriseCount(surpriseCount);
       setPendingNumDefenses(numDefenses);
       setPendingDifficulty(difficulty);
+      setPendingSoundEnabled(soundEnabled);
+      setPendingVolume(volume);
     }
-  }, [open, boardSize, questionTime, surpriseCount, numDefenses, difficulty]);
+  }, [open, boardSize, questionTime, surpriseCount, numDefenses, difficulty, soundEnabled, volume]);
 
   const sliders = [
     {
@@ -114,6 +126,8 @@ const GameSettingsModal = ({
     onSurpriseCountChange(pendingSurpriseCount);
     onNumDefensesChange(pendingNumDefenses);
     onDifficultyChange(pendingDifficulty);
+    onSoundEnabledChange(pendingSoundEnabled);
+    onVolumeChange(pendingVolume);
     onOpenChange(false);
   };
 
@@ -134,6 +148,12 @@ const GameSettingsModal = ({
           </DialogHeader>
           <div className="py-2 flex flex-col gap-7 w-full">
             <LanguageSelector />
+            <SoundControls
+              soundEnabled={pendingSoundEnabled}
+              onSoundEnabledChange={setPendingSoundEnabled}
+              volume={pendingVolume}
+              onVolumeChange={setPendingVolume}
+            />
             <GameSettingsDifficultySelector 
               difficulty={pendingDifficulty} 
               onDifficultyChange={(d) => { setPendingDifficulty(d); }} 

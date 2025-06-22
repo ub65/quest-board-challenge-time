@@ -1,5 +1,6 @@
 import { useCallback } from "react";
 import { getValidMoves } from "./utils";
+import { soundManager } from "@/lib/soundManager";
 
 export function useHumanMoveHandler({
   winner, disableInput, turn, positions, BOARD_SIZE, defenseTiles, difficulty,
@@ -56,6 +57,9 @@ export function useHumanMoveHandler({
           setTurn("ai");
           return;
         }
+
+        // Play move sound for successful answer
+        soundManager.play('move');
 
         setPositions((p) => {
           setBoardPoints((prev) => {

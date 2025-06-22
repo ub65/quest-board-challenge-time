@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { DEFAULT_DEFENSES } from "@/components/GameBoard/types";
 
@@ -9,19 +8,17 @@ export default function useIndexGameFlow() {
   const [difficulty, setDifficulty] = useState<"easy" | "medium" | "hard">("easy");
   const [gameKey, setGameKey] = useState(0);
 
-  // Only "welcome" and "game" remain
   const [step, setStep] = useState<Step>("welcome");
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [playerName, setPlayerName] = useState("");
   const [soundEnabled, setSoundEnabled] = useState(true);
-  const [volume, setVolume] = useState<number>(0.5); // Add volume control
+  const [volume, setVolume] = useState<number>(0.5);
   const [questionTime, setQuestionTime] = useState(20);
   const [boardSize, setBoardSize] = useState(8);
   const [numSurprises, setNumSurprises] = useState(4);
   const [numDefenses, setNumDefenses] = useState(DEFAULT_DEFENSES);
   const [questionType, setQuestionType] = useState<"translate" | "math">("translate");
 
-  // Only single-player "ai" mode
   const mode: Mode = "ai";
 
   const handleRestart = () => {
@@ -30,7 +27,6 @@ export default function useIndexGameFlow() {
     setPlayerName("");
   };
 
-  // No online/other mode select - always AI
   const handleStart = () => {
     setStep("game");
   };
@@ -42,7 +38,7 @@ export default function useIndexGameFlow() {
     settingsOpen, setSettingsOpen,
     playerName, setPlayerName,
     soundEnabled, setSoundEnabled,
-    volume, setVolume, // Add volume controls
+    volume, setVolume,
     questionTime, setQuestionTime,
     boardSize, setBoardSize,
     numSurprises, setNumSurprises,

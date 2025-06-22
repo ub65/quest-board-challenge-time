@@ -1,6 +1,7 @@
 import { Gift } from "lucide-react";
 import { useCallback } from "react";
 import type { Tile, PlayerType, SurpriseTile } from "./types";
+import { soundManager } from "@/lib/soundManager";
 
 type UseSurpriseProps = {
   boardPoints: number[][];
@@ -35,6 +36,9 @@ export function useSurprise({
       let message = "";
       let pointsChange = 0;
       let doFreeMove = false;
+
+      // Play surprise sound
+      soundManager.play('surprise');
 
       const tilePoints = boardPoints[tile.y]?.[tile.x] || 0;
       switch (s.type) {

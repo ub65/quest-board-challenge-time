@@ -1,5 +1,12 @@
 import React, { useState, useEffect } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { SlidersHorizontal, Save } from "lucide-react";
 import LanguageSelector from "./LanguageSelector";
 import { useLocalization } from "@/contexts/LocalizationContext";
@@ -10,6 +17,7 @@ import { SoundControls } from "@/components/ui/sound-controls";
 import { Button } from "@/components/ui/button";
 
 type QuestionType = "translate" | "math";
+
 type GameSettingsModalProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -44,6 +52,8 @@ const GameSettingsModal = ({
   onNumDefensesChange,
   difficulty,
   onDifficultyChange,
+  questionType,
+  onQuestionTypeChange,
   soundEnabled = true,
   onSoundEnabledChange = () => {},
   volume = 0.5,
@@ -55,7 +65,7 @@ const GameSettingsModal = ({
   const [pendingQuestionTime, setPendingQuestionTime] = useState(questionTime);
   const [pendingSurpriseCount, setPendingSurpriseCount] = useState(surpriseCount);
   const [pendingNumDefenses, setPendingNumDefenses] = useState(numDefenses);
-  const [pendingDifficulty, setPendingDifficulty] = useState<"easy" | "medium" | "hard">(difficulty);
+  const [pendingDifficulty, setPendingDifficulty] = useState(difficulty);
   const [pendingSoundEnabled, setPendingSoundEnabled] = useState(soundEnabled);
   const [pendingVolume, setPendingVolume] = useState(volume);
 
@@ -69,7 +79,7 @@ const GameSettingsModal = ({
       setPendingSoundEnabled(soundEnabled);
       setPendingVolume(volume);
     }
-  }, [open, boardSize, questionTime, surpriseCount, numDefenses, difficulty, soundEnabled, volume]);
+  }, [open]);
 
   const sliders = [
     {
@@ -79,10 +89,10 @@ const GameSettingsModal = ({
       max: 12,
       step: 1,
       value: pendingBoardSize,
-      onValueChange: (v: number) => { setPendingBoardSize(v); },
+      onValueChange: setPendingBoardSize,
       displayValue: `${pendingBoardSize}x${pendingBoardSize}`,
       minLabelKey: "settings.boardMin",
-      maxLabelKey: "settings.boardMax"
+      maxLabelKey: "settings.boardMax",
     },
     {
       id: "question-time-slider",
@@ -91,10 +101,10 @@ const GameSettingsModal = ({
       max: 40,
       step: 1,
       value: pendingQuestionTime,
-      onValueChange: (v: number) => { setPendingQuestionTime(v); },
+      onValueChange: setPendingQuestionTime,
       suffix: "s",
       minLabelKey: "settings.timeMin",
-      maxLabelKey: "settings.timeMax"
+      maxLabelKey: "settings.timeMax",
     },
     {
       id: "surprise-count-slider",
@@ -103,9 +113,9 @@ const GameSettingsModal = ({
       max: 8,
       step: 1,
       value: pendingSurpriseCount,
-      onValueChange: (v: number) => { setPendingSurpriseCount(v); },
+      onValueChange: setPendingSurpriseCount,
       minLabelKey: "settings.surpriseMin",
-      maxLabelKey: "settings.surpriseMax"
+      maxLabelKey: "settings.surpriseMax",
     },
     {
       id: "defense-count-slider",
@@ -114,10 +124,10 @@ const GameSettingsModal = ({
       max: 4,
       step: 1,
       value: pendingNumDefenses,
-      onValueChange: (v: number) => { setPendingNumDefenses(v); },
+      onValueChange: setPendingNumDefenses,
       minLabelKey: "settings.defenseMin",
-      maxLabelKey: "settings.defenseMax"
-    }
+      maxLabelKey: "settings.defenseMax",
+    },
   ];
 
   const handleSave = () => {
@@ -139,10 +149,10 @@ const GameSettingsModal = ({
             <div className="flex flex-col items-center gap-1 mb-2">
               <SlidersHorizontal size={32} className="text-primary" />
               <DialogTitle className="text-2xl font-bold tracking-tight">
-                {t('settings.title')}
+                {t("settings.title")}
               </DialogTitle>
-              <DialogDescription className="mb-0 text-center">
-                {t('settings.desc')}
+              <DialogDescription className="text-center">
+                {t("settings.desc")}
               </DialogDescription>
             </div>
           </DialogHeader>
@@ -154,24 +164,25 @@ const GameSettingsModal = ({
               volume={pendingVolume}
               onVolumeChange={setPendingVolume}
             />
-            <GameSettingsDifficultySelector 
-              difficulty={pendingDifficulty} 
-              onDifficultyChange={(d) => { setPendingDifficulty(d); }} 
+            <GameSettingsDifficultySelector
+              difficulty={pendingDifficulty}
+              onDifficultyChange={setPendingDifficulty}
             />
             <GameSettingsSliderGroup sliders={sliders} />
           </div>
         </ScrollArea>
- <DialogFooter className="pt-3 pb-4 px-6 flex flex-col gap-2 bg-gradient-to-b from-transparent to-white/95 w-full z-10">
+        <DialogFooter className="pt-3 pb-4 px-6 flex flex-col gap-2 bg-gradient-to-b from-transparent to-white/95 w-full z-10">
           <div className="flex gap-2 w-full">
             <Button className="flex-1 font-semibold" onClick={handleSave} variant="default">
               <Save className="w-4 h-4 mr-2" />
-              {t('settings.save') ?? "Save"}
+              {t("settings.save")}
             </Button>
-            <Button className="flex-1" variant="secondary" onClick={() => onOpenChange(false)} type="button">
-              {t('settings.cancel')?? "Cancel"}
+            <Button className="flex-1" variant="secondary" onClick={() => onOpenChange(false)}>
+              {t("settings.cancel")}
             </Button>
           </div>
         </DialogFooter>
+      </DialogContent>
     </Dialog>
   );
 };

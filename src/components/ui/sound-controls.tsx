@@ -53,7 +53,7 @@ export const SoundControls: React.FC<SoundControlsProps> = ({
         </div>
       </div>
 
-      {/* Volume Control */}
+
       {soundEnabled && (
         <div className="flex flex-col gap-2">
           <Label htmlFor="volume-slider" className="text-base font-semibold flex justify-between">

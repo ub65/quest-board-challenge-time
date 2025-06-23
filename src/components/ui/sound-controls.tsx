@@ -44,14 +44,7 @@ export const SoundControls: React.FC<SoundControlsProps> = ({
           {soundEnabled ? <Volume2 size={20} /> : <VolumeX size={20} />}
           {t('settings.sound')}
         </Label>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={testSound}
-            className="text-xs px-2 py-1 bg-blue-100 hover:bg-blue-200 rounded text-blue-700 transition-colors"
-            type="button"
-          >
-            Test
-          </button>
+       
           <Switch
             id="sound-enabled"
             checked={soundEnabled}

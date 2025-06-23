@@ -4,6 +4,7 @@ import { Switch } from '@/components/ui/switch';
 import { Slider } from '@/components/ui/slider';
 import { Label } from '@/components/ui/label';
 import { useLocalization } from '@/contexts/LocalizationContext';
+import { soundManager } from '@/lib/soundManager';
 
 type SoundControlsProps = {
   soundEnabled: boolean;
@@ -20,6 +21,21 @@ export const SoundControls: React.FC<SoundControlsProps> = ({
 }) => {
   const { t } = useLocalization();
 
+  const handleSoundToggle = (enabled: boolean) => {
+    console.log('Sound toggle clicked:', enabled);
+    onSoundEnabledChange(enabled);
+  };
+
+  const handleVolumeChange = (newVolume: number) => {
+    console.log('Volume changed:', newVolume);
+    onVolumeChange(newVolume);
+  };
+
+  const testSound = () => {
+    console.log('Testing sound...');
+    soundManager.test();
+  };
+
   return (
     <div className="flex flex-col gap-4">
       {/* Sound Enable/Disable */}
@@ -28,11 +44,20 @@ export const SoundControls: React.FC<SoundControlsProps> = ({
           {soundEnabled ? <Volume2 size={20} /> : <VolumeX size={20} />}
           {t('settings.sound')}
         </Label>
-        <Switch
-          id="sound-enabled"
-          checked={soundEnabled}
-          onCheckedChange={onSoundEnabledChange}
-        />
+        <div className="flex items-center gap-2">
+          <button
+            onClick={testSound}
+            className="text-xs px-2 py-1 bg-blue-100 hover:bg-blue-200 rounded text-blue-700 transition-colors"
+            type="button"
+          >
+            Test
+          </button>
+          <Switch
+            id="sound-enabled"
+            checked={soundEnabled}
+            onCheckedChange={handleSoundToggle}
+          />
+        </div>
       </div>
 
       {/* Volume Control */}
@@ -48,7 +73,7 @@ export const SoundControls: React.FC<SoundControlsProps> = ({
             max={1}
             step={0.1}
             value={[volume]}
-            onValueChange={([val]) => onVolumeChange(val)}
+            onValueChange={([val]) => handleVolumeChange(val)}
             className="w-full"
           />
           <div className="flex justify-between text-xs text-gray-400 mt-1">

@@ -1,17 +1,21 @@
-import React from "react";
+import React, { useEffect } from "react";
 import GameBoard from "@/components/GameBoard";
 import { useLocalization } from "@/contexts/LocalizationContext";
 import WelcomeScreen from "@/components/WelcomeScreen";
 import GameSettingsModal from "@/components/GameSettingsModal";
-import { useSoundManager } from "@/hooks/useSoundManager";
+import { soundManager } from "@/lib/soundManager";
 import useIndexGameFlow from "./useIndexGameFlow";
 
 const Index = () => {
   const { t, language } = useLocalization();
   const flow = useIndexGameFlow();
 
-  // Initialize sound manager
-  useSoundManager(flow.soundEnabled, flow.volume);
+  // Initialize and update sound manager when settings change
+  useEffect(() => {
+    soundManager.setEnabled(flow.soundEnabled);
+    soundManager.setVolume(flow.volume);
+    console.log('Sound settings updated:', { enabled: flow.soundEnabled, volume: flow.volume });
+  }, [flow.soundEnabled, flow.volume]);
 
   const dummyQuestionType = "translate";
   const dummySetQuestionType = () => {};

@@ -9,18 +9,22 @@ export function useSoundManager(enabled: boolean, volume: number) {
       soundManager.setEnabled(enabled);
       soundManager.setVolume(volume);
       initializedRef.current = true;
+      console.log('Sound manager initialized:', { enabled, volume });
     }
   }, []);
 
   useEffect(() => {
     soundManager.setEnabled(enabled);
+    console.log('Sound enabled changed to:', enabled);
   }, [enabled]);
 
   useEffect(() => {
     soundManager.setVolume(volume);
+    console.log('Sound volume changed to:', volume);
   }, [volume]);
 
   return {
     playSound: (soundName: string) => soundManager.play(soundName),
+    testSound: () => soundManager.test(),
   };
 }

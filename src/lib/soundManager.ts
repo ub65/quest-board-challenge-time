@@ -12,6 +12,7 @@ export class SoundManager {
     if (this.initialized) return;
     
     try {
+      console.log('Initializing sound manager...');
       // Create audio elements for different sound effects using simpler approach
       const soundFiles = {
         move: this.createSimpleBeep(440, 0.1),
@@ -32,6 +33,7 @@ export class SoundManager {
       this.updateAllVolumes();
       
       this.initialized = true;
+      console.log('Sound manager initialized successfully');
     } catch (error) {
       console.warn('Failed to initialize sounds:', error);
     }
@@ -108,18 +110,28 @@ export class SoundManager {
 
   setEnabled(enabled: boolean) {
     this.enabled = enabled;
-    console.log('Sound enabled:', enabled);
+    console.log('Sound manager: enabled set to', enabled);
   }
 
   setVolume(volume: number) {
     this.volume = Math.max(0, Math.min(1, volume));
-    console.log('Sound volume set to:', this.volume);
+    console.log('Sound manager: volume set to', this.volume);
     
     // Update volume for all existing sounds
     this.updateAllVolumes();
   }
 
+  getEnabled(): boolean {
+    return this.enabled;
+  }
+
+  getVolume(): number {
+    return this.volume;
+  }
+
   async play(soundName: string) {
+    console.log(`Sound manager: attempting to play '${soundName}', enabled: ${this.enabled}, volume: ${this.volume}`);
+    
     if (!this.enabled) {
       console.log('Sound disabled, not playing:', soundName);
       return;
@@ -139,6 +151,8 @@ export class SoundManager {
       const audio = this.sounds[soundName];
       audio.volume = this.volume;
       audio.currentTime = 0;
+      
+      console.log(`Playing sound '${soundName}' at volume ${this.volume}`);
       
       // Play the sound
       const playPromise = audio.play();
@@ -164,4 +178,3 @@ export class SoundManager {
 
 // Create a singleton instance
 export const soundManager = new SoundManager();
-//ghhfghfghfghfgh

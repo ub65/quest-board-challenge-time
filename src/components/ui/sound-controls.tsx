@@ -38,7 +38,7 @@ export const SoundControls: React.FC<SoundControlsProps> = ({
 
   return (
     <div className="flex flex-col gap-4">
-      {/* Sound Enable/Disable */}
+
       <div className="flex items-center justify-between">
         <Label htmlFor="sound-enabled" className="text-base font-semibold flex items-center gap-2">
           {soundEnabled ? <Volume2 size={20} /> : <VolumeX size={20} />}

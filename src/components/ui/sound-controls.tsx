@@ -51,7 +51,7 @@ export const SoundControls: React.FC<SoundControlsProps> = ({
             onCheckedChange={handleSoundToggle}
           />
         </div>
-      </div>
+      
 
 
       {soundEnabled && (

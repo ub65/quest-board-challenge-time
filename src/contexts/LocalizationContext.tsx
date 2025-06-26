@@ -93,8 +93,11 @@ const translations = {
     "game.defenses_left": "Your defenses left",
     "game.ai_defenses_left": "AI defenses left",
     "game.defense_place_btn": "Place Defense",
+    "game.defense_cancel_btn": "Cancel Defense",
     "game.defense_mode_on": "Defense Mode",
     "game.defense_mode_on_desc": "Select a tile (not start/end, not occupied, not surprise) to block the AI.",
+    "game.defense_mode_off": "Defense mode canceled",
+    "game.defense_mode_off_desc": "Defense placement has been canceled",
     "game.defense_mode_select": "Select a tile to place your defense...",
     "game.defense_placed": "Defense Placed",
     "game.defense_success": "AI cannot move to this tile!",
@@ -113,7 +116,7 @@ const translations = {
     'welcome.playerName': 'Your Name',
     'welcome.playerNamePlaceholder': 'Enter your name',
     'welcome.settings': 'Settings',
-    'welcome.questionType': 'Question Type', // Added line
+    'welcome.questionType': 'Question Type',
     'welcome.back': 'Back',
     
     // New: support fallbacks for {n} interpolation
@@ -210,8 +213,11 @@ const translations = {
     "game.defenses_left": "מספר מחסומים שנותרו לך",
     "game.ai_defenses_left": "מחסומי הבינה שנותרו",
     "game.defense_place_btn": "הצב מחסום",
+    "game.defense_cancel_btn": "בטל מחסום",
     "game.defense_mode_on": "מצב מחסום",
     "game.defense_mode_on_desc": "בחר משבצת (לא פינה, לא תפוסה, לא הפתעה) כדי לחסום את הבינה.",
+    "game.defense_mode_off": "מצב מחסום בוטל",
+    "game.defense_mode_off_desc": "הצבת המחסום בוטלה",
     "game.defense_mode_select": "בחר משבצת להצבת המחסום...",
     "game.defense_placed": "המחסום הוצב",
     "game.defense_success": "הבינה לא יכולה לעבור למשבצת זו!",
@@ -230,7 +236,7 @@ const translations = {
     'welcome.playerName': 'השם שלך',
     'welcome.playerNamePlaceholder': 'הכנס את שמך',
     'welcome.settings': 'הגדרות',
-    'welcome.questionType': 'סוג שאלה', // Added line
+    'welcome.questionType': 'סוג שאלה',
     'welcome.back': 'חזרה',
     
     // New: support fallbacks for {n} interpolation

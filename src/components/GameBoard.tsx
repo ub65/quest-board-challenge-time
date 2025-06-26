@@ -217,44 +217,151 @@ const GameBoard = ({
     }, 100);
   };
 
-  function handleDefenseClick(tile: { x: number; y: number }) {
-    const problem = canPlaceDefenseHere({
-      tile,
-      BOARD_SIZE,
-      numDefenses,
-      positions,
-      defenseTiles,
-      surpriseTiles,
-      defensesUsed,
-      t,
-    });
-    if (problem) {
+  // 1. Enhanced useDefenseModeHandler hook
+const useDefenseModeHandler = ({
+  t,
+  toast,
+  setDefenseMode,
+  handleDefenseClick,
+  defenseMode, // Add this prop
+}) => {
+  const toggleDefensePlacement = useCallback(() => {
+    if (defenseMode) {
+      // If already in defense mode, cancel it
+      setDefenseMode(false);
       toast({
-        title: t("game.defense_fail") || "Invalid defense placement",
-        description: (
-          <span className="flex items-center gap-2">
-            <span className="font-semibold">⛔ Defense! </span>
-            {problem}
-          </span>
-        ),
-        duration: 2500,
+        title: t("game.defense_cancelled") || "Defense Cancelled",
+        description: t("game.defense_cancelled_desc") || "Defense placement mode disabled",
+        duration: 1500,
       });
-      return;
+    } else {
+      // Enter defense mode
+      setDefenseMode(true);
+      toast({
+        title: t("game.defense_mode") || "Defense Mode",
+        description: t("game.defense_mode_desc") || "Click on a tile to place your defense",
+        duration: 2000,
+      });
     }
-    setDefenseTiles((prev) => [...prev, { ...tile, owner: "human" }]);
-    setDefensesUsed((d) => ({ ...d, human: d.human + 1 }));
-    setDefenseMode(false);
+  }, [defenseMode, setDefenseMode, t, toast]);
+
+  return { toggleDefensePlacement };
+};
+
+// 2. Enhanced handleTileClick function to properly handle defense cancellation
+const handleTileClick = useCallback((x, y) => {
+  // If in defense mode, handle defense placement
+  if (defenseMode) {
+    handleDefenseClick({ x, y });
+    return; // Important: return early to prevent normal move logic
+  }
+
+  // ... rest of your normal tile click logic
+}, [defenseMode, handleDefenseClick, /* other dependencies */]);
+
+// 3. Add escape key handler for canceling defense mode
+useEffect(() => {
+  const handleKeyDown = (event) => {
+    if (event.key === 'Escape' && defenseMode) {
+      setDefenseMode(false);
+      toast({
+        title: t("game.defense_cancelled") || "Defense Cancelled",
+        description: t("game.defense_cancelled_desc") || "Defense placement mode disabled",
+        duration: 1500,
+      });
+    }
+  };
+
+  document.addEventListener('keydown', handleKeyDown);
+  return () => {
+    document.removeEventListener('keydown', handleKeyDown);
+  };
+}, [defenseMode, setDefenseMode, t, toast]);
+
+// 4. Enhanced handleDefenseClick function
+function handleDefenseClick(tile) {
+  const problem = canPlaceDefenseHere({
+    tile,
+    BOARD_SIZE,
+    numDefenses,
+    positions,
+    defenseTiles,
+    surpriseTiles,
+    defensesUsed,
+    t,
+  });
+  
+  if (problem) {
     toast({
-      title: t("game.defense_placed") || "Defense Placed",
+      title: t("game.defense_fail") || "Invalid defense placement",
       description: (
         <span className="flex items-center gap-2">
-          <span className="font-semibold">🛡️ Defense! </span>
-          {t("game.defense_success") || "AI cannot move to this tile!"}
+          <span className="font-semibold">⛔ Defense! </span>
+          {problem}
         </span>
       ),
-      duration: 2000,
+      duration: 2500,
     });
+    // Don't exit defense mode on failed placement
+    return;
   }
+  
+  // Successfully placed defense
+  setDefenseTiles((prev) => [...prev, { ...tile, owner: "human" }]);
+  setDefensesUsed((d) => ({ ...d, human: d.human + 1 }));
+  setDefenseMode(false); // Exit defense mode after successful placement
+  
+  toast({
+    title: t("game.defense_placed") || "Defense Placed",
+    description: (
+      <span className="flex items-center gap-2">
+        <span className="font-semibold">🛡️ Defense! </span>
+        {t("game.defense_success") || "AI cannot move to this tile!"}
+      </span>
+    ),
+    duration: 2000,
+  });
+}
+
+// 5. Make sure to pass defenseMode to useDefenseModeHandler
+const { toggleDefensePlacement } = useDefenseModeHandler({
+  t,
+  toast,
+  setDefenseMode,
+  handleDefenseClick,
+  defenseMode, // Add this line
+});
+
+// 6. Cancel defense mode when turn changes
+useEffect(() => {
+  if (defenseMode && turn !== 'human') {
+    setDefenseMode(false);
+  }
+}, [turn, defenseMode, setDefenseMode]);
+
+// 7. Cancel defense mode when game ends
+useEffect(() => {
+  if (winner && defenseMode) {
+    setDefenseMode(false);
+  }
+}, [winner, defenseMode, setDefenseMode]);
+
+// 8. Enhanced UI feedback - add visual indicator for defense mode
+const DefenseModeIndicator = ({ defenseMode, onCancel }) => {
+  if (!defenseMode) return null;
+  
+  return (
+    <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-40 bg-blue-600 text-white px-4 py-2 rounded-lg shadow-lg flex items-center gap-2">
+      <span>🛡️ Defense Mode Active - Click a tile to place defense</span>
+      <button 
+        onClick={onCancel}
+        className="ml-2 bg-white/20 hover:bg-white/30 rounded px-2 py-1 text-sm"
+      >
+        Cancel (ESC)
+      </button>
+    </div>
+  );
+};
 
   const handleRestart = useGameRestart({
     boardSize,

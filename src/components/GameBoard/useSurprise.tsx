@@ -1,7 +1,7 @@
 import { Gift } from "lucide-react";
 import { useCallback } from "react";
 import type { Tile, PlayerType, SurpriseTile } from "./types";
-import { soundManager } from "@/lib/soundManager";
+import { toast } from "@/components/ui/use-toast"; // Only import `toast`, not `ToastFn`
 
 type UseSurpriseProps = {
   boardPoints: number[][];
@@ -12,7 +12,7 @@ type UseSurpriseProps = {
   humanPoints: number;
   aiPoints: number;
   t: (s: string, params?: any) => string;
-  toast: (args: any) => void;
+  toast: typeof toast; // Use the type of the imported `toast` function
 };
 
 export function useSurprise({
@@ -36,9 +36,6 @@ export function useSurprise({
       let message = "";
       let pointsChange = 0;
       let doFreeMove = false;
-
-      // Play surprise sound
-      soundManager.play('surprise');
 
       const tilePoints = boardPoints[tile.y]?.[tile.x] || 0;
       switch (s.type) {

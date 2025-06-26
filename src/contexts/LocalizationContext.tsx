@@ -43,9 +43,6 @@ const translations = {
     // Settings
     'settings.title': 'Game Settings',
     'settings.sound': 'Sound Effects',
-    'settings.volume': 'Volume',
-    'settings.volumeMin': '0%',
-    'settings.volumeMax': '100%',
     'settings.boardSize': 'Board Size',
     'settings.questionTime': 'Question Time (seconds)',
     'settings.language': 'Language',
@@ -116,7 +113,7 @@ const translations = {
     'welcome.playerName': 'Your Name',
     'welcome.playerNamePlaceholder': 'Enter your name',
     'welcome.settings': 'Settings',
-    'welcome.questionType': 'Question Type',
+    'welcome.questionType': 'Question Type', // Added line
     'welcome.back': 'Back',
     
     // New: support fallbacks for {n} interpolation
@@ -126,7 +123,7 @@ const translations = {
     "instructions.button": "Instructions",
     "instructions.title": "How to Play Tile Titans",
     "instructions.content":
-      "Welcome to Tile Titans!\n\nGoal: Be the first to reach your opponent's starting tile (the opposite corner) before the AI does!\n\nHow To Play:\n• You and the AI take turns. Your goal is to reach the opponent's start tile.\n• Each move, answer a question correctly to advance.\n• You can only move up, down, left, or right – no diagonal moves!\n• Question types: translation or math, as you choose on the opening screen.\n• There are surprise tiles – land on them for random effects!\n• Use defense blocks to block the AI (if enabled in settings).\n• The first to reach the opponent's starting tile (top-left for AI, bottom-right for you) wins.\n\nGood luck, Titan!",
+      "Welcome to Tile Titans!\n\nGoal: Be the first to reach your opponent's starting tile (the opposite corner) before the AI does!\n\nHow To Play:\n• You and the AI take turns. Your goal is to reach the opponent’s start tile.\n• Each move, answer a question correctly to advance.\n• You can only move up, down, left, or right – no diagonal moves!\n• Question types: translation or math, as you choose on the opening screen.\n• There are surprise tiles – land on them for random effects!\n• Use defense blocks to block the AI (if enabled in settings).\n• The first to reach the opponent's starting tile (top-left for AI, bottom-right for you) wins.\n\nGood luck, Titan!",
     // --- Add these new keys:
     'game.startingPlayer.human': 'You start the game! 🚶 Click Start Game.',
     'game.startingPlayer.ai': 'AI starts the game! 🤖 Click Start Game.',
@@ -163,9 +160,6 @@ const translations = {
     // Settings
     'settings.title': 'הגדרות המשחק',
     'settings.sound': 'אפקטי קול',
-    'settings.volume': 'עוצמת קול',
-    'settings.volumeMin': '0%',
-    'settings.volumeMax': '100%',
     'settings.boardSize': 'גודל הלוח',
     'settings.questionTime': 'זמן לשאלה (שניות)',
     'settings.language': 'שפה',
@@ -236,7 +230,7 @@ const translations = {
     'welcome.playerName': 'השם שלך',
     'welcome.playerNamePlaceholder': 'הכנס את שמך',
     'welcome.settings': 'הגדרות',
-    'welcome.questionType': 'סוג שאלה',
+    'welcome.questionType': 'סוג שאלה', // Added line
     'welcome.back': 'חזרה',
     
     // New: support fallbacks for {n} interpolation
@@ -256,6 +250,7 @@ const translations = {
 export const LocalizationProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [language, setLanguage] = useState<Language>("he");
 
+  // New: support fallbacks for {n} interpolation
   const t = (key: string, vars?: Record<string, string | number>) => {
     let txt = translations[language][key as keyof typeof translations[typeof language]] || key;
     if (vars) {

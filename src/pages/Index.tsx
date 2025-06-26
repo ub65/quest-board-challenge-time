@@ -1,25 +1,21 @@
-import React, { useEffect } from "react";
+
+import React from "react";
 import GameBoard from "@/components/GameBoard";
 import { useLocalization } from "@/contexts/LocalizationContext";
 import WelcomeScreen from "@/components/WelcomeScreen";
 import GameSettingsModal from "@/components/GameSettingsModal";
-import { soundManager } from "@/lib/soundManager";
 import useIndexGameFlow from "./useIndexGameFlow";
 
 const Index = () => {
   const { t, language } = useLocalization();
   const flow = useIndexGameFlow();
 
-  // Initialize and update sound manager when settings change
-  useEffect(() => {
-    soundManager.setEnabled(flow.soundEnabled);
-    soundManager.setVolume(flow.volume);
-    console.log('Sound settings updated:', { enabled: flow.soundEnabled, volume: flow.volume });
-  }, [flow.soundEnabled, flow.volume]);
-
+  // Add dummy props for questionType and onQuestionTypeChange to GameSettingsModal,
+  // which are required but in this flow are only controlled (user-facing) from welcome screen.
   const dummyQuestionType = "translate";
   const dummySetQuestionType = () => {};
 
+  // --- Single-player flow only ---
   return (
     <div
       className={`
@@ -42,10 +38,6 @@ const Index = () => {
         onDifficultyChange={flow.setDifficulty}
         questionType={dummyQuestionType}
         onQuestionTypeChange={dummySetQuestionType}
-        soundEnabled={flow.soundEnabled}
-        onSoundEnabledChange={flow.setSoundEnabled}
-        volume={flow.volume}
-        onVolumeChange={flow.setVolume}
       />
       {flow.step === "welcome" && (
         <WelcomeScreen

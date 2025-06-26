@@ -1,3 +1,4 @@
+
 import React, { useRef, useEffect, useState } from "react";
 import { useLocalization } from "@/contexts/LocalizationContext";
 import { toast } from "@/components/ui/use-toast";
@@ -14,7 +15,6 @@ import GameBoardArea from "./GameBoard/GameBoardArea";
 import { useDefenseModeHandler } from "./GameBoard/useDefenseModeHandler";
 import GameBoardModals from "./GameBoard/GameBoardModals";
 import { generateQuestion } from "./GameBoard/questionGenerator";
-import { soundManager } from "@/lib/soundManager";
 
 const GameBoard = ({
   difficulty: initialDifficulty,
@@ -87,13 +87,13 @@ const GameBoard = ({
     setDefenseMode(false);
     setHumanHasMoved(false);
     setDisableInput(true);
+    // eslint-disable-next-line
   }, [boardSize, numSurprises, numDefenses]);
 
   const handleStartGame = () => {
     setGameStarted(true);
     setDisableInput(false);
     setHumanHasMoved(startingPlayer === "ai");
-    soundManager.play('gameStart');
   };
 
   useEffect(() => {
@@ -104,13 +104,6 @@ const GameBoard = ({
       setDisableInput(true);
       aiMovingRef.current = false;
       setDefenseMode(false);
-      
-      // Play win/lose sound
-      if (winner === "human") {
-        soundManager.play('win');
-      } else {
-        soundManager.play('lose');
-      }
     }
   }, [winner]);
 
@@ -168,7 +161,7 @@ const GameBoard = ({
     toast,
   });
 
-  const { startDefensePlacement } = useDefenseModeHandler({
+  const { toggleDefensePlacement } = useDefenseModeHandler({
     t,
     toast,
     setDefenseMode,
@@ -211,10 +204,6 @@ const GameBoard = ({
       });
       return { ...p, ai: { x, y } };
     });
-    
-    // Play AI move sound
-    soundManager.play('aiMove');
-    
     setTimeout(() => {
       surpriseHandler(aiModalState.targetTile, "ai");
       setAIModalState(null);
@@ -240,7 +229,6 @@ const GameBoard = ({
       t,
     });
     if (problem) {
-      soundManager.play('wrong');
       toast({
         title: t("game.defense_fail") || "Invalid defense placement",
         description: (
@@ -256,10 +244,6 @@ const GameBoard = ({
     setDefenseTiles((prev) => [...prev, { ...tile, owner: "human" }]);
     setDefensesUsed((d) => ({ ...d, human: d.human + 1 }));
     setDefenseMode(false);
-    
-    // Play defense sound
-    soundManager.play('defense');
-    
     toast({
       title: t("game.defense_placed") || "Defense Placed",
       description: (
@@ -328,7 +312,7 @@ const GameBoard = ({
           aiPoints={aiPoints}
           numDefenses={numDefenses}
           defensesUsed={defensesUsed}
-          onPlaceDefense={startDefensePlacement}
+          onPlaceDefense={toggleDefensePlacement}
           defenseMode={defenseMode}
           boardSize={BOARD_SIZE}
           boardPoints={boardPoints}

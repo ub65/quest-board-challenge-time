@@ -1,5 +1,4 @@
-
-import React, { useRef, useEffect, useState } from "react";
+import React, { useRef, useEffect, useState, useCallback } from "react";
 import { useLocalization } from "@/contexts/LocalizationContext";
 import { toast } from "@/components/ui/use-toast";
 import { PlayerType, DEFAULT_BOARD_SIZE, DEFAULT_QUESTION_TIME } from "./GameBoard/types";
@@ -161,151 +160,127 @@ const GameBoard = ({
     toast,
   });
 
-  // 1. Enhanced useDefenseModeHandler hook
-const useDefenseModeHandler = ({
-  t,
-  toast,
-  setDefenseMode,
-  handleDefenseClick,
-  defenseMode, // Add this prop
-}) => {
-  const toggleDefensePlacement = useCallback(() => {
-    if (defenseMode) {
-      // If already in defense mode, cancel it
-      setDefenseMode(false);
+  // Enhanced handleDefenseClick function
+  const handleDefenseClick = useCallback((tile: { x: number; y: number }) => {
+    const problem = canPlaceDefenseHere({
+      tile,
+      BOARD_SIZE,
+      numDefenses,
+      positions,
+      defenseTiles,
+      surpriseTiles,
+      defensesUsed,
+      t,
+    });
+    
+    if (problem) {
       toast({
-        title: t("game.defense_cancelled") || "Defense Cancelled",
-        description: t("game.defense_cancelled_desc") || "Defense placement mode disabled",
-        duration: 1500,
+        title: t("game.defense_fail") || "Invalid defense placement",
+        description: (
+          <span className="flex items-center gap-2">
+            <span className="font-semibold">⛔ Defense! </span>
+            {problem}
+          </span>
+        ),
+        duration: 2500,
       });
-    } else {
-      // Enter defense mode
-      setDefenseMode(true);
-      toast({
-        title: t("game.defense_mode") || "Defense Mode",
-        description: t("game.defense_mode_desc") || "Click on a tile to place your defense",
-        duration: 2000,
-      });
+      // Don't exit defense mode on failed placement
+      return;
     }
-  }, [defenseMode, setDefenseMode, t, toast]);
-
-  return { toggleDefensePlacement };
-};
-
-// 2. Enhanced handleTileClick function to properly handle defense cancellation
-const handleTileClick = useCallback((x, y) => {
-  // If in defense mode, handle defense placement
-  if (defenseMode) {
-    handleDefenseClick({ x, y });
-    return; // Important: return early to prevent normal move logic
-  }
-
-  // ... rest of your normal tile click logic
-}, [defenseMode, handleDefenseClick, /* other dependencies */]);
-
-// 3. Add escape key handler for canceling defense mode
-useEffect(() => {
-  const handleKeyDown = (event) => {
-    if (event.key === 'Escape' && defenseMode) {
-      setDefenseMode(false);
-      toast({
-        title: t("game.defense_cancelled") || "Defense Cancelled",
-        description: t("game.defense_cancelled_desc") || "Defense placement mode disabled",
-        duration: 1500,
-      });
-    }
-  };
-
-  document.addEventListener('keydown', handleKeyDown);
-  return () => {
-    document.removeEventListener('keydown', handleKeyDown);
-  };
-}, [defenseMode, setDefenseMode, t, toast]);
-
-// 4. Enhanced handleDefenseClick function
-function handleDefenseClick(tile) {
-  const problem = canPlaceDefenseHere({
-    tile,
-    BOARD_SIZE,
-    numDefenses,
-    positions,
-    defenseTiles,
-    surpriseTiles,
-    defensesUsed,
-    t,
-  });
-  
-  if (problem) {
+    
+    // Successfully placed defense
+    setDefenseTiles((prev) => [...prev, { ...tile, owner: "human" }]);
+    setDefensesUsed((d) => ({ ...d, human: d.human + 1 }));
+    setDefenseMode(false); // Exit defense mode after successful placement
+    
     toast({
-      title: t("game.defense_fail") || "Invalid defense placement",
+      title: t("game.defense_placed") || "Defense Placed",
       description: (
         <span className="flex items-center gap-2">
-          <span className="font-semibold">⛔ Defense! </span>
-          {problem}
+          <span className="font-semibold">🛡️ Defense! </span>
+          {t("game.defense_success") || "AI cannot move to this tile!"}
         </span>
       ),
-      duration: 2500,
+      duration: 2000,
     });
-    // Don't exit defense mode on failed placement
-    return;
-  }
-  
-  // Successfully placed defense
-  setDefenseTiles((prev) => [...prev, { ...tile, owner: "human" }]);
-  setDefensesUsed((d) => ({ ...d, human: d.human + 1 }));
-  setDefenseMode(false); // Exit defense mode after successful placement
-  
-  toast({
-    title: t("game.defense_placed") || "Defense Placed",
-    description: (
-      <span className="flex items-center gap-2">
-        <span className="font-semibold">🛡️ Defense! </span>
-        {t("game.defense_success") || "AI cannot move to this tile!"}
-      </span>
-    ),
-    duration: 2000,
+  }, [BOARD_SIZE, numDefenses, positions, defenseTiles, surpriseTiles, defensesUsed, t, toast, setDefenseTiles, setDefensesUsed, setDefenseMode]);
+
+  // Enhanced useDefenseModeHandler hook
+  const { toggleDefensePlacement } = useDefenseModeHandler({
+    t,
+    toast,
+    setDefenseMode,
+    handleDefenseClick,
+    defenseMode,
   });
-}
 
-// 5. Make sure to pass defenseMode to useDefenseModeHandler
-const { toggleDefensePlacement } = useDefenseModeHandler({
-  t,
-  toast,
-  setDefenseMode,
-  handleDefenseClick,
-  defenseMode, // Add this line
-});
+  // Enhanced handleTileClick function to properly handle defense cancellation
+  const handleTileClick = useCallback((x: number, y: number) => {
+    // If in defense mode, handle defense placement
+    if (defenseMode) {
+      handleDefenseClick({ x, y });
+      return; // Important: return early to prevent normal move logic
+    }
 
-// 6. Cancel defense mode when turn changes
-useEffect(() => {
-  if (defenseMode && turn !== 'human') {
-    setDefenseMode(false);
-  }
-}, [turn, defenseMode, setDefenseMode]);
+    // ... rest of your normal tile click logic would go here
+  }, [defenseMode, handleDefenseClick]);
 
-// 7. Cancel defense mode when game ends
-useEffect(() => {
-  if (winner && defenseMode) {
-    setDefenseMode(false);
-  }
-}, [winner, defenseMode, setDefenseMode]);
+  // Add escape key handler for canceling defense mode
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && defenseMode) {
+        setDefenseMode(false);
+        toast({
+          title: t("game.defense_cancelled") || "Defense Cancelled",
+          description: t("game.defense_cancelled_desc") || "Defense placement mode disabled",
+          duration: 1500,
+        });
+      }
+    };
 
-// 8. Enhanced UI feedback - add visual indicator for defense mode
-const DefenseModeIndicator = ({ defenseMode, onCancel }) => {
-  if (!defenseMode) return null;
-  
-  return (
-    <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-40 bg-blue-600 text-white px-4 py-2 rounded-lg shadow-lg flex items-center gap-2">
-      <span>🛡️ Defense Mode Active - Click a tile to place defense</span>
-      <button 
-        onClick={onCancel}
-        className="ml-2 bg-white/20 hover:bg-white/30 rounded px-2 py-1 text-sm"
-      >
-        Cancel (ESC)
-      </button>
-    </div>
-  );
-};
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [defenseMode, setDefenseMode, t, toast]);
+
+  // Cancel defense mode when turn changes
+  useEffect(() => {
+    if (defenseMode && turn !== 'human') {
+      setDefenseMode(false);
+    }
+  }, [turn, defenseMode, setDefenseMode]);
+
+  // Cancel defense mode when game ends
+  useEffect(() => {
+    if (winner && defenseMode) {
+      setDefenseMode(false);
+    }
+  }, [winner, defenseMode, setDefenseMode]);
+
+  // Enhanced UI feedback - add visual indicator for defense mode
+  const DefenseModeIndicator = ({ defenseMode, onCancel }: { defenseMode: boolean; onCancel: () => void }) => {
+    if (!defenseMode) return null;
+    
+    return (
+      <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-40 bg-blue-600 text-white px-4 py-2 rounded-lg shadow-lg flex items-center gap-2">
+        <span>🛡️ Defense Mode Active - Click a tile to place defense</span>
+        <button 
+          onClick={onCancel}
+          className="ml-2 bg-white/20 hover:bg-white/30 rounded px-2 py-1 text-sm"
+        >
+          Cancel (ESC)
+        </button>
+      </div>
+    );
+  };
+
+  const handleAIModalSubmit = useCallback((isCorrect: boolean) => {
+    if (aiModalState) {
+      // Handle AI modal submission logic here
+      setAIModalState(null);
+    }
+  }, [aiModalState, setAIModalState]);
 
   const handleRestart = useGameRestart({
     boardSize,
@@ -353,65 +328,71 @@ const DefenseModeIndicator = ({ defenseMode, onCancel }) => {
       )}
 
       {gameStarted && (
-        <GameBoardArea
-          language={language}
-          t={t}
-          turn={turn}
-          winner={winner}
-          difficulty={difficulty}
-          humanPoints={humanPoints}
-          aiPoints={aiPoints}
-          numDefenses={numDefenses}
-          defensesUsed={defensesUsed}
-          onPlaceDefense={toggleDefensePlacement}
-          defenseMode={defenseMode}
-          boardSize={BOARD_SIZE}
-          boardPoints={boardPoints}
-          positions={positions}
-          humanTarget={humanTarget}
-          aiTarget={aiTarget}
-          disableInput={disableInput}
-          handleTileClick={handleTileClick}
-          getValidMoves={(pos) =>
-            getValidMoves(
-              pos,
-              BOARD_SIZE,
-              defenseTiles,
-              pos === positions.human ? positions.ai : positions.human
-            )
-          }
-          positionsEqual={positionsEqual}
-          surpriseTiles={surpriseTiles}
-          defenseTiles={defenseTiles}
-          aiPendingTarget={aiModalState ? aiModalState.targetTile : null}
-          moveState={moveState}
-          isModalOpen={isModalOpen}
-          aiModalState={aiModalState}
-          questionTime={questionTime}
-          onHumanSubmit={moveState?.resolve}
-          onAISubmit={handleAIModalSubmit}
-          onRestart={handleRestart}
-          settingsOpen={settingsOpen}
-          setSettingsOpen={setSettingsOpen}
-          onBoardSizeChange={v => setBoardSize(Math.max(5, Math.min(12, v || DEFAULT_BOARD_SIZE)))}
-          onQuestionTimeChange={v => setQuestionTime(Math.max(6, Math.min(40, v || DEFAULT_QUESTION_TIME)))}
-          onSurpriseCountChange={setNumSurprises}
-          onNumDefensesChange={setNumDefenses}
-          onDifficultyChange={setDifficulty}
-          surpriseCount={numSurprises}
-          playerName={playerName}
-        >
-          <GameBoardModals
+        <>
+          <DefenseModeIndicator 
+            defenseMode={defenseMode} 
+            onCancel={() => setDefenseMode(false)} 
+          />
+          <GameBoardArea
+            language={language}
+            t={t}
+            turn={turn}
+            winner={winner}
+            difficulty={difficulty}
+            humanPoints={humanPoints}
+            aiPoints={aiPoints}
+            numDefenses={numDefenses}
+            defensesUsed={defensesUsed}
+            onPlaceDefense={toggleDefensePlacement}
+            defenseMode={defenseMode}
+            boardSize={BOARD_SIZE}
+            boardPoints={boardPoints}
+            positions={positions}
+            humanTarget={humanTarget}
+            aiTarget={aiTarget}
+            disableInput={disableInput}
+            handleTileClick={handleTileClick}
+            getValidMoves={(pos) =>
+              getValidMoves(
+                pos,
+                BOARD_SIZE,
+                defenseTiles,
+                pos === positions.human ? positions.ai : positions.human
+              )
+            }
+            positionsEqual={positionsEqual}
+            surpriseTiles={surpriseTiles}
+            defenseTiles={defenseTiles}
+            aiPendingTarget={aiModalState ? aiModalState.targetTile : null}
             moveState={moveState}
             isModalOpen={isModalOpen}
             aiModalState={aiModalState}
-            winner={winner}
             questionTime={questionTime}
             onHumanSubmit={moveState?.resolve}
             onAISubmit={handleAIModalSubmit}
-            questionType={questionType}
-          />
-        </GameBoardArea>
+            onRestart={handleRestart}
+            settingsOpen={settingsOpen}
+            setSettingsOpen={setSettingsOpen}
+            onBoardSizeChange={v => setBoardSize(Math.max(5, Math.min(12, v || DEFAULT_BOARD_SIZE)))}
+            onQuestionTimeChange={v => setQuestionTime(Math.max(6, Math.min(40, v || DEFAULT_QUESTION_TIME)))}
+            onSurpriseCountChange={setNumSurprises}
+            onNumDefensesChange={setNumDefenses}
+            onDifficultyChange={setDifficulty}
+            surpriseCount={numSurprises}
+            playerName={playerName}
+          >
+            <GameBoardModals
+              moveState={moveState}
+              isModalOpen={isModalOpen}
+              aiModalState={aiModalState}
+              winner={winner}
+              questionTime={questionTime}
+              onHumanSubmit={moveState?.resolve}
+              onAISubmit={handleAIModalSubmit}
+              questionType={questionType}
+            />
+          </GameBoardArea>
+        </>
       )}
     </div>
   );

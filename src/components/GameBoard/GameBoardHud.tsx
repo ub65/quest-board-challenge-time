@@ -1,4 +1,3 @@
-
 import React from "react";
 import GameScoreboard from "../GameScoreboard";
 import { Shield, X } from "lucide-react";
@@ -29,6 +28,13 @@ const GameBoardHud: React.FC<GameBoardHudProps> = ({
   defenseMode,
   playerName,
 }) => {
+  const handleDefenseButtonClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    console.log('[DEFENSE] Defense button clicked, current mode:', defenseMode);
+    onPlaceDefense();
+  };
+
   return (
     <div className="w-full flex flex-col items-center">
       <GameScoreboard humanPoints={humanPoints} aiPoints={aiPoints} playerName={playerName} />
@@ -47,7 +53,7 @@ const GameBoardHud: React.FC<GameBoardHudProps> = ({
         </div>
         {!winner && turn === "human" && (numDefenses - defensesUsed.human > 0) && (
           <button
-            onClick={onPlaceDefense}
+            onClick={handleDefenseButtonClick}
             className={`${
               defenseMode 
                 ? "bg-red-500 hover:bg-red-700" 

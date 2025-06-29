@@ -326,14 +326,18 @@ const GameBoard = ({
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape' && defenseMode) {
         console.log('[DEFENSE] Escape key pressed, cancelling defense mode');
+        event.preventDefault();
+        event.stopPropagation();
         cancelDefensePlacement();
       }
     };
 
-    document.addEventListener('keydown', handleKeyDown);
-    return () => {
-      document.removeEventListener('keydown', handleKeyDown);
-    };
+    if (defenseMode) {
+      document.addEventListener('keydown', handleKeyDown, { capture: true });
+      return () => {
+        document.removeEventListener('keydown', handleKeyDown, { capture: true });
+      };
+    }
   }, [defenseMode, cancelDefensePlacement]);
 
   // Cancel defense mode when turn changes
@@ -360,11 +364,14 @@ const GameBoard = ({
       <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-40 bg-blue-600 text-white px-4 py-2 rounded-lg shadow-lg flex items-center gap-2">
         <span>🛡️ Defense Mode Active - Click a tile to place defense</span>
         <button 
-          onClick={() => {
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
             console.log('[DEFENSE] Cancel button clicked');
             onCancel();
           }}
           className="ml-2 bg-white/20 hover:bg-white/30 rounded px-2 py-1 text-sm transition-colors"
+          type="button"
         >
           Cancel (ESC)
         </button>

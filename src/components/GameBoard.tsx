@@ -15,83 +15,106 @@ import { useDefenseModeHandler } from "./GameBoard/useDefenseModeHandler";
 import GameBoardModals from "./GameBoard/GameBoardModals";
 import { generateQuestion } from "./GameBoard/questionGenerator";
 
-// Enhanced sound effects with better audio context management
+// Enhanced sound effects with better audio context management and higher volume
 const playSound = (soundType: string, soundEnabled: boolean, volume: number = 0.5) => {
-  if (!soundEnabled || volume === 0) return;
+  if (!soundEnabled || volume === 0) {
+    console.log(`[SOUND] Skipped ${soundType} - sound disabled or volume 0`);
+    return;
+  }
+  
+  console.log(`[SOUND] Playing ${soundType} at volume ${volume}`);
   
   try {
+    // Create a new audio context for each sound to avoid conflicts
     const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
     
     // Resume audio context if suspended (required by some browsers)
     if (audioContext.state === 'suspended') {
-      audioContext.resume();
+      audioContext.resume().then(() => {
+        console.log('[SOUND] Audio context resumed');
+        playActualSound();
+      });
+    } else {
+      playActualSound();
     }
     
-    const oscillator = audioContext.createOscillator();
-    const gainNode = audioContext.createGain();
-    
-    oscillator.connect(gainNode);
-    gainNode.connect(audioContext.destination);
-    
-    // Adjust volume and create envelope
-    const adjustedVolume = Math.max(0, Math.min(1, volume)) * 0.15; // Cap at 15% of max volume
-    gainNode.gain.setValueAtTime(0, audioContext.currentTime);
-    gainNode.gain.linearRampToValueAtTime(adjustedVolume, audioContext.currentTime + 0.01);
-    gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.4);
-    
-    // Set oscillator type for better sound quality
-    oscillator.type = 'sine';
-    
-    switch (soundType) {
-      case 'move':
-        oscillator.frequency.setValueAtTime(440, audioContext.currentTime);
-        oscillator.frequency.exponentialRampToValueAtTime(660, audioContext.currentTime + 0.1);
-        break;
-      case 'correct':
-        // Pleasant ascending chord
-        oscillator.frequency.setValueAtTime(523, audioContext.currentTime); // C5
-        oscillator.frequency.setValueAtTime(659, audioContext.currentTime + 0.1); // E5
-        oscillator.frequency.setValueAtTime(784, audioContext.currentTime + 0.2); // G5
-        break;
-      case 'wrong':
-        // Descending tone
-        oscillator.frequency.setValueAtTime(330, audioContext.currentTime);
-        oscillator.frequency.exponentialRampToValueAtTime(220, audioContext.currentTime + 0.3);
-        break;
-      case 'win':
-        // Victory fanfare
-        oscillator.frequency.setValueAtTime(523, audioContext.currentTime);
-        oscillator.frequency.setValueAtTime(659, audioContext.currentTime + 0.15);
-        oscillator.frequency.setValueAtTime(784, audioContext.currentTime + 0.3);
-        oscillator.frequency.setValueAtTime(1047, audioContext.currentTime + 0.45);
-        break;
-      case 'surprise':
-        // Magical sound
-        oscillator.frequency.setValueAtTime(330, audioContext.currentTime);
-        oscillator.frequency.setValueAtTime(415, audioContext.currentTime + 0.1);
-        oscillator.frequency.setValueAtTime(523, audioContext.currentTime + 0.2);
-        break;
-      case 'defense':
-        // Low defensive sound
-        oscillator.frequency.setValueAtTime(200, audioContext.currentTime);
-        oscillator.frequency.setValueAtTime(150, audioContext.currentTime + 0.15);
-        break;
-      default:
-        oscillator.frequency.setValueAtTime(440, audioContext.currentTime);
-    }
-    
-    oscillator.start(audioContext.currentTime);
-    oscillator.stop(audioContext.currentTime + 0.4);
-    
-    // Clean up audio context after use
-    setTimeout(() => {
-      if (audioContext.state !== 'closed') {
-        audioContext.close();
+    function playActualSound() {
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+      
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+      
+      // Increase base volume significantly and use the user's volume setting
+      const adjustedVolume = Math.max(0, Math.min(1, volume)) * 0.3; // Increased from 0.15 to 0.3
+      console.log(`[SOUND] Adjusted volume: ${adjustedVolume}`);
+      
+      // Create audio envelope
+      gainNode.gain.setValueAtTime(0, audioContext.currentTime);
+      gainNode.gain.linearRampToValueAtTime(adjustedVolume, audioContext.currentTime + 0.01);
+      gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.5);
+      
+      // Set oscillator type for better sound quality
+      oscillator.type = 'sine';
+      
+      switch (soundType) {
+        case 'move':
+          oscillator.frequency.setValueAtTime(440, audioContext.currentTime);
+          oscillator.frequency.exponentialRampToValueAtTime(660, audioContext.currentTime + 0.1);
+          break;
+        case 'correct':
+          // Pleasant ascending chord
+          oscillator.frequency.setValueAtTime(523, audioContext.currentTime); // C5
+          oscillator.frequency.setValueAtTime(659, audioContext.currentTime + 0.1); // E5
+          oscillator.frequency.setValueAtTime(784, audioContext.currentTime + 0.2); // G5
+          break;
+        case 'wrong':
+          // Descending tone
+          oscillator.frequency.setValueAtTime(330, audioContext.currentTime);
+          oscillator.frequency.exponentialRampToValueAtTime(220, audioContext.currentTime + 0.3);
+          break;
+        case 'win':
+          // Victory fanfare
+          oscillator.frequency.setValueAtTime(523, audioContext.currentTime);
+          oscillator.frequency.setValueAtTime(659, audioContext.currentTime + 0.15);
+          oscillator.frequency.setValueAtTime(784, audioContext.currentTime + 0.3);
+          oscillator.frequency.setValueAtTime(1047, audioContext.currentTime + 0.45);
+          break;
+        case 'surprise':
+          // Magical sound
+          oscillator.frequency.setValueAtTime(330, audioContext.currentTime);
+          oscillator.frequency.setValueAtTime(415, audioContext.currentTime + 0.1);
+          oscillator.frequency.setValueAtTime(523, audioContext.currentTime + 0.2);
+          break;
+        case 'defense':
+          // Low defensive sound
+          oscillator.frequency.setValueAtTime(200, audioContext.currentTime);
+          oscillator.frequency.setValueAtTime(150, audioContext.currentTime + 0.15);
+          break;
+        case 'test':
+          // Test sound - simple beep
+          oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
+          break;
+        default:
+          oscillator.frequency.setValueAtTime(440, audioContext.currentTime);
       }
-    }, 500);
+      
+      oscillator.start(audioContext.currentTime);
+      oscillator.stop(audioContext.currentTime + 0.5);
+      
+      console.log(`[SOUND] ${soundType} sound started`);
+      
+      // Clean up audio context after use
+      setTimeout(() => {
+        if (audioContext.state !== 'closed') {
+          audioContext.close();
+          console.log('[SOUND] Audio context closed');
+        }
+      }, 600);
+    }
     
   } catch (error) {
-    console.log("Audio not supported or failed:", error);
+    console.error("Audio failed:", error);
   }
 };
 
@@ -159,6 +182,18 @@ const GameBoard = ({
     setLocalSoundEnabled(soundEnabled);
   }, [soundEnabled]);
 
+  // Test sound on component mount
+  useEffect(() => {
+    console.log(`[SOUND] GameBoard mounted with sound: ${soundEnabled}, volume: ${volume}`);
+    if (soundEnabled && volume > 0) {
+      // Play a test sound after a short delay to ensure audio context is ready
+      setTimeout(() => {
+        console.log('[SOUND] Playing test sound...');
+        playSound('test', true, volume);
+      }, 1000);
+    }
+  }, []);
+
   useEffect(() => {
     const randomStartingPlayer = getRandomStartingPlayer();
     setStartingPlayer(randomStartingPlayer);
@@ -190,6 +225,10 @@ const GameBoard = ({
     } else {
       setHumanHasMoved(false); // Human needs to move first
     }
+    
+    // Play a start game sound
+    console.log('[SOUND] Game starting, playing start sound');
+    playSound('correct', localSoundEnabled, volume);
   };
 
   useEffect(() => {
@@ -202,6 +241,7 @@ const GameBoard = ({
       setDefenseMode(false);
       
       // Play win/lose sound
+      console.log(`[SOUND] Game ended, winner: ${winner}`);
       playSound(winner === "human" ? "win" : "wrong", localSoundEnabled, volume);
     }
   }, [winner, localSoundEnabled, volume]);
@@ -229,6 +269,7 @@ const GameBoard = ({
   // Enhanced surprise handler with sound
   const surpriseHandlerWithSound = useCallback((tile: any, player: string) => {
     const result = surpriseHandler(tile, player);
+    console.log('[SOUND] Surprise triggered, playing surprise sound');
     playSound("surprise", localSoundEnabled, volume);
     return result;
   }, [surpriseHandler, localSoundEnabled, volume]);
@@ -305,6 +346,7 @@ const GameBoard = ({
     });
     
     if (problem) {
+      console.log('[SOUND] Defense placement failed, playing wrong sound');
       playSound("wrong", localSoundEnabled, volume);
       toast({
         title: t("game.defense_fail") || "Invalid defense placement",
@@ -325,6 +367,7 @@ const GameBoard = ({
     setDefensesUsed((d) => ({ ...d, human: d.human + 1 }));
     setDefenseMode(false); // Exit defense mode after successful placement
     
+    console.log('[SOUND] Defense placed successfully, playing defense sound');
     playSound("defense", localSoundEnabled, volume);
     toast({
       title: t("game.defense_placed") || "Defense Placed",
@@ -433,6 +476,7 @@ const GameBoard = ({
       });
       
       // Play move sound
+      console.log('[SOUND] AI moved, playing move sound');
       playSound("move", localSoundEnabled, volume);
       
       // Handle surprise if any
@@ -473,6 +517,7 @@ const GameBoard = ({
 
   // Enhanced modal submit handlers with sound
   const handleHumanModalSubmit = useCallback((isCorrect: boolean) => {
+    console.log(`[SOUND] Human answered ${isCorrect ? 'correctly' : 'incorrectly'}`);
     playSound(isCorrect ? "correct" : "wrong", localSoundEnabled, volume);
     if (moveState?.resolve) {
       moveState.resolve(isCorrect);
@@ -559,7 +604,15 @@ const GameBoard = ({
             surpriseCount={numSurprises}
             playerName={playerName}
             soundEnabled={localSoundEnabled}
-            onToggleSound={() => setLocalSoundEnabled(!localSoundEnabled)}
+            onToggleSound={() => {
+              const newSoundState = !localSoundEnabled;
+              setLocalSoundEnabled(newSoundState);
+              console.log(`[SOUND] Sound toggled to: ${newSoundState}`);
+              if (newSoundState) {
+                // Play a test sound when enabling
+                setTimeout(() => playSound('test', true, volume), 100);
+              }
+            }}
           >
             <GameBoardModals
               moveState={moveState}

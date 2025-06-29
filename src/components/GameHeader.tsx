@@ -16,13 +16,19 @@ const GameHeader: React.FC<GameHeaderProps> = ({
   onToggleSound 
 }) => {
   const { t, language } = useLocalization();
+  
+  const handleSoundToggle = () => {
+    console.log(`[SOUND] Header sound toggle clicked, current state: ${soundEnabled}`);
+    onToggleSound();
+  };
+  
   return (
     <div
       className={`flex flex-row justify-between items-center w-full mb-4 gap-2`}
       dir={language === "he" ? "rtl" : "ltr"}
     >
       <button
-        onClick={onToggleSound}
+        onClick={handleSoundToggle}
         className="px-3 py-2 rounded-md bg-gray-100 hover:bg-blue-200 text-blue-700 font-medium shadow transition-colors text-base flex items-center gap-2"
         title={soundEnabled ? t("sound.mute") || "Mute" : t("sound.unmute") || "Unmute"}
       >

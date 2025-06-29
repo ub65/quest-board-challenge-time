@@ -8,6 +8,7 @@ import GameSettingsDifficultySelector from "./GameSettingsDifficultySelector";
 import GameSettingsSliderGroup from "./GameSettingsSliderGroup";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
+import { playSound } from "@/lib/audioManager";
 
 type QuestionType = "translate" | "math";
 type GameSettingsModalProps = {
@@ -29,45 +30,6 @@ type GameSettingsModalProps = {
   onSoundEnabledChange?: (enabled: boolean) => void;
   volume?: number;
   onVolumeChange?: (volume: number) => void;
-};
-
-// Simple test sound function for settings
-const playTestSound = (volume: number) => {
-  try {
-    const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
-    
-    const playSound = () => {
-      const oscillator = audioContext.createOscillator();
-      const gainNode = audioContext.createGain();
-      
-      oscillator.connect(gainNode);
-      gainNode.connect(audioContext.destination);
-      
-      gainNode.gain.setValueAtTime(0, audioContext.currentTime);
-      gainNode.gain.linearRampToValueAtTime(volume * 0.3, audioContext.currentTime + 0.02);
-      gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.4);
-      
-      oscillator.type = 'sine';
-      oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
-      
-      oscillator.start(audioContext.currentTime);
-      oscillator.stop(audioContext.currentTime + 0.4);
-      
-      setTimeout(() => {
-        if (audioContext.state !== 'closed') {
-          audioContext.close();
-        }
-      }, 500);
-    };
-    
-    if (audioContext.state === 'suspended') {
-      audioContext.resume().then(playSound);
-    } else {
-      playSound();
-    }
-  } catch (error) {
-    console.error('Test sound failed:', error);
-  }
 };
 
 const GameSettingsModal = ({
@@ -168,7 +130,7 @@ const GameSettingsModal = ({
         setPendingVolume(v);
         // Play test sound when adjusting volume
         if (v > 0) {
-          playTestSound(v);
+          playSound('test', true, v);
         }
       },
       displayValue: `${Math.round(pendingVolume * 100)}%`,
@@ -190,7 +152,7 @@ const GameSettingsModal = ({
 
   const handleTestSound = () => {
     if (pendingSoundEnabled && pendingVolume > 0) {
-      playTestSound(pendingVolume);
+      playSound('test', true, pendingVolume);
     }
   };
 
@@ -228,7 +190,7 @@ const GameSettingsModal = ({
                     setPendingSoundEnabled(checked);
                     if (checked && pendingVolume > 0) {
                       // Play test sound when enabling
-                      setTimeout(() => playTestSound(pendingVolume), 100);
+                      setTimeout(() => playSound('test', true, pendingVolume), 100);
                     }
                   }}
                 />

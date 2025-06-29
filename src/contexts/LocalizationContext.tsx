@@ -49,6 +49,10 @@ const translations = {
     // Settings
     'settings.title': 'Game Settings',
     'settings.sound': 'Sound Effects',
+    'settings.soundDesc': 'Enable sound effects for game actions',
+    'settings.volume': 'Volume',
+    'settings.volumeMin': '0%',
+    'settings.volumeMax': '100%',
     'settings.boardSize': 'Board Size',
     'settings.questionTime': 'Question Time (seconds)',
     'settings.language': 'Language',
@@ -175,6 +179,10 @@ const translations = {
     // Settings
     'settings.title': 'הגדרות המשחק',
     'settings.sound': 'אפקטי קול',
+    'settings.soundDesc': 'הפעל אפקטי קול לפעולות במשחק',
+    'settings.volume': 'עוצמת קול',
+    'settings.volumeMin': '0%',
+    'settings.volumeMax': '100%',
     'settings.boardSize': 'גודל הלוח',
     'settings.questionTime': 'זמן לשאלה (שניות)',
     'settings.language': 'שפה',

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { SlidersHorizontal, Save } from "lucide-react";
@@ -8,6 +7,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import GameSettingsDifficultySelector from "./GameSettingsDifficultySelector";
 import GameSettingsSliderGroup from "./GameSettingsSliderGroup";
 import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
 
 type QuestionType = "translate" | "math";
 type GameSettingsModalProps = {
@@ -25,6 +25,10 @@ type GameSettingsModalProps = {
   onDifficultyChange: (d: "easy" | "medium" | "hard") => void;
   questionType: QuestionType;
   onQuestionTypeChange: (q: QuestionType) => void;
+  soundEnabled?: boolean;
+  onSoundEnabledChange?: (enabled: boolean) => void;
+  volume?: number;
+  onVolumeChange?: (volume: number) => void;
 };
 
 const GameSettingsModal = ({
@@ -40,6 +44,10 @@ const GameSettingsModal = ({
   onNumDefensesChange,
   difficulty,
   onDifficultyChange,
+  soundEnabled = true,
+  onSoundEnabledChange,
+  volume = 0.5,
+  onVolumeChange,
 }: GameSettingsModalProps) => {
   const { t } = useLocalization();
 
@@ -48,6 +56,8 @@ const GameSettingsModal = ({
   const [pendingSurpriseCount, setPendingSurpriseCount] = useState(surpriseCount);
   const [pendingNumDefenses, setPendingNumDefenses] = useState(numDefenses);
   const [pendingDifficulty, setPendingDifficulty] = useState<"easy" | "medium" | "hard">(difficulty);
+  const [pendingSoundEnabled, setPendingSoundEnabled] = useState(soundEnabled);
+  const [pendingVolume, setPendingVolume] = useState(volume);
 
   useEffect(() => {
     if (open) {
@@ -56,8 +66,10 @@ const GameSettingsModal = ({
       setPendingSurpriseCount(surpriseCount);
       setPendingNumDefenses(numDefenses);
       setPendingDifficulty(difficulty);
+      setPendingSoundEnabled(soundEnabled);
+      setPendingVolume(volume);
     }
-  }, [open, boardSize, questionTime, surpriseCount, numDefenses, difficulty]);
+  }, [open, boardSize, questionTime, surpriseCount, numDefenses, difficulty, soundEnabled, volume]);
 
   const sliders = [
     {
@@ -105,7 +117,19 @@ const GameSettingsModal = ({
       onValueChange: (v: number) => { setPendingNumDefenses(v); },
       minLabelKey: "settings.defenseMin",
       maxLabelKey: "settings.defenseMax"
-    }
+    },
+    ...(pendingSoundEnabled ? [{
+      id: "volume-slider",
+      labelKey: "settings.volume",
+      min: 0,
+      max: 1,
+      step: 0.1,
+      value: pendingVolume,
+      onValueChange: (v: number) => { setPendingVolume(v); },
+      displayValue: `${Math.round(pendingVolume * 100)}%`,
+      minLabelKey: "settings.volumeMin",
+      maxLabelKey: "settings.volumeMax"
+    }] : [])
   ];
 
   const handleSave = () => {
@@ -114,6 +138,8 @@ const GameSettingsModal = ({
     onSurpriseCountChange(pendingSurpriseCount);
     onNumDefensesChange(pendingNumDefenses);
     onDifficultyChange(pendingDifficulty);
+    if (onSoundEnabledChange) onSoundEnabledChange(pendingSoundEnabled);
+    if (onVolumeChange) onVolumeChange(pendingVolume);
     onOpenChange(false);
   };
 
@@ -138,6 +164,25 @@ const GameSettingsModal = ({
               difficulty={pendingDifficulty} 
               onDifficultyChange={(d) => { setPendingDifficulty(d); }} 
             />
+            
+            {/* Sound Settings */}
+            <div className="flex flex-col gap-3">
+              <div className="flex items-center justify-between">
+                <label className="text-base font-semibold">
+                  {t('settings.sound') || 'Sound Effects'}
+                </label>
+                <Switch
+                  checked={pendingSoundEnabled}
+                  onCheckedChange={setPendingSoundEnabled}
+                />
+              </div>
+              {pendingSoundEnabled && (
+                <div className="text-sm text-gray-600">
+                  {t('settings.soundDesc') || 'Enable sound effects for game actions'}
+                </div>
+              )}
+            </div>
+            
             <GameSettingsSliderGroup sliders={sliders} />
           </div>
         </ScrollArea>

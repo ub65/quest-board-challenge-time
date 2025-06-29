@@ -1,4 +1,3 @@
-
 import React from "react";
 import GameBoard from "@/components/GameBoard";
 import { useLocalization } from "@/contexts/LocalizationContext";
@@ -38,6 +37,10 @@ const Index = () => {
         onDifficultyChange={flow.setDifficulty}
         questionType={dummyQuestionType}
         onQuestionTypeChange={dummySetQuestionType}
+        soundEnabled={flow.soundEnabled}
+        onSoundEnabledChange={flow.setSoundEnabled}
+        volume={flow.volume}
+        onVolumeChange={flow.setVolume}
       />
       {flow.step === "welcome" && (
         <WelcomeScreen
@@ -59,6 +62,8 @@ const Index = () => {
             onRestart={flow.handleRestart}
             playerName={flow.playerName}
             questionType={flow.questionType}
+            soundEnabled={flow.soundEnabled}
+            volume={flow.volume}
           />
         </div>
       )}

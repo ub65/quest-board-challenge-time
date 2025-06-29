@@ -15,47 +15,64 @@ import { useDefenseModeHandler } from "./GameBoard/useDefenseModeHandler";
 import GameBoardModals from "./GameBoard/GameBoardModals";
 import { generateQuestion } from "./GameBoard/questionGenerator";
 
-// Sound effects
+// Enhanced sound effects with better audio context management
 const playSound = (soundType: string, soundEnabled: boolean, volume: number = 0.5) => {
-  if (!soundEnabled) return;
+  if (!soundEnabled || volume === 0) return;
   
   try {
     const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+    
+    // Resume audio context if suspended (required by some browsers)
+    if (audioContext.state === 'suspended') {
+      audioContext.resume();
+    }
+    
     const oscillator = audioContext.createOscillator();
     const gainNode = audioContext.createGain();
     
     oscillator.connect(gainNode);
     gainNode.connect(audioContext.destination);
     
-    gainNode.gain.setValueAtTime(volume * 0.1, audioContext.currentTime);
-    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+    // Adjust volume and create envelope
+    const adjustedVolume = Math.max(0, Math.min(1, volume)) * 0.15; // Cap at 15% of max volume
+    gainNode.gain.setValueAtTime(0, audioContext.currentTime);
+    gainNode.gain.linearRampToValueAtTime(adjustedVolume, audioContext.currentTime + 0.01);
+    gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.4);
+    
+    // Set oscillator type for better sound quality
+    oscillator.type = 'sine';
     
     switch (soundType) {
       case 'move':
         oscillator.frequency.setValueAtTime(440, audioContext.currentTime);
-        oscillator.frequency.exponentialRampToValueAtTime(880, audioContext.currentTime + 0.1);
+        oscillator.frequency.exponentialRampToValueAtTime(660, audioContext.currentTime + 0.1);
         break;
       case 'correct':
-        oscillator.frequency.setValueAtTime(523, audioContext.currentTime);
-        oscillator.frequency.setValueAtTime(659, audioContext.currentTime + 0.1);
-        oscillator.frequency.setValueAtTime(784, audioContext.currentTime + 0.2);
+        // Pleasant ascending chord
+        oscillator.frequency.setValueAtTime(523, audioContext.currentTime); // C5
+        oscillator.frequency.setValueAtTime(659, audioContext.currentTime + 0.1); // E5
+        oscillator.frequency.setValueAtTime(784, audioContext.currentTime + 0.2); // G5
         break;
       case 'wrong':
-        oscillator.frequency.setValueAtTime(220, audioContext.currentTime);
-        oscillator.frequency.exponentialRampToValueAtTime(110, audioContext.currentTime + 0.3);
+        // Descending tone
+        oscillator.frequency.setValueAtTime(330, audioContext.currentTime);
+        oscillator.frequency.exponentialRampToValueAtTime(220, audioContext.currentTime + 0.3);
         break;
       case 'win':
+        // Victory fanfare
         oscillator.frequency.setValueAtTime(523, audioContext.currentTime);
         oscillator.frequency.setValueAtTime(659, audioContext.currentTime + 0.15);
         oscillator.frequency.setValueAtTime(784, audioContext.currentTime + 0.3);
         oscillator.frequency.setValueAtTime(1047, audioContext.currentTime + 0.45);
         break;
       case 'surprise':
+        // Magical sound
         oscillator.frequency.setValueAtTime(330, audioContext.currentTime);
         oscillator.frequency.setValueAtTime(415, audioContext.currentTime + 0.1);
         oscillator.frequency.setValueAtTime(523, audioContext.currentTime + 0.2);
         break;
       case 'defense':
+        // Low defensive sound
         oscillator.frequency.setValueAtTime(200, audioContext.currentTime);
         oscillator.frequency.setValueAtTime(150, audioContext.currentTime + 0.15);
         break;
@@ -64,7 +81,15 @@ const playSound = (soundType: string, soundEnabled: boolean, volume: number = 0.
     }
     
     oscillator.start(audioContext.currentTime);
-    oscillator.stop(audioContext.currentTime + 0.3);
+    oscillator.stop(audioContext.currentTime + 0.4);
+    
+    // Clean up audio context after use
+    setTimeout(() => {
+      if (audioContext.state !== 'closed') {
+        audioContext.close();
+      }
+    }, 500);
+    
   } catch (error) {
     console.log("Audio not supported or failed:", error);
   }
@@ -77,6 +102,8 @@ const GameBoard = ({
   gameCode,
   onlineRole,
   questionType = "translate",
+  soundEnabled = true,
+  volume = 0.5,
 }: {
   difficulty: "easy" | "medium" | "hard";
   onRestart: () => void;
@@ -84,6 +111,8 @@ const GameBoard = ({
   gameCode?: string;
   onlineRole?: "host" | "guest";
   questionType?: "translate" | "math";
+  soundEnabled?: boolean;
+  volume?: number;
 }) => {
   const { t, language } = useLocalization();
 
@@ -114,9 +143,8 @@ const GameBoard = ({
     getRandomStartingPlayer,
   } = useGameBoardState(boardSize, numSurprises);
 
-  // Sound state
-  const [soundEnabled, setSoundEnabled] = useState(true);
-  const [volume, setVolume] = useState(0.5);
+  // Local sound state for mute button
+  const [localSoundEnabled, setLocalSoundEnabled] = useState(soundEnabled);
 
   const BOARD_SIZE = boardSize;
   const aiTarget = { x: 0, y: 0 };
@@ -125,6 +153,11 @@ const GameBoard = ({
   const aiMovingRef = useRef(false);
   const [gameStarted, setGameStarted] = useState(false);
   const [startingPlayer, setStartingPlayer] = useState<"human" | "ai" | null>(null);
+
+  // Update local sound state when prop changes
+  useEffect(() => {
+    setLocalSoundEnabled(soundEnabled);
+  }, [soundEnabled]);
 
   useEffect(() => {
     const randomStartingPlayer = getRandomStartingPlayer();
@@ -169,9 +202,9 @@ const GameBoard = ({
       setDefenseMode(false);
       
       // Play win/lose sound
-      playSound(winner === "human" ? "win" : "wrong", soundEnabled, volume);
+      playSound(winner === "human" ? "win" : "wrong", localSoundEnabled, volume);
     }
-  }, [winner, soundEnabled, volume]);
+  }, [winner, localSoundEnabled, volume]);
 
   useEffect(() => {
     if (positions.human.x === humanTarget.x && positions.human.y === humanTarget.y) {
@@ -196,9 +229,9 @@ const GameBoard = ({
   // Enhanced surprise handler with sound
   const surpriseHandlerWithSound = useCallback((tile: any, player: string) => {
     const result = surpriseHandler(tile, player);
-    playSound("surprise", soundEnabled, volume);
+    playSound("surprise", localSoundEnabled, volume);
     return result;
-  }, [surpriseHandler, soundEnabled, volume]);
+  }, [surpriseHandler, localSoundEnabled, volume]);
 
   // Create human move handler
   const { handleTileClick: humanTileClick } = useHumanMoveHandler({
@@ -272,7 +305,7 @@ const GameBoard = ({
     });
     
     if (problem) {
-      playSound("wrong", soundEnabled, volume);
+      playSound("wrong", localSoundEnabled, volume);
       toast({
         title: t("game.defense_fail") || "Invalid defense placement",
         description: (
@@ -292,7 +325,7 @@ const GameBoard = ({
     setDefensesUsed((d) => ({ ...d, human: d.human + 1 }));
     setDefenseMode(false); // Exit defense mode after successful placement
     
-    playSound("defense", soundEnabled, volume);
+    playSound("defense", localSoundEnabled, volume);
     toast({
       title: t("game.defense_placed") || "Defense Placed",
       description: (
@@ -303,7 +336,7 @@ const GameBoard = ({
       ),
       duration: 2000,
     });
-  }, [BOARD_SIZE, numDefenses, positions, defenseTiles, surpriseTiles, defensesUsed, t, toast, setDefenseTiles, setDefensesUsed, setDefenseMode, soundEnabled, volume]);
+  }, [BOARD_SIZE, numDefenses, positions, defenseTiles, surpriseTiles, defensesUsed, t, toast, setDefenseTiles, setDefensesUsed, setDefenseMode, localSoundEnabled, volume]);
 
   // Enhanced useDefenseModeHandler hook
   const { toggleDefensePlacement } = useDefenseModeHandler({
@@ -400,7 +433,7 @@ const GameBoard = ({
       });
       
       // Play move sound
-      playSound("move", soundEnabled, volume);
+      playSound("move", localSoundEnabled, volume);
       
       // Handle surprise if any
       setTimeout(() => {
@@ -417,7 +450,7 @@ const GameBoard = ({
       
       setAIModalState(null);
     }
-  }, [aiModalState, setPositions, setBoardPoints, setAIPoints, BOARD_SIZE, surpriseHandlerWithSound, winner, setTurn, setDisableInput, soundEnabled, volume]);
+  }, [aiModalState, setPositions, setBoardPoints, setAIPoints, BOARD_SIZE, surpriseHandlerWithSound, winner, setTurn, setDisableInput, localSoundEnabled, volume]);
 
   const handleRestart = useGameRestart({
     boardSize,
@@ -440,11 +473,11 @@ const GameBoard = ({
 
   // Enhanced modal submit handlers with sound
   const handleHumanModalSubmit = useCallback((isCorrect: boolean) => {
-    playSound(isCorrect ? "correct" : "wrong", soundEnabled, volume);
+    playSound(isCorrect ? "correct" : "wrong", localSoundEnabled, volume);
     if (moveState?.resolve) {
       moveState.resolve(isCorrect);
     }
-  }, [moveState, soundEnabled, volume]);
+  }, [moveState, localSoundEnabled, volume]);
 
   const announcementKey =
     startingPlayer === "human"
@@ -525,8 +558,8 @@ const GameBoard = ({
             onDifficultyChange={setDifficulty}
             surpriseCount={numSurprises}
             playerName={playerName}
-            soundEnabled={soundEnabled}
-            onToggleSound={() => setSoundEnabled(!soundEnabled)}
+            soundEnabled={localSoundEnabled}
+            onToggleSound={() => setLocalSoundEnabled(!localSoundEnabled)}
           >
             <GameBoardModals
               moveState={moveState}

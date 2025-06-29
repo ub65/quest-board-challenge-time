@@ -92,7 +92,12 @@ const GameBoard = ({
   const handleStartGame = () => {
     setGameStarted(true);
     setDisableInput(false);
-    setHumanHasMoved(startingPlayer === "ai");
+    // Set humanHasMoved based on starting player
+    if (startingPlayer === "ai") {
+      setHumanHasMoved(true); // Allow AI to move immediately
+    } else {
+      setHumanHasMoved(false); // Human needs to move first
+    }
   };
 
   useEffect(() => {
@@ -113,6 +118,42 @@ const GameBoard = ({
       setWinner("ai");
     }
   }, [positions, humanTarget.x, humanTarget.y, aiTarget.x, aiTarget.y]);
+
+  const surpriseHandler = useSurprise({
+    boardPoints,
+    surpriseTiles,
+    setSurpriseTiles,
+    setHumanPoints,
+    setAIPoints,
+    humanPoints,
+    aiPoints,
+    t,
+    toast,
+  });
+
+  // Create human move handler
+  const { handleTileClick: humanTileClick } = useHumanMoveHandler({
+    winner,
+    disableInput,
+    turn,
+    positions,
+    BOARD_SIZE,
+    defenseTiles,
+    difficulty,
+    defenseMode,
+    handleDefenseClick: () => {}, // Will be set below
+    setPositions,
+    setBoardPoints,
+    setIsModalOpen,
+    setMoveState,
+    setTurn,
+    setHumanPoints,
+    handleSurprise: surpriseHandler,
+    questionType,
+    getQuestionForTurn: () => generateQuestion(questionType, difficulty),
+    setHumanHasMoved,
+    humanHasMoved,
+  });
 
   useAITurn({
     turn,
@@ -146,18 +187,6 @@ const GameBoard = ({
         setAIModalState(val);
       }
     }
-  });
-
-  const surpriseHandler = useSurprise({
-    boardPoints,
-    surpriseTiles,
-    setSurpriseTiles,
-    setHumanPoints,
-    setAIPoints,
-    humanPoints,
-    aiPoints,
-    t,
-    toast,
   });
 
   // Enhanced handleDefenseClick function
@@ -212,30 +241,6 @@ const GameBoard = ({
     setDefenseMode,
     handleDefenseClick,
     defenseMode,
-  });
-
-  // Create human move handler
-  const { handleTileClick: humanTileClick } = useHumanMoveHandler({
-    winner,
-    disableInput,
-    turn,
-    positions,
-    BOARD_SIZE,
-    defenseTiles,
-    difficulty,
-    defenseMode,
-    handleDefenseClick,
-    setPositions,
-    setBoardPoints,
-    setIsModalOpen,
-    setMoveState,
-    setTurn,
-    setHumanPoints,
-    handleSurprise: surpriseHandler,
-    questionType,
-    getQuestionForTurn: () => generateQuestion(questionType, difficulty),
-    setHumanHasMoved,
-    humanHasMoved,
   });
 
   // Enhanced handleTileClick function to properly handle defense cancellation
@@ -303,11 +308,42 @@ const GameBoard = ({
   };
 
   const handleAIModalSubmit = useCallback((isCorrect: boolean) => {
+    console.log("AI modal submit:", isCorrect);
     if (aiModalState) {
-      // Handle AI modal submission logic here
+      const targetTile = aiModalState.targetTile;
+      
+      // Move AI regardless of answer (AI always gets correct answer)
+      setPositions(prev => {
+        const newPos = { ...prev, ai: targetTile };
+        
+        // Add points from the tile
+        setBoardPoints(prevBoard => {
+          const newBoard = prevBoard.map(row => [...row]);
+          if (!((targetTile.x === 0 && targetTile.y === 0) || (targetTile.x === BOARD_SIZE - 1 && targetTile.y === BOARD_SIZE - 1))) {
+            setAIPoints(cur => cur + newBoard[targetTile.y][targetTile.x]);
+          }
+          return newBoard;
+        });
+        
+        return newPos;
+      });
+      
+      // Handle surprise if any
+      setTimeout(() => {
+        surpriseHandler(targetTile, "ai");
+        
+        // Switch turn back to human after a delay
+        setTimeout(() => {
+          if (!winner) {
+            setTurn("human");
+            setDisableInput(false);
+          }
+        }, 600);
+      }, 100);
+      
       setAIModalState(null);
     }
-  }, [aiModalState, setAIModalState]);
+  }, [aiModalState, setPositions, setBoardPoints, setAIPoints, BOARD_SIZE, surpriseHandler, winner, setTurn, setDisableInput]);
 
   const handleRestart = useGameRestart({
     boardSize,

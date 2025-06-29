@@ -1,6 +1,6 @@
 import React from "react";
 import { useLocalization } from "@/contexts/LocalizationContext";
-import { Volume2, VolumeX } from "lucide-react";
+import { Volume2, VolumeX, RotateCcw } from "lucide-react";
 
 type GameHeaderProps = {
   onRestart: () => void;
@@ -104,23 +104,50 @@ const GameHeader: React.FC<GameHeaderProps> = ({
       </div>
 
       {/* Modern Restart Button */}
-      <button
-        onClick={onRestart}
-        className="
-          group relative overflow-hidden
-          px-4 py-2 rounded-xl
-          bg-gradient-to-br from-gray-100 to-gray-200 
-          hover:from-blue-100 hover:to-blue-200
-          border border-gray-200 hover:border-blue-300
-          font-semibold text-gray-700 hover:text-blue-700
-          shadow-md hover:shadow-lg
-          transition-all duration-300 ease-out
-          transform hover:scale-105 active:scale-95
-        "
-      >
-        <span className="relative z-10">{t("game.restart")}</span>
-        <div className="absolute inset-0 bg-white/20 scale-0 group-active:scale-100 transition-transform duration-150 rounded-xl" />
-      </button>
+      <div className="relative">
+        <button
+          onClick={onRestart}
+          className="
+            group relative overflow-hidden
+            w-12 h-12 rounded-2xl
+            bg-gradient-to-br from-emerald-500 to-emerald-600 
+            hover:from-emerald-600 hover:to-emerald-700
+            transition-all duration-300 ease-out
+            transform hover:scale-105 active:scale-95
+            shadow-lg hover:shadow-xl
+          "
+          title={t("game.restart")}
+        >
+          {/* Background glow effect */}
+          <div className="
+            absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300
+            bg-emerald-400/30 blur-xl scale-110
+          " />
+          
+          {/* Icon container */}
+          <div className="relative z-10 flex items-center justify-center w-full h-full">
+            <RotateCcw 
+              size={20} 
+              className="text-white drop-shadow-sm transition-transform duration-200 group-hover:scale-110 group-hover:rotate-180" 
+            />
+          </div>
+          
+          {/* Ripple effect on click */}
+          <div className="absolute inset-0 rounded-2xl bg-white/20 scale-0 group-active:scale-100 transition-transform duration-150" />
+          
+          {/* Rotating animation indicator */}
+          <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2">
+            <div className="w-1 h-1 bg-white/60 rounded-full animate-ping" />
+          </div>
+        </button>
+        
+        {/* Action indicator dot */}
+        <div className="
+          absolute -top-1 -right-1 w-3 h-3 rounded-full border-2 border-white
+          bg-orange-400 shadow-orange-400/50 shadow-lg
+          transition-all duration-300
+        " />
+      </div>
     </div>
   );
 };

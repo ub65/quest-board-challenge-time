@@ -122,6 +122,8 @@ const GameBoardArea: React.FC<GameBoardAreaProps> = ({
         questionTime={questionTime}
         onHumanSubmit={onHumanSubmit}
         onAISubmit={onAISubmit}
+        soundEnabled={soundEnabled}
+        volume={0.5} // You can make this configurable if needed
       />
       <GameBoardTurnInfo
         winner={winner}

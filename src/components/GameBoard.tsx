@@ -248,7 +248,7 @@ const GameBoard = ({
     defenseMode,
   });
 
-  // Create human move handler with sound props
+  // Create human move handler (removed sound props since sound is now in modal)
   const { handleTileClick: humanTileClick } = useHumanMoveHandler({
     winner,
     disableInput,
@@ -270,8 +270,6 @@ const GameBoard = ({
     getQuestionForTurn: () => generateQuestion(questionType, difficulty),
     setHumanHasMoved,
     humanHasMoved,
-    soundEnabled: localSoundEnabled,
-    volume,
   });
 
   useAITurn({
@@ -444,7 +442,7 @@ const GameBoard = ({
     setDefenseMode,
   });
 
-  // Enhanced modal submit handlers - removed sound from here since it's now in humanHooks
+  // Modal submit handlers (sound is now handled in modals)
   const handleHumanModalSubmit = useCallback((isCorrect: boolean) => {
     console.log(`[MODAL] Human answered ${isCorrect ? 'correctly' : 'incorrectly'}`);
     if (moveState?.resolve) {
@@ -554,6 +552,8 @@ const GameBoard = ({
               onHumanSubmit={handleHumanModalSubmit}
               onAISubmit={handleAIModalSubmit}
               questionType={questionType}
+              soundEnabled={localSoundEnabled}
+              volume={volume}
             />
           </GameBoardArea>
         </>

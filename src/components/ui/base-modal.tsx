@@ -1,7 +1,7 @@
-
 import React, { useEffect, useState } from "react";
 import { useLocalization } from "@/contexts/LocalizationContext";
 import { Slider } from "@/components/ui/slider";
+import { playSound } from "@/lib/audioManager";
 
 type BaseModalProps = {
   isOpen: boolean;
@@ -10,6 +10,8 @@ type BaseModalProps = {
   timeLimit?: number;
   children: React.ReactNode;
   onAnswerSelect?: (selectedIdx: number, correct: boolean) => void;
+  soundEnabled?: boolean;
+  volume?: number;
 };
 
 const shuffle = (arr: any[]) => {
@@ -29,7 +31,14 @@ const getTimeSliderColor = (timeLeft: number, timeLimit: number) => {
   return "bg-red-500";
 };
 
-export const useQuestionModal = (question: any, timeLimit: number, isOpen: boolean, onSubmit: (correct: boolean) => void) => {
+export const useQuestionModal = (
+  question: any, 
+  timeLimit: number, 
+  isOpen: boolean, 
+  onSubmit: (correct: boolean) => void,
+  soundEnabled: boolean = true,
+  volume: number = 0.5
+) => {
   const [selected, setSelected] = useState<number | null>(null);
   const [shuffled, setShuffled] = useState<{ answer: string; idx: number }[]>([]);
   const [time, setTime] = useState(timeLimit);
@@ -49,12 +58,17 @@ export const useQuestionModal = (question: any, timeLimit: number, isOpen: boole
     if (!isOpen || answered) return;
     if (time <= 0) {
       setAnswered(true);
+      // Play wrong sound for timeout
+      console.log('[AUDIO] Question timeout, playing wrong sound');
+      if (soundEnabled) {
+        playSound("wrong", soundEnabled, volume);
+      }
       setTimeout(() => onSubmit(false), 800);
       return;
     }
     const tmo = setTimeout(() => setTime(s => s - 1), 1000);
     return () => clearTimeout(tmo);
-  }, [time, isOpen, answered, onSubmit]);
+  }, [time, isOpen, answered, onSubmit, soundEnabled, volume]);
 
   const handlePick = (pickedIdx: number) => {
     if (answered) return;
@@ -62,6 +76,13 @@ export const useQuestionModal = (question: any, timeLimit: number, isOpen: boole
     const originalIdx = shuffled[pickedIdx].idx;
     const correct = originalIdx === question.correct;
     setAnswered(true);
+    
+    // Play sound immediately when answer is selected
+    console.log(`[AUDIO] Answer selected: ${correct ? 'correct' : 'wrong'}, playing sound`);
+    if (soundEnabled) {
+      playSound(correct ? "correct" : "wrong", soundEnabled, volume);
+    }
+    
     setTimeout(() => onSubmit(correct), 800);
   };
 
@@ -80,10 +101,12 @@ const BaseModal: React.FC<BaseModalProps> = ({
   question,
   onSubmit,
   timeLimit = 14,
-  children
+  children,
+  soundEnabled = true,
+  volume = 0.5
 }) => {
   const { t, language } = useLocalization();
-  const modalState = useQuestionModal(question, timeLimit, isOpen, onSubmit);
+  const modalState = useQuestionModal(question, timeLimit, isOpen, onSubmit, soundEnabled, volume);
   const direction = language === "he" ? "rtl" : "ltr";
 
   return (

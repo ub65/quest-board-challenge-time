@@ -1,4 +1,3 @@
-
 import React from "react";
 import BaseModal from "@/components/ui/base-modal";
 
@@ -49,11 +48,15 @@ const TranslateQuestionModal = ({
   question,
   onSubmit,
   timeLimit = 14,
+  soundEnabled = true,
+  volume = 0.5,
 }: {
   isOpen: boolean;
   question: Question;
   onSubmit: (isCorrect: boolean) => void;
   timeLimit?: number;
+  soundEnabled?: boolean;
+  volume?: number;
 }) => {
   return (
     <BaseModal
@@ -61,6 +64,8 @@ const TranslateQuestionModal = ({
       question={question}
       onSubmit={onSubmit}
       timeLimit={timeLimit}
+      soundEnabled={soundEnabled}
+      volume={volume}
     >
       <TranslateQuestionContent question={question} />
     </BaseModal>

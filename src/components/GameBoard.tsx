@@ -188,64 +188,6 @@ const GameBoard = ({
     return result;
   }, [surpriseHandler, localSoundEnabled, volume]);
 
-  // Create human move handler
-  const { handleTileClick: humanTileClick } = useHumanMoveHandler({
-    winner,
-    disableInput,
-    turn,
-    positions,
-    BOARD_SIZE,
-    defenseTiles,
-    difficulty,
-    defenseMode,
-    handleDefenseClick: () => {}, // Will be set below
-    setPositions,
-    setBoardPoints,
-    setIsModalOpen,
-    setMoveState,
-    setTurn,
-    setHumanPoints,
-    handleSurprise: surpriseHandlerWithSound,
-    questionType,
-    getQuestionForTurn: () => generateQuestion(questionType, difficulty),
-    setHumanHasMoved,
-    humanHasMoved,
-  });
-
-  useAITurn({
-    turn,
-    winner,
-    aiModalState,
-    disableInput,
-    positions,
-    defensesUsed,
-    defenseTiles,
-    surpriseTiles,
-    numDefenses,
-    difficulty,
-    BOARD_SIZE,
-    aiTarget,
-    humanTarget,
-    t,
-    setDisableInput,
-    setDefenseTiles,
-    setDefensesUsed,
-    toast,
-    setTurn,
-    aiMovingRef,
-    humanHasMoved,
-    setAIModalState: (val) => {
-      if (val && val.targetTile) {
-        setAIModalState({
-          ...val,
-          question: generateQuestion(questionType, difficulty)
-        });
-      } else {
-        setAIModalState(val);
-      }
-    }
-  });
-
   // Enhanced handleDefenseClick function
   const handleDefenseClick = useCallback(async (tile: { x: number; y: number }) => {
     await initializeAudio(); // Ensure audio is ready
@@ -298,12 +240,70 @@ const GameBoard = ({
   }, [BOARD_SIZE, numDefenses, positions, defenseTiles, surpriseTiles, defensesUsed, t, toast, setDefenseTiles, setDefensesUsed, setDefenseMode, localSoundEnabled, volume, initializeAudio]);
 
   // Enhanced useDefenseModeHandler hook
-  const { toggleDefensePlacement } = useDefenseModeHandler({
+  const { toggleDefensePlacement, cancelDefensePlacement } = useDefenseModeHandler({
     t,
     toast,
     setDefenseMode,
     handleDefenseClick,
     defenseMode,
+  });
+
+  // Create human move handler
+  const { handleTileClick: humanTileClick } = useHumanMoveHandler({
+    winner,
+    disableInput,
+    turn,
+    positions,
+    BOARD_SIZE,
+    defenseTiles,
+    difficulty,
+    defenseMode,
+    handleDefenseClick,
+    setPositions,
+    setBoardPoints,
+    setIsModalOpen,
+    setMoveState,
+    setTurn,
+    setHumanPoints,
+    handleSurprise: surpriseHandlerWithSound,
+    questionType,
+    getQuestionForTurn: () => generateQuestion(questionType, difficulty),
+    setHumanHasMoved,
+    humanHasMoved,
+  });
+
+  useAITurn({
+    turn,
+    winner,
+    aiModalState,
+    disableInput,
+    positions,
+    defensesUsed,
+    defenseTiles,
+    surpriseTiles,
+    numDefenses,
+    difficulty,
+    BOARD_SIZE,
+    aiTarget,
+    humanTarget,
+    t,
+    setDisableInput,
+    setDefenseTiles,
+    setDefensesUsed,
+    toast,
+    setTurn,
+    aiMovingRef,
+    humanHasMoved,
+    setAIModalState: (val) => {
+      if (val && val.targetTile) {
+        setAIModalState({
+          ...val,
+          question: generateQuestion(questionType, difficulty)
+        });
+      } else {
+        setAIModalState(val);
+      }
+    }
   });
 
   // Enhanced handleTileClick function to properly handle defense cancellation
@@ -325,12 +325,8 @@ const GameBoard = ({
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape' && defenseMode) {
-        setDefenseMode(false);
-        toast({
-          title: t("game.defense_cancelled") || "Defense Cancelled",
-          description: t("game.defense_cancelled_desc") || "Defense placement mode disabled",
-          duration: 1500,
-        });
+        console.log('[DEFENSE] Escape key pressed, cancelling defense mode');
+        cancelDefensePlacement();
       }
     };
 
@@ -338,11 +334,12 @@ const GameBoard = ({
     return () => {
       document.removeEventListener('keydown', handleKeyDown);
     };
-  }, [defenseMode, setDefenseMode, t, toast]);
+  }, [defenseMode, cancelDefensePlacement]);
 
   // Cancel defense mode when turn changes
   useEffect(() => {
     if (defenseMode && turn !== 'human') {
+      console.log('[DEFENSE] Turn changed, cancelling defense mode');
       setDefenseMode(false);
     }
   }, [turn, defenseMode, setDefenseMode]);
@@ -350,6 +347,7 @@ const GameBoard = ({
   // Cancel defense mode when game ends
   useEffect(() => {
     if (winner && defenseMode) {
+      console.log('[DEFENSE] Game ended, cancelling defense mode');
       setDefenseMode(false);
     }
   }, [winner, defenseMode, setDefenseMode]);
@@ -362,8 +360,11 @@ const GameBoard = ({
       <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-40 bg-blue-600 text-white px-4 py-2 rounded-lg shadow-lg flex items-center gap-2">
         <span>🛡️ Defense Mode Active - Click a tile to place defense</span>
         <button 
-          onClick={onCancel}
-          className="ml-2 bg-white/20 hover:bg-white/30 rounded px-2 py-1 text-sm"
+          onClick={() => {
+            console.log('[DEFENSE] Cancel button clicked');
+            onCancel();
+          }}
+          className="ml-2 bg-white/20 hover:bg-white/30 rounded px-2 py-1 text-sm transition-colors"
         >
           Cancel (ESC)
         </button>
@@ -473,7 +474,7 @@ const GameBoard = ({
         <>
           <DefenseModeIndicator 
             defenseMode={defenseMode} 
-            onCancel={() => setDefenseMode(false)} 
+            onCancel={cancelDefensePlacement} 
           />
           <GameBoardArea
             language={language}

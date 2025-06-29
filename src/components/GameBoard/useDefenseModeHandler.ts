@@ -1,5 +1,4 @@
-
-import { useState } from "react";
+import { useCallback } from "react";
 import { Tile } from "./types";
 
 /**
@@ -10,56 +9,47 @@ export function useDefenseModeHandler({
   toast,
   setDefenseMode,
   handleDefenseClick,
+  defenseMode,
 }: {
   t: (key: string, params?: any) => string;
   toast: (args: any) => void;
   setDefenseMode: (b: boolean) => void;
   handleDefenseClick: (tile: Tile) => void;
+  defenseMode: boolean;
 }) {
-  const [defenseActive, setDefenseActive] = useState(false);
-
-  function startDefensePlacement() {
+  const startDefensePlacement = useCallback(() => {
+    console.log('[DEFENSE] Starting defense placement mode');
     setDefenseMode(true);
-    setDefenseActive(true);
     toast({
-      title: t("game.defense_mode_on"),
-      description: t("game.defense_mode_on_desc"),
+      title: t("game.defense_mode_on") || "Defense Mode",
+      description: t("game.defense_mode_on_desc") || "Select a tile to place your defense",
       duration: 2200,
     });
-    const handler = (ev: MouseEvent) => {
-      if (!(ev.target instanceof HTMLElement)) return;
-      let tileDiv = ev.target.closest("button[data-tile-x]");
-      if (!tileDiv) return;
-      const x = parseInt(tileDiv.getAttribute("data-tile-x") || "-1");
-      const y = parseInt(tileDiv.getAttribute("data-tile-y") || "-1");
-      if (x < 0 || y < 0) return;
-      handleDefenseClick({ x, y });
-      document.removeEventListener("click", handler, true);
-      setDefenseMode(false);
-      setDefenseActive(false);
-    };
-    setTimeout(() => {
-      document.addEventListener("click", handler, true);
-    }, 100);
-  }
+  }, [setDefenseMode, toast, t]);
 
-  function cancelDefensePlacement() {
+  const cancelDefensePlacement = useCallback(() => {
+    console.log('[DEFENSE] Cancelling defense placement mode');
     setDefenseMode(false);
-    setDefenseActive(false);
     toast({
-      title: t("game.defense_mode_off") || "Defense mode canceled",
-      description: t("game.defense_mode_off_desc") || "Defense placement has been canceled",
-      duration: 2000,
+      title: t("game.defense_cancelled") || "Defense Cancelled",
+      description: t("game.defense_cancelled_desc") || "Defense placement mode disabled",
+      duration: 1500,
     });
-  }
+  }, [setDefenseMode, toast, t]);
 
-  function toggleDefensePlacement() {
-    if (defenseActive) {
+  const toggleDefensePlacement = useCallback(() => {
+    console.log(`[DEFENSE] Toggling defense mode, current state: ${defenseMode}`);
+    if (defenseMode) {
       cancelDefensePlacement();
     } else {
       startDefensePlacement();
     }
-  }
+  }, [defenseMode, startDefensePlacement, cancelDefensePlacement]);
 
-  return { defenseActive, startDefensePlacement, cancelDefensePlacement, toggleDefensePlacement };
+  return { 
+    defenseActive: defenseMode, 
+    startDefensePlacement, 
+    cancelDefensePlacement, 
+    toggleDefensePlacement 
+  };
 }

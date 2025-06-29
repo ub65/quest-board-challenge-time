@@ -105,7 +105,7 @@ const translations = {
     "game.defense_place_btn": "Place Defense",
     "game.defense_cancel_btn": "Cancel Defense",
     "game.defense_mode_on": "Defense Mode",
-    "game.defense_mode_on_desc": "Select a tile (not start/end, not occupied, not surprise) to block the AI.",
+    "game.defense_mode_on_desc": "Select a tile to place your defense",
     "game.defense_mode_off": "Defense mode canceled",
     "game.defense_mode_off_desc": "Defense placement has been canceled",
     "game.defense_mode_select": "Select a tile to place your defense...",
@@ -119,6 +119,8 @@ const translations = {
     "game.defense_no_surprise": "Cannot place a defense on a surprise tile",
     "game.defense_ai_placed": "AI placed a defense!",
     "game.defense_ai_msg": "AI blocked your path!",
+    "game.defense_cancelled": "Defense Cancelled",
+    "game.defense_cancelled_desc": "Defense placement mode disabled",
     
     // WELCOME SCREEN
     'welcome.startGame': 'Start Game',
@@ -235,7 +237,7 @@ const translations = {
     "game.defense_place_btn": "הצב מחסום",
     "game.defense_cancel_btn": "בטל מחסום",
     "game.defense_mode_on": "מצב מחסום",
-    "game.defense_mode_on_desc": "בחר משבצת (לא פינה, לא תפוסה, לא הפתעה) כדי לחסום את הבינה.",
+    "game.defense_mode_on_desc": "בחר משבצת להצבת המחסום",
     "game.defense_mode_off": "מצב מחסום בוטל",
     "game.defense_mode_off_desc": "הצבת המחסום בוטלה",
     "game.defense_mode_select": "בחר משבצת להצבת המחסום...",
@@ -249,6 +251,8 @@ const translations = {
     "game.defense_no_surprise": "לא ניתן להציב מחסום על הפתעה",
     "game.defense_ai_placed": "הבינה הציבה מחסום!",
     "game.defense_ai_msg": "הבינה חסמה את דרכך!",
+    "game.defense_cancelled": "מחסום בוטל",
+    "game.defense_cancelled_desc": "מצב הצבת מחסום בוטל",
     
     // WELCOME SCREEN
     'welcome.startGame': 'התחל משחק',

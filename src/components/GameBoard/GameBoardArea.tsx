@@ -1,4 +1,3 @@
-
 import React, { RefObject } from "react";
 import GameHeader from "../GameHeader";
 import GameBoardHud from "./GameBoardHud";
@@ -48,6 +47,8 @@ type GameBoardAreaProps = {
   onDifficultyChange: (d: "easy" | "medium" | "hard") => void;
   surpriseCount: number;
   playerName?: string;
+  soundEnabled: boolean;
+  onToggleSound: () => void;
   children?: React.ReactNode;
 };
 
@@ -58,7 +59,7 @@ const GameBoardArea: React.FC<GameBoardAreaProps> = ({
   moveState, isModalOpen, aiModalState, questionTime, onHumanSubmit, onAISubmit, onRestart,
   settingsOpen, setSettingsOpen,
   onBoardSizeChange, onQuestionTimeChange, onSurpriseCountChange, onNumDefensesChange, onDifficultyChange, surpriseCount,
-  playerName,
+  playerName, soundEnabled, onToggleSound,
   children,
 }) => {
   // Dummy placeholder for props no longer used due to question type now controlled from welcome screen only.
@@ -71,9 +72,10 @@ const GameBoardArea: React.FC<GameBoardAreaProps> = ({
       dir={language === "he" ? "rtl" : "ltr"}
     >
       <GameHeader
-        onSettingsOpen={() => setSettingsOpen(true)}
         onRestart={onRestart}
         difficulty={difficulty}
+        soundEnabled={soundEnabled}
+        onToggleSound={onToggleSound}
       />
       <GameBoardHud
         humanPoints={humanPoints}

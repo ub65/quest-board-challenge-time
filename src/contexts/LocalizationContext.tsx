@@ -27,6 +27,12 @@ const translations = {
     'game.aiWins': '😔 AI Wins',
     'game.playAgain': 'Play Again',
     
+    // Sound controls
+    'sound.on': 'Sound On',
+    'sound.off': 'Sound Off',
+    'sound.mute': 'Mute',
+    'sound.unmute': 'Unmute',
+    
     // Question modal
     'question.translateTo': 'Translate to Hebrew:',
     'question.timeLeft': 'Time left:',
@@ -126,7 +132,7 @@ const translations = {
     "instructions.button": "Instructions",
     "instructions.title": "How to Play Tile Titans",
     "instructions.content":
-      "Welcome to Tile Titans!\n\nGoal: Be the first to reach your opponent's starting tile (the opposite corner) before the AI does!\n\nHow To Play:\n• You and the AI take turns. Your goal is to reach the opponent’s start tile.\n• Each move, answer a question correctly to advance.\n• You can only move up, down, left, or right – no diagonal moves!\n• Question types: translation or math, as you choose on the opening screen.\n• There are surprise tiles – land on them for random effects!\n• Use defense blocks to block the AI (if enabled in settings).\n• The first to reach the opponent's starting tile (top-left for AI, bottom-right for you) wins.\n\nGood luck, Titan!",
+      "Welcome to Tile Titans!\n\nGoal: Be the first to reach your opponent's starting tile (the opposite corner) before the AI does!\n\nHow To Play:\n• You and the AI take turns. Your goal is to reach the opponent's start tile.\n• Each move, answer a question correctly to advance.\n• You can only move up, down, left, or right – no diagonal moves!\n• Question types: translation or math, as you choose on the opening screen.\n• There are surprise tiles – land on them for random effects!\n• Use defense blocks to block the AI (if enabled in settings).\n• The first to reach the opponent's starting tile (top-left for AI, bottom-right for you) wins.\n\nGood luck, Titan!",
     // --- Add these new keys:
     'game.startingPlayer.human': 'You start the game! 🚶 Click Start Game.',
     'game.startingPlayer.ai': 'AI starts the game! 🤖 Click Start Game.',
@@ -146,6 +152,12 @@ const translations = {
     'game.youWin': '🎉 ניצחת!',
     'game.aiWins': '😔 הבינה המלאכותית ניצחה',
     'game.playAgain': 'שחק שוב',
+    
+    // Sound controls
+    'sound.on': 'קול פועל',
+    'sound.off': 'קול כבוי',
+    'sound.mute': 'השתק',
+    'sound.unmute': 'בטל השתקה',
     
     // Question modal
     'question.translateTo': 'תרגם לעברית:',

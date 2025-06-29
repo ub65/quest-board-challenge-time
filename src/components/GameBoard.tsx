@@ -101,7 +101,9 @@ const GameBoard = ({
     }
   }, [audioInitialized]);
 
+  // Reset game when board size changes
   useEffect(() => {
+    console.log('[GAME] Board size changed to:', boardSize);
     const randomStartingPlayer = getRandomStartingPlayer();
     setStartingPlayer(randomStartingPlayer);
     setGameStarted(false);
@@ -120,8 +122,11 @@ const GameBoard = ({
     setDefenseMode(false);
     setHumanHasMoved(false);
     setDisableInput(true);
-    // eslint-disable-next-line
-  }, [boardSize, numSurprises, numDefenses]);
+    setMoveState(null);
+    setAIModalState(null);
+    setIsModalOpen(false);
+    aiMovingRef.current = false;
+  }, [boardSize, numSurprises, numDefenses, getRandomStartingPlayer, setPositions, setTurn, setWinner, setHumanPoints, setAIPoints, setBoardPoints, setSurpriseTiles, setDefenseTiles, setDefensesUsed, setDefenseMode, setHumanHasMoved, setDisableInput, setMoveState, setIsModalOpen]);
 
   const handleStartGame = async () => {
     await initializeAudio(); // Initialize audio on game start
@@ -450,6 +455,13 @@ const GameBoard = ({
     }
   }, [moveState]);
 
+  // Enhanced board size change handler
+  const handleBoardSizeChange = useCallback((newSize: number) => {
+    console.log('[SETTINGS] Board size changing from', boardSize, 'to', newSize);
+    setBoardSize(newSize);
+    // The useEffect above will handle the game reset
+  }, [boardSize, setBoardSize]);
+
   const announcementKey =
     startingPlayer === "human"
       ? "game.startingPlayer.human"
@@ -522,7 +534,7 @@ const GameBoard = ({
             onRestart={handleRestart}
             settingsOpen={settingsOpen}
             setSettingsOpen={setSettingsOpen}
-            onBoardSizeChange={v => setBoardSize(Math.max(5, Math.min(12, v || DEFAULT_BOARD_SIZE)))}
+            onBoardSizeChange={handleBoardSizeChange}
             onQuestionTimeChange={v => setQuestionTime(Math.max(6, Math.min(40, v || DEFAULT_QUESTION_TIME)))}
             onSurpriseCountChange={setNumSurprises}
             onNumDefensesChange={setNumDefenses}

@@ -214,16 +214,43 @@ const GameBoard = ({
     defenseMode,
   });
 
+  // Create human move handler
+  const { handleTileClick: humanTileClick } = useHumanMoveHandler({
+    winner,
+    disableInput,
+    turn,
+    positions,
+    BOARD_SIZE,
+    defenseTiles,
+    difficulty,
+    defenseMode,
+    handleDefenseClick,
+    setPositions,
+    setBoardPoints,
+    setIsModalOpen,
+    setMoveState,
+    setTurn,
+    setHumanPoints,
+    handleSurprise: surpriseHandler,
+    questionType,
+    getQuestionForTurn: () => generateQuestion(questionType, difficulty),
+    setHumanHasMoved,
+    humanHasMoved,
+  });
+
   // Enhanced handleTileClick function to properly handle defense cancellation
-  const handleTileClick = useCallback((x: number, y: number) => {
+  const handleTileClick = useCallback((tile: { x: number; y: number }) => {
+    console.log("Tile clicked:", tile, "Turn:", turn, "Defense mode:", defenseMode, "Disabled:", disableInput);
+    
     // If in defense mode, handle defense placement
     if (defenseMode) {
-      handleDefenseClick({ x, y });
+      handleDefenseClick(tile);
       return; // Important: return early to prevent normal move logic
     }
 
-    // ... rest of your normal tile click logic would go here
-  }, [defenseMode, handleDefenseClick]);
+    // Use the human move handler for normal moves
+    humanTileClick(tile);
+  }, [defenseMode, handleDefenseClick, humanTileClick, turn, disableInput]);
 
   // Add escape key handler for canceling defense mode
   useEffect(() => {

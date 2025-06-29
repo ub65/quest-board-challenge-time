@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
-import { SlidersHorizontal, Save } from "lucide-react";
+import { SlidersHorizontal, Save, Volume2 } from "lucide-react";
 import LanguageSelector from "./LanguageSelector";
 import { useLocalization } from "@/contexts/LocalizationContext";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -29,6 +29,45 @@ type GameSettingsModalProps = {
   onSoundEnabledChange?: (enabled: boolean) => void;
   volume?: number;
   onVolumeChange?: (volume: number) => void;
+};
+
+// Simple test sound function for settings
+const playTestSound = (volume: number) => {
+  try {
+    const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+    
+    const playSound = () => {
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+      
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+      
+      gainNode.gain.setValueAtTime(0, audioContext.currentTime);
+      gainNode.gain.linearRampToValueAtTime(volume * 0.3, audioContext.currentTime + 0.02);
+      gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.4);
+      
+      oscillator.type = 'sine';
+      oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
+      
+      oscillator.start(audioContext.currentTime);
+      oscillator.stop(audioContext.currentTime + 0.4);
+      
+      setTimeout(() => {
+        if (audioContext.state !== 'closed') {
+          audioContext.close();
+        }
+      }, 500);
+    };
+    
+    if (audioContext.state === 'suspended') {
+      audioContext.resume().then(playSound);
+    } else {
+      playSound();
+    }
+  } catch (error) {
+    console.error('Test sound failed:', error);
+  }
 };
 
 const GameSettingsModal = ({
@@ -125,7 +164,13 @@ const GameSettingsModal = ({
       max: 1,
       step: 0.1,
       value: pendingVolume,
-      onValueChange: (v: number) => { setPendingVolume(v); },
+      onValueChange: (v: number) => { 
+        setPendingVolume(v);
+        // Play test sound when adjusting volume
+        if (v > 0) {
+          playTestSound(v);
+        }
+      },
       displayValue: `${Math.round(pendingVolume * 100)}%`,
       minLabelKey: "settings.volumeMin",
       maxLabelKey: "settings.volumeMax"
@@ -141,6 +186,12 @@ const GameSettingsModal = ({
     if (onSoundEnabledChange) onSoundEnabledChange(pendingSoundEnabled);
     if (onVolumeChange) onVolumeChange(pendingVolume);
     onOpenChange(false);
+  };
+
+  const handleTestSound = () => {
+    if (pendingSoundEnabled && pendingVolume > 0) {
+      playTestSound(pendingVolume);
+    }
   };
 
   return (
@@ -166,19 +217,37 @@ const GameSettingsModal = ({
             />
             
             {/* Sound Settings */}
-            <div className="flex flex-col gap-3">
+            <div className="flex flex-col gap-4">
               <div className="flex items-center justify-between">
                 <label className="text-base font-semibold">
                   {t('settings.sound') || 'Sound Effects'}
                 </label>
                 <Switch
                   checked={pendingSoundEnabled}
-                  onCheckedChange={setPendingSoundEnabled}
+                  onCheckedChange={(checked) => {
+                    setPendingSoundEnabled(checked);
+                    if (checked && pendingVolume > 0) {
+                      // Play test sound when enabling
+                      setTimeout(() => playTestSound(pendingVolume), 100);
+                    }
+                  }}
                 />
               </div>
               {pendingSoundEnabled && (
-                <div className="text-sm text-gray-600">
-                  {t('settings.soundDesc') || 'Enable sound effects for game actions'}
+                <div className="flex items-center gap-2">
+                  <div className="text-sm text-gray-600 flex-1">
+                    {t('settings.soundDesc') || 'Enable sound effects for game actions'}
+                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={handleTestSound}
+                    className="flex items-center gap-1"
+                  >
+                    <Volume2 size={14} />
+                    Test
+                  </Button>
                 </div>
               )}
             </div>

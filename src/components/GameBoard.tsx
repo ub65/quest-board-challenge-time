@@ -15,7 +15,7 @@ import { useDefenseModeHandler } from "./GameBoard/useDefenseModeHandler";
 import GameBoardModals from "./GameBoard/GameBoardModals";
 import { generateQuestion } from "./GameBoard/questionGenerator";
 
-// Enhanced sound effects with better audio context management and higher volume
+// Simplified and more reliable sound system
 const playSound = (soundType: string, soundEnabled: boolean, volume: number = 0.5) => {
   if (!soundEnabled || volume === 0) {
     console.log(`[SOUND] Skipped ${soundType} - sound disabled or volume 0`);
@@ -25,42 +25,34 @@ const playSound = (soundType: string, soundEnabled: boolean, volume: number = 0.
   console.log(`[SOUND] Playing ${soundType} at volume ${volume}`);
   
   try {
-    // Create a new audio context for each sound to avoid conflicts
+    // Create audio context
     const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
     
-    // Resume audio context if suspended (required by some browsers)
-    if (audioContext.state === 'suspended') {
-      audioContext.resume().then(() => {
-        console.log('[SOUND] Audio context resumed');
-        playActualSound();
-      });
-    } else {
-      playActualSound();
-    }
-    
-    function playActualSound() {
+    // Function to actually play the sound
+    const playActualSound = () => {
       const oscillator = audioContext.createOscillator();
       const gainNode = audioContext.createGain();
       
       oscillator.connect(gainNode);
       gainNode.connect(audioContext.destination);
       
-      // Increase base volume significantly and use the user's volume setting
-      const adjustedVolume = Math.max(0, Math.min(1, volume)) * 0.3; // Increased from 0.15 to 0.3
+      // Set volume - increased base volume for better audibility
+      const adjustedVolume = Math.max(0, Math.min(1, volume)) * 0.5; // Increased from 0.3 to 0.5
       console.log(`[SOUND] Adjusted volume: ${adjustedVolume}`);
       
-      // Create audio envelope
+      // Create audio envelope for smooth sound
       gainNode.gain.setValueAtTime(0, audioContext.currentTime);
-      gainNode.gain.linearRampToValueAtTime(adjustedVolume, audioContext.currentTime + 0.01);
-      gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.5);
+      gainNode.gain.linearRampToValueAtTime(adjustedVolume, audioContext.currentTime + 0.02);
+      gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.6);
       
-      // Set oscillator type for better sound quality
+      // Set oscillator type
       oscillator.type = 'sine';
       
+      // Define sound frequencies and patterns
       switch (soundType) {
         case 'move':
           oscillator.frequency.setValueAtTime(440, audioContext.currentTime);
-          oscillator.frequency.exponentialRampToValueAtTime(660, audioContext.currentTime + 0.1);
+          oscillator.frequency.exponentialRampToValueAtTime(660, audioContext.currentTime + 0.15);
           break;
         case 'correct':
           // Pleasant ascending chord
@@ -71,7 +63,7 @@ const playSound = (soundType: string, soundEnabled: boolean, volume: number = 0.
         case 'wrong':
           // Descending tone
           oscillator.frequency.setValueAtTime(330, audioContext.currentTime);
-          oscillator.frequency.exponentialRampToValueAtTime(220, audioContext.currentTime + 0.3);
+          oscillator.frequency.exponentialRampToValueAtTime(220, audioContext.currentTime + 0.4);
           break;
         case 'win':
           // Victory fanfare
@@ -89,10 +81,10 @@ const playSound = (soundType: string, soundEnabled: boolean, volume: number = 0.
         case 'defense':
           // Low defensive sound
           oscillator.frequency.setValueAtTime(200, audioContext.currentTime);
-          oscillator.frequency.setValueAtTime(150, audioContext.currentTime + 0.15);
+          oscillator.frequency.setValueAtTime(150, audioContext.currentTime + 0.2);
           break;
         case 'test':
-          // Test sound - simple beep
+          // Test sound - clear beep
           oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
           break;
         default:
@@ -100,21 +92,54 @@ const playSound = (soundType: string, soundEnabled: boolean, volume: number = 0.
       }
       
       oscillator.start(audioContext.currentTime);
-      oscillator.stop(audioContext.currentTime + 0.5);
+      oscillator.stop(audioContext.currentTime + 0.6);
       
-      console.log(`[SOUND] ${soundType} sound started`);
+      console.log(`[SOUND] ${soundType} sound started and will play for 0.6 seconds`);
       
-      // Clean up audio context after use
+      // Clean up
       setTimeout(() => {
-        if (audioContext.state !== 'closed') {
-          audioContext.close();
-          console.log('[SOUND] Audio context closed');
+        try {
+          if (audioContext.state !== 'closed') {
+            audioContext.close();
+            console.log('[SOUND] Audio context closed');
+          }
+        } catch (e) {
+          console.log('[SOUND] Audio context cleanup completed');
         }
-      }, 600);
+      }, 700);
+    };
+    
+    // Handle audio context state
+    if (audioContext.state === 'suspended') {
+      console.log('[SOUND] Audio context suspended, attempting to resume...');
+      audioContext.resume().then(() => {
+        console.log('[SOUND] Audio context resumed successfully');
+        playActualSound();
+      }).catch(err => {
+        console.error('[SOUND] Failed to resume audio context:', err);
+      });
+    } else {
+      console.log('[SOUND] Audio context ready, playing sound immediately');
+      playActualSound();
     }
     
   } catch (error) {
-    console.error("Audio failed:", error);
+    console.error("[SOUND] Audio failed:", error);
+    
+    // Fallback: try to play a simple beep using a different method
+    try {
+      const oscillator = new OscillatorNode(new AudioContext());
+      const gainNode = new GainNode(new AudioContext());
+      oscillator.connect(gainNode);
+      gainNode.connect(gainNode.context.destination);
+      gainNode.gain.value = volume * 0.3;
+      oscillator.frequency.value = 440;
+      oscillator.start();
+      oscillator.stop(oscillator.context.currentTime + 0.2);
+      console.log('[SOUND] Fallback sound played');
+    } catch (fallbackError) {
+      console.error('[SOUND] Fallback also failed:', fallbackError);
+    }
   }
 };
 
@@ -168,6 +193,7 @@ const GameBoard = ({
 
   // Local sound state for mute button
   const [localSoundEnabled, setLocalSoundEnabled] = useState(soundEnabled);
+  const [audioInitialized, setAudioInitialized] = useState(false);
 
   const BOARD_SIZE = boardSize;
   const aiTarget = { x: 0, y: 0 };
@@ -182,17 +208,28 @@ const GameBoard = ({
     setLocalSoundEnabled(soundEnabled);
   }, [soundEnabled]);
 
-  // Test sound on component mount
-  useEffect(() => {
-    console.log(`[SOUND] GameBoard mounted with sound: ${soundEnabled}, volume: ${volume}`);
-    if (soundEnabled && volume > 0) {
-      // Play a test sound after a short delay to ensure audio context is ready
-      setTimeout(() => {
-        console.log('[SOUND] Playing test sound...');
-        playSound('test', true, volume);
-      }, 1000);
+  // Initialize audio on first user interaction
+  const initializeAudio = useCallback(() => {
+    if (!audioInitialized) {
+      console.log('[SOUND] Initializing audio on user interaction...');
+      try {
+        const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+        if (audioContext.state === 'suspended') {
+          audioContext.resume().then(() => {
+            console.log('[SOUND] Audio context initialized and resumed');
+            setAudioInitialized(true);
+            audioContext.close();
+          });
+        } else {
+          console.log('[SOUND] Audio context already running');
+          setAudioInitialized(true);
+          audioContext.close();
+        }
+      } catch (error) {
+        console.error('[SOUND] Failed to initialize audio:', error);
+      }
     }
-  }, []);
+  }, [audioInitialized]);
 
   useEffect(() => {
     const randomStartingPlayer = getRandomStartingPlayer();
@@ -217,6 +254,7 @@ const GameBoard = ({
   }, [boardSize, numSurprises, numDefenses]);
 
   const handleStartGame = () => {
+    initializeAudio(); // Initialize audio on game start
     setGameStarted(true);
     setDisableInput(false);
     // Set humanHasMoved based on starting player
@@ -228,7 +266,9 @@ const GameBoard = ({
     
     // Play a start game sound
     console.log('[SOUND] Game starting, playing start sound');
-    playSound('correct', localSoundEnabled, volume);
+    setTimeout(() => {
+      playSound('correct', localSoundEnabled, volume);
+    }, 500); // Delay to ensure audio is ready
   };
 
   useEffect(() => {
@@ -242,7 +282,9 @@ const GameBoard = ({
       
       // Play win/lose sound
       console.log(`[SOUND] Game ended, winner: ${winner}`);
-      playSound(winner === "human" ? "win" : "wrong", localSoundEnabled, volume);
+      setTimeout(() => {
+        playSound(winner === "human" ? "win" : "wrong", localSoundEnabled, volume);
+      }, 300);
     }
   }, [winner, localSoundEnabled, volume]);
 
@@ -270,7 +312,9 @@ const GameBoard = ({
   const surpriseHandlerWithSound = useCallback((tile: any, player: string) => {
     const result = surpriseHandler(tile, player);
     console.log('[SOUND] Surprise triggered, playing surprise sound');
-    playSound("surprise", localSoundEnabled, volume);
+    setTimeout(() => {
+      playSound("surprise", localSoundEnabled, volume);
+    }, 200);
     return result;
   }, [surpriseHandler, localSoundEnabled, volume]);
 
@@ -334,6 +378,8 @@ const GameBoard = ({
 
   // Enhanced handleDefenseClick function
   const handleDefenseClick = useCallback((tile: { x: number; y: number }) => {
+    initializeAudio(); // Ensure audio is ready
+    
     const problem = canPlaceDefenseHere({
       tile,
       BOARD_SIZE,
@@ -379,7 +425,7 @@ const GameBoard = ({
       ),
       duration: 2000,
     });
-  }, [BOARD_SIZE, numDefenses, positions, defenseTiles, surpriseTiles, defensesUsed, t, toast, setDefenseTiles, setDefensesUsed, setDefenseMode, localSoundEnabled, volume]);
+  }, [BOARD_SIZE, numDefenses, positions, defenseTiles, surpriseTiles, defensesUsed, t, toast, setDefenseTiles, setDefensesUsed, setDefenseMode, localSoundEnabled, volume, initializeAudio]);
 
   // Enhanced useDefenseModeHandler hook
   const { toggleDefensePlacement } = useDefenseModeHandler({
@@ -392,6 +438,7 @@ const GameBoard = ({
 
   // Enhanced handleTileClick function to properly handle defense cancellation
   const handleTileClick = useCallback((tile: { x: number; y: number }) => {
+    initializeAudio(); // Ensure audio is ready on any click
     console.log("Tile clicked:", tile, "Turn:", turn, "Defense mode:", defenseMode, "Disabled:", disableInput);
     
     // If in defense mode, handle defense placement
@@ -402,7 +449,7 @@ const GameBoard = ({
 
     // Use the human move handler for normal moves
     humanTileClick(tile);
-  }, [defenseMode, handleDefenseClick, humanTileClick, turn, disableInput]);
+  }, [defenseMode, handleDefenseClick, humanTileClick, turn, disableInput, initializeAudio]);
 
   // Add escape key handler for canceling defense mode
   useEffect(() => {
@@ -477,7 +524,9 @@ const GameBoard = ({
       
       // Play move sound
       console.log('[SOUND] AI moved, playing move sound');
-      playSound("move", localSoundEnabled, volume);
+      setTimeout(() => {
+        playSound("move", localSoundEnabled, volume);
+      }, 100);
       
       // Handle surprise if any
       setTimeout(() => {
@@ -609,8 +658,11 @@ const GameBoard = ({
               setLocalSoundEnabled(newSoundState);
               console.log(`[SOUND] Sound toggled to: ${newSoundState}`);
               if (newSoundState) {
-                // Play a test sound when enabling
-                setTimeout(() => playSound('test', true, volume), 100);
+                // Initialize audio and play a test sound when enabling
+                initializeAudio();
+                setTimeout(() => {
+                  playSound('test', true, volume);
+                }, 200);
               }
             }}
           >

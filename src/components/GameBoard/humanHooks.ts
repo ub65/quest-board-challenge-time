@@ -1,12 +1,13 @@
-
 import { useCallback } from "react";
 import { getValidMoves } from "./utils";
+import { playSound } from "@/lib/audioManager";
 
 export function useHumanMoveHandler({
   winner, disableInput, turn, positions, BOARD_SIZE, defenseTiles, difficulty,
   defenseMode, handleDefenseClick, setPositions, setBoardPoints,
   setIsModalOpen, setMoveState, setTurn, setHumanPoints, handleSurprise,
   questionType, getQuestionForTurn, setHumanHasMoved, humanHasMoved,
+  soundEnabled, volume,
 }: {
   winner: any;
   disableInput: boolean;
@@ -28,6 +29,8 @@ export function useHumanMoveHandler({
   getQuestionForTurn: () => any;
   setHumanHasMoved: (b: boolean) => void;
   humanHasMoved?: boolean;
+  soundEnabled?: boolean;
+  volume?: number;
 }) {
   function canMoveTo(tile: { x: number; y: number }, aiPos: { x: number; y: number }, defenseTiles: any[], BOARD_SIZE: number) {
     const valid = getValidMoves(positions.human, BOARD_SIZE, defenseTiles, aiPos);
@@ -54,10 +57,22 @@ export function useHumanMoveHandler({
         setMoveState(null);
 
         if (!ok) {
+          // Play wrong sound immediately when answer is incorrect
+          console.log('[AUDIO] Human answered incorrectly, playing wrong sound');
+          if (soundEnabled) {
+            playSound("wrong", soundEnabled, volume || 0.5);
+          }
           setTurn("ai");
           return;
         }
 
+        // Play correct sound immediately when answer is correct
+        console.log('[AUDIO] Human answered correctly, playing correct sound');
+        if (soundEnabled) {
+          playSound("correct", soundEnabled, volume || 0.5);
+        }
+
+        // Move the player
         setPositions((p) => {
           setBoardPoints((prev) => {
             const newBoard = prev.map((row) => [...row]);
@@ -71,18 +86,27 @@ export function useHumanMoveHandler({
 
         setHumanHasMoved(true);
 
+        // Play move sound after a short delay
         setTimeout(() => {
-          handleSurprise(tile, "human");
+          console.log('[AUDIO] Human moved, playing move sound');
+          if (soundEnabled) {
+            playSound("move", soundEnabled, volume || 0.5);
+          }
+          
+          // Handle surprise after move sound
           setTimeout(() => {
-            if (!winner) {
-              setTurn("ai");
-            }
-          }, 600);
-        }, 100);
+            handleSurprise(tile, "human");
+            setTimeout(() => {
+              if (!winner) {
+                setTurn("ai");
+              }
+            }, 600);
+          }, 200);
+        }, 300);
       }
     });
     setIsModalOpen(true);
-  }, [BOARD_SIZE, defenseMode, defenseTiles, disableInput, getQuestionForTurn, handleDefenseClick, handleSurprise, positions.ai, positions.human, setBoardPoints, setHumanPoints, setIsModalOpen, setMoveState, setPositions, setTurn, setHumanHasMoved, winner]);
+  }, [BOARD_SIZE, defenseMode, defenseTiles, disableInput, getQuestionForTurn, handleDefenseClick, handleSurprise, positions.ai, positions.human, setBoardPoints, setHumanPoints, setIsModalOpen, setMoveState, setPositions, setTurn, setHumanHasMoved, winner, soundEnabled, volume]);
 
   return { handleTileClick };
 }

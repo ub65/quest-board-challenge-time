@@ -24,6 +24,7 @@ export default function useIndexGameFlow() {
   const mode: Mode = "ai";
 
   const handleRestart = () => {
+    console.log('[FLOW] Restarting game, incrementing game key');
     setGameKey((k) => k + 1);
     setStep("welcome");
     setPlayerName("");
@@ -31,7 +32,17 @@ export default function useIndexGameFlow() {
 
   // No online/other mode select - always AI
   const handleStart = () => {
+    console.log('[FLOW] Starting game with board size:', boardSize);
     setStep("game");
+  };
+
+  // Enhanced setBoardSize with logging
+  const handleSetBoardSize = (newSize: number) => {
+    console.log('[FLOW] Setting board size from', boardSize, 'to', newSize);
+    setBoardSize(newSize);
+    // Force game restart when board size changes
+    setGameKey((k) => k + 1);
+    setStep("welcome");
   };
 
   return {
@@ -43,7 +54,8 @@ export default function useIndexGameFlow() {
     soundEnabled, setSoundEnabled,
     volume, setVolume,
     questionTime, setQuestionTime,
-    boardSize, setBoardSize,
+    boardSize, 
+    setBoardSize: handleSetBoardSize,
     numSurprises, setNumSurprises,
     numDefenses, setNumDefenses,
     questionType, setQuestionType,

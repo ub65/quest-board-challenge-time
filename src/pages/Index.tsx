@@ -14,6 +14,13 @@ const Index = () => {
   const dummyQuestionType = "translate";
   const dummySetQuestionType = () => {};
 
+  console.log('[INDEX] Current flow state:', {
+    step: flow.step,
+    boardSize: flow.boardSize,
+    difficulty: flow.difficulty,
+    gameKey: flow.gameKey
+  });
+
   // --- Single-player flow only ---
   return (
     <div
@@ -26,7 +33,10 @@ const Index = () => {
         open={flow.settingsOpen}
         onOpenChange={flow.setSettingsOpen}
         boardSize={flow.boardSize}
-        onBoardSizeChange={flow.setBoardSize}
+        onBoardSizeChange={(newSize) => {
+          console.log('[INDEX] Board size change requested:', newSize);
+          flow.setBoardSize(newSize);
+        }}
         questionTime={flow.questionTime}
         onQuestionTimeChange={flow.setQuestionTime}
         surpriseCount={flow.numSurprises}

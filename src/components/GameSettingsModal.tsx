@@ -62,6 +62,15 @@ const GameSettingsModal = ({
 
   useEffect(() => {
     if (open) {
+      console.log('[SETTINGS] Modal opened, setting pending values:', {
+        boardSize,
+        questionTime,
+        surpriseCount,
+        numDefenses,
+        difficulty,
+        soundEnabled,
+        volume
+      });
       setPendingBoardSize(boardSize);
       setPendingQuestionTime(questionTime);
       setPendingSurpriseCount(surpriseCount);
@@ -80,7 +89,10 @@ const GameSettingsModal = ({
       max: 12,
       step: 1,
       value: pendingBoardSize,
-      onValueChange: (v: number) => { setPendingBoardSize(v); },
+      onValueChange: (v: number) => { 
+        console.log('[SETTINGS] Board size slider changed to:', v);
+        setPendingBoardSize(v); 
+      },
       displayValue: `${pendingBoardSize}x${pendingBoardSize}`,
       minLabelKey: "settings.boardMin",
       maxLabelKey: "settings.boardMax"
@@ -92,7 +104,10 @@ const GameSettingsModal = ({
       max: 40,
       step: 1,
       value: pendingQuestionTime,
-      onValueChange: (v: number) => { setPendingQuestionTime(v); },
+      onValueChange: (v: number) => { 
+        console.log('[SETTINGS] Question time changed to:', v);
+        setPendingQuestionTime(v); 
+      },
       suffix: "s",
       minLabelKey: "settings.timeMin",
       maxLabelKey: "settings.timeMax"
@@ -104,7 +119,10 @@ const GameSettingsModal = ({
       max: 8,
       step: 1,
       value: pendingSurpriseCount,
-      onValueChange: (v: number) => { setPendingSurpriseCount(v); },
+      onValueChange: (v: number) => { 
+        console.log('[SETTINGS] Surprise count changed to:', v);
+        setPendingSurpriseCount(v); 
+      },
       minLabelKey: "settings.surpriseMin",
       maxLabelKey: "settings.surpriseMax"
     },
@@ -115,7 +133,10 @@ const GameSettingsModal = ({
       max: 4,
       step: 1,
       value: pendingNumDefenses,
-      onValueChange: (v: number) => { setPendingNumDefenses(v); },
+      onValueChange: (v: number) => { 
+        console.log('[SETTINGS] Defense count changed to:', v);
+        setPendingNumDefenses(v); 
+      },
       minLabelKey: "settings.defenseMin",
       maxLabelKey: "settings.defenseMax"
     },
@@ -127,6 +148,7 @@ const GameSettingsModal = ({
       step: 0.1,
       value: pendingVolume,
       onValueChange: (v: number) => { 
+        console.log('[SETTINGS] Volume changed to:', v);
         setPendingVolume(v);
         // Play test sound when adjusting volume
         if (v > 0) {
@@ -140,6 +162,16 @@ const GameSettingsModal = ({
   ];
 
   const handleSave = () => {
+    console.log('[SETTINGS] Saving settings:', {
+      boardSize: pendingBoardSize,
+      questionTime: pendingQuestionTime,
+      surpriseCount: pendingSurpriseCount,
+      numDefenses: pendingNumDefenses,
+      difficulty: pendingDifficulty,
+      soundEnabled: pendingSoundEnabled,
+      volume: pendingVolume
+    });
+    
     onBoardSizeChange(pendingBoardSize);
     onQuestionTimeChange(pendingQuestionTime);
     onSurpriseCountChange(pendingSurpriseCount);
@@ -175,7 +207,10 @@ const GameSettingsModal = ({
             <LanguageSelector />
             <GameSettingsDifficultySelector 
               difficulty={pendingDifficulty} 
-              onDifficultyChange={(d) => { setPendingDifficulty(d); }} 
+              onDifficultyChange={(d) => { 
+                console.log('[SETTINGS] Difficulty changed to:', d);
+                setPendingDifficulty(d); 
+              }} 
             />
             
             {/* Sound Settings */}
@@ -187,6 +222,7 @@ const GameSettingsModal = ({
                 <Switch
                   checked={pendingSoundEnabled}
                   onCheckedChange={(checked) => {
+                    console.log('[SETTINGS] Sound enabled changed to:', checked);
                     setPendingSoundEnabled(checked);
                     if (checked && pendingVolume > 0) {
                       // Play test sound when enabling

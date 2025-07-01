@@ -21,6 +21,16 @@ const Index = () => {
     gameKey: flow.gameKey
   });
 
+  // Enhanced board size change handler with detailed logging
+  const handleBoardSizeChange = (newSize: number) => {
+    console.log('[INDEX] Board size change requested:', {
+      from: flow.boardSize,
+      to: newSize,
+      gameKey: flow.gameKey
+    });
+    flow.setBoardSize(newSize);
+  };
+
   // --- Single-player flow only ---
   return (
     <div
@@ -33,10 +43,7 @@ const Index = () => {
         open={flow.settingsOpen}
         onOpenChange={flow.setSettingsOpen}
         boardSize={flow.boardSize}
-        onBoardSizeChange={(newSize) => {
-          console.log('[INDEX] Board size change requested:', newSize);
-          flow.setBoardSize(newSize);
-        }}
+        onBoardSizeChange={handleBoardSizeChange}
         questionTime={flow.questionTime}
         onQuestionTimeChange={flow.setQuestionTime}
         surpriseCount={flow.numSurprises}

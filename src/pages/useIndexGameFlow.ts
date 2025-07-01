@@ -15,7 +15,7 @@ export default function useIndexGameFlow() {
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [volume, setVolume] = useState<number>(0.5);
   const [questionTime, setQuestionTime] = useState(20);
-  const [boardSize, setBoardSize] = useState(8);
+  const [boardSize, setBoardSize] = useState(7); // Default to 7x7
   const [numSurprises, setNumSurprises] = useState(4);
   const [numDefenses, setNumDefenses] = useState(DEFAULT_DEFENSES);
   const [questionType, setQuestionType] = useState<"translate" | "math">("translate");
@@ -36,13 +36,27 @@ export default function useIndexGameFlow() {
     setStep("game");
   };
 
-  // Enhanced setBoardSize with logging
+  // Enhanced setBoardSize with proper logging and game restart
   const handleSetBoardSize = (newSize: number) => {
-    console.log('[FLOW] Setting board size from', boardSize, 'to', newSize);
-    setBoardSize(newSize);
-    // Force game restart when board size changes
-    setGameKey((k) => k + 1);
-    setStep("welcome");
+    console.log('[FLOW] Board size change requested from', boardSize, 'to', newSize);
+    
+    if (newSize !== boardSize) {
+      console.log('[FLOW] Board size is different, updating and restarting game');
+      setBoardSize(newSize);
+      
+      // Force game restart when board size changes
+      setGameKey((k) => {
+        const newKey = k + 1;
+        console.log('[FLOW] Game key incremented to', newKey);
+        return newKey;
+      });
+      
+      // Return to welcome screen to restart the game
+      console.log('[FLOW] Returning to welcome screen for new game');
+      setStep("welcome");
+    } else {
+      console.log('[FLOW] Board size unchanged, no restart needed');
+    }
   };
 
   return {

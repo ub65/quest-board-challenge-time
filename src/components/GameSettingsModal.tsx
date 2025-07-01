@@ -62,7 +62,7 @@ const GameSettingsModal = ({
 
   useEffect(() => {
     if (open) {
-      console.log('[SETTINGS] Modal opened, setting pending values:', {
+      console.log('[SETTINGS] Modal opened, resetting pending values to current values:', {
         boardSize,
         questionTime,
         surpriseCount,
@@ -90,7 +90,7 @@ const GameSettingsModal = ({
       step: 1,
       value: pendingBoardSize,
       onValueChange: (v: number) => { 
-        console.log('[SETTINGS] Board size slider changed to:', v);
+        console.log('[SETTINGS] Board size slider changed from', pendingBoardSize, 'to', v);
         setPendingBoardSize(v); 
       },
       displayValue: `${pendingBoardSize}x${pendingBoardSize}`,
@@ -162,7 +162,7 @@ const GameSettingsModal = ({
   ];
 
   const handleSave = () => {
-    console.log('[SETTINGS] Saving settings:', {
+    console.log('[SETTINGS] Saving settings with pending values:', {
       boardSize: pendingBoardSize,
       questionTime: pendingQuestionTime,
       surpriseCount: pendingSurpriseCount,
@@ -172,13 +172,24 @@ const GameSettingsModal = ({
       volume: pendingVolume
     });
     
-    onBoardSizeChange(pendingBoardSize);
+    // Check if board size changed
+    const boardSizeChanged = pendingBoardSize !== boardSize;
+    console.log('[SETTINGS] Board size changed?', boardSizeChanged, 'from', boardSize, 'to', pendingBoardSize);
+    
+    // Apply all changes
+    if (boardSizeChanged) {
+      console.log('[SETTINGS] Calling onBoardSizeChange with:', pendingBoardSize);
+      onBoardSizeChange(pendingBoardSize);
+    }
+    
     onQuestionTimeChange(pendingQuestionTime);
     onSurpriseCountChange(pendingSurpriseCount);
     onNumDefensesChange(pendingNumDefenses);
     onDifficultyChange(pendingDifficulty);
     if (onSoundEnabledChange) onSoundEnabledChange(pendingSoundEnabled);
     if (onVolumeChange) onVolumeChange(pendingVolume);
+    
+    console.log('[SETTINGS] All settings saved, closing modal');
     onOpenChange(false);
   };
 

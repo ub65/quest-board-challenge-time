@@ -100,8 +100,8 @@ const GameSettingsModal = ({
     {
       id: "question-time-slider",
       labelKey: "settings.questionTime",
-      min: 6,
-      max: 40,
+      min: 10,
+      max: 30,
       step: 1,
       value: pendingQuestionTime,
       onValueChange: (v: number) => { 

@@ -86,7 +86,7 @@ const GameSettingsModal = ({
       id: "board-size-slider",
       labelKey: "settings.boardSize",
       min: 5,
-      max: 12,
+      max: 10,
       step: 1,
       value: pendingBoardSize,
       onValueChange: (v: number) => { 

@@ -81,6 +81,7 @@ const Index = () => {
             questionType={flow.questionType}
             soundEnabled={flow.soundEnabled}
             volume={flow.volume}
+            boardSize={flow.boardSize} // Pass board size as prop
           />
         </div>
       )}

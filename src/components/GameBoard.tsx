@@ -25,6 +25,7 @@ const GameBoard = ({
   questionType = "translate",
   soundEnabled = true,
   volume = 0.5,
+  boardSize: propBoardSize = DEFAULT_BOARD_SIZE, // Accept board size as prop
 }: {
   difficulty: "easy" | "medium" | "hard";
   onRestart: () => void;
@@ -34,6 +35,7 @@ const GameBoard = ({
   questionType?: "translate" | "math";
   soundEnabled?: boolean;
   volume?: number;
+  boardSize?: number; // Add board size prop
 }) => {
   const { t, language } = useLocalization();
 
@@ -45,6 +47,16 @@ const GameBoard = ({
     numSurprises, setNumSurprises,
     numDefenses, setNumDefenses,
   } = useGameSettings(initialDifficulty);
+
+  // Use prop board size if provided, otherwise use internal state
+  const actualBoardSize = propBoardSize || boardSize;
+
+  console.log('[GAMEBOARD] Board size values:', {
+    propBoardSize,
+    internalBoardSize: boardSize,
+    actualBoardSize,
+    gameKey: Date.now() % 10000 // Simple way to track rerenders
+  });
 
   const {
     boardPoints, setBoardPoints,
@@ -62,13 +74,13 @@ const GameBoard = ({
     disableInput, setDisableInput,
     humanHasMoved, setHumanHasMoved,
     getRandomStartingPlayer,
-  } = useGameBoardState(boardSize, numSurprises);
+  } = useGameBoardState(actualBoardSize, numSurprises);
 
   // Local sound state for mute button
   const [localSoundEnabled, setLocalSoundEnabled] = useState(soundEnabled);
   const [audioInitialized, setAudioInitialized] = useState(false);
 
-  const BOARD_SIZE = boardSize;
+  const BOARD_SIZE = actualBoardSize;
   const aiTarget = { x: 0, y: 0 };
   const humanTarget = { x: BOARD_SIZE - 1, y: BOARD_SIZE - 1 };
   const [aiModalState, setAIModalState] = useState<null | { question: any; targetTile: any }>(null);
@@ -103,20 +115,20 @@ const GameBoard = ({
 
   // Reset game when board size changes
   useEffect(() => {
-    console.log('[GAME] Board size changed to:', boardSize);
+    console.log('[GAME] Board size changed to:', actualBoardSize);
     const randomStartingPlayer = getRandomStartingPlayer();
     setStartingPlayer(randomStartingPlayer);
     setGameStarted(false);
     setTurn(randomStartingPlayer);
     setPositions({
       human: { x: 0, y: 0 },
-      ai: { x: boardSize - 1, y: boardSize - 1 }
+      ai: { x: actualBoardSize - 1, y: actualBoardSize - 1 }
     });
     setWinner(null);
     setHumanPoints(0);
     setAIPoints(0);
-    setBoardPoints(generateRandomPoints(boardSize));
-    setSurpriseTiles(getRandomSurpriseTiles(boardSize, numSurprises));
+    setBoardPoints(generateRandomPoints(actualBoardSize));
+    setSurpriseTiles(getRandomSurpriseTiles(actualBoardSize, numSurprises));
     setDefenseTiles([]);
     setDefensesUsed({ human: 0, ai: 0 });
     setDefenseMode(false);
@@ -126,7 +138,7 @@ const GameBoard = ({
     setAIModalState(null);
     setIsModalOpen(false);
     aiMovingRef.current = false;
-  }, [boardSize, numSurprises, numDefenses, getRandomStartingPlayer, setPositions, setTurn, setWinner, setHumanPoints, setAIPoints, setBoardPoints, setSurpriseTiles, setDefenseTiles, setDefensesUsed, setDefenseMode, setHumanHasMoved, setDisableInput, setMoveState, setIsModalOpen]);
+  }, [actualBoardSize, numSurprises, numDefenses, getRandomStartingPlayer, setPositions, setTurn, setWinner, setHumanPoints, setAIPoints, setBoardPoints, setSurpriseTiles, setDefenseTiles, setDefensesUsed, setDefenseMode, setHumanHasMoved, setDisableInput, setMoveState, setIsModalOpen]);
 
   const handleStartGame = async () => {
     await initializeAudio(); // Initialize audio on game start
@@ -429,7 +441,7 @@ const GameBoard = ({
   }, [aiModalState, setPositions, setBoardPoints, setAIPoints, BOARD_SIZE, surpriseHandlerWithSound, winner, setTurn, setDisableInput, localSoundEnabled, volume]);
 
   const handleRestart = useGameRestart({
-    boardSize,
+    boardSize: actualBoardSize,
     numSurprises,
     setPositions,
     setWinner,
@@ -455,11 +467,10 @@ const GameBoard = ({
     }
   }, [moveState]);
 
-  // Enhanced board size change handler
+  // Enhanced board size change handler - now just updates internal state
   const handleBoardSizeChange = useCallback((newSize: number) => {
-    console.log('[SETTINGS] Board size changing from', boardSize, 'to', newSize);
+    console.log('[SETTINGS] Internal board size changing from', boardSize, 'to', newSize);
     setBoardSize(newSize);
-    // The useEffect above will handle the game reset
   }, [boardSize, setBoardSize]);
 
   const announcementKey =

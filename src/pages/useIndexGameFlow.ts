@@ -44,16 +44,14 @@ export default function useIndexGameFlow() {
       console.log('[FLOW] Board size is different, updating and restarting game');
       setBoardSize(newSize);
       
-      // Force game restart when board size changes
-      setGameKey((k) => {
-        const newKey = k + 1;
-        console.log('[FLOW] Game key incremented to', newKey);
-        return newKey;
-      });
-      
-      // Return to welcome screen to restart the game
-      console.log('[FLOW] Returning to welcome screen for new game');
-      setStep("welcome");
+      // Force game restart when board size changes during gameplay
+      if (step === "game") {
+        setGameKey((k) => {
+          const newKey = k + 1;
+          console.log('[FLOW] Game key incremented to', newKey);
+          return newKey;
+        });
+      }
     } else {
       console.log('[FLOW] Board size unchanged, no restart needed');
     }

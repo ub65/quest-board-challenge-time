@@ -105,7 +105,7 @@ const GameSettingsModal = ({
       step: 1,
       value: pendingQuestionTime,
       onValueChange: (v: number) => { 
-        console.log('[SETTINGS] Question time changed to:', v);
+        console.log('[SETTINGS] Question time slider changed from', pendingQuestionTime, 'to', v);
         setPendingQuestionTime(v); 
       },
       suffix: "s",
@@ -172,9 +172,14 @@ const GameSettingsModal = ({
       volume: pendingVolume
     });
     
-    // Check if board size changed
+    // Check what changed
     const boardSizeChanged = pendingBoardSize !== boardSize;
-    console.log('[SETTINGS] Board size changed?', boardSizeChanged, 'from', boardSize, 'to', pendingBoardSize);
+    const questionTimeChanged = pendingQuestionTime !== questionTime;
+    
+    console.log('[SETTINGS] Changes detected:', {
+      boardSizeChanged: boardSizeChanged ? `${boardSize} -> ${pendingBoardSize}` : 'no change',
+      questionTimeChanged: questionTimeChanged ? `${questionTime} -> ${pendingQuestionTime}` : 'no change'
+    });
     
     // Apply all changes
     if (boardSizeChanged) {
@@ -182,7 +187,11 @@ const GameSettingsModal = ({
       onBoardSizeChange(pendingBoardSize);
     }
     
-    onQuestionTimeChange(pendingQuestionTime);
+    if (questionTimeChanged) {
+      console.log('[SETTINGS] Calling onQuestionTimeChange with:', pendingQuestionTime);
+      onQuestionTimeChange(pendingQuestionTime);
+    }
+    
     onSurpriseCountChange(pendingSurpriseCount);
     onNumDefensesChange(pendingNumDefenses);
     onDifficultyChange(pendingDifficulty);

@@ -18,6 +18,7 @@ const Index = () => {
     step: flow.step,
     boardSize: flow.boardSize,
     difficulty: flow.difficulty,
+    questionTime: flow.questionTime,
     gameKey: flow.gameKey
   });
 
@@ -29,6 +30,15 @@ const Index = () => {
       gameKey: flow.gameKey
     });
     flow.setBoardSize(newSize);
+  };
+
+  // Enhanced question time change handler
+  const handleQuestionTimeChange = (newTime: number) => {
+    console.log('[INDEX] Question time change requested:', {
+      from: flow.questionTime,
+      to: newTime
+    });
+    flow.setQuestionTime(newTime);
   };
 
   // --- Single-player flow only ---
@@ -45,7 +55,7 @@ const Index = () => {
         boardSize={flow.boardSize}
         onBoardSizeChange={handleBoardSizeChange}
         questionTime={flow.questionTime}
-        onQuestionTimeChange={flow.setQuestionTime}
+        onQuestionTimeChange={handleQuestionTimeChange}
         surpriseCount={flow.numSurprises}
         onSurpriseCountChange={flow.setNumSurprises}
         numDefenses={flow.numDefenses}
@@ -81,7 +91,8 @@ const Index = () => {
             questionType={flow.questionType}
             soundEnabled={flow.soundEnabled}
             volume={flow.volume}
-            boardSize={flow.boardSize} // Pass board size as prop
+            boardSize={flow.boardSize}
+            questionTime={flow.questionTime}
           />
         </div>
       )}

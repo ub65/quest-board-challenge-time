@@ -25,7 +25,8 @@ const GameBoard = ({
   questionType = "translate",
   soundEnabled = true,
   volume = 0.5,
-  boardSize: propBoardSize = DEFAULT_BOARD_SIZE, // Accept board size as prop
+  boardSize: propBoardSize = DEFAULT_BOARD_SIZE,
+  questionTime: propQuestionTime = DEFAULT_QUESTION_TIME,
 }: {
   difficulty: "easy" | "medium" | "hard";
   onRestart: () => void;
@@ -35,27 +36,32 @@ const GameBoard = ({
   questionType?: "translate" | "math";
   soundEnabled?: boolean;
   volume?: number;
-  boardSize?: number; // Add board size prop
+  boardSize?: number;
+  questionTime?: number;
 }) => {
   const { t, language } = useLocalization();
 
   const {
     difficulty, setDifficulty,
     settingsOpen, setSettingsOpen,
-    questionTime, setQuestionTime,
-    boardSize, setBoardSize,
+    questionTime: internalQuestionTime, setQuestionTime,
+    boardSize: internalBoardSize, setBoardSize,
     numSurprises, setNumSurprises,
     numDefenses, setNumDefenses,
   } = useGameSettings(initialDifficulty);
 
-  // Use prop board size if provided, otherwise use internal state
-  const actualBoardSize = propBoardSize || boardSize;
+  // Use prop values if provided, otherwise use internal state
+  const actualBoardSize = propBoardSize || internalBoardSize;
+  const actualQuestionTime = propQuestionTime || internalQuestionTime;
 
-  console.log('[GAMEBOARD] Board size values:', {
+  console.log('[GAMEBOARD] Settings values:', {
     propBoardSize,
-    internalBoardSize: boardSize,
+    internalBoardSize,
     actualBoardSize,
-    gameKey: Date.now() % 10000 // Simple way to track rerenders
+    propQuestionTime,
+    internalQuestionTime,
+    actualQuestionTime,
+    gameKey: Date.now() % 10000
   });
 
   const {
@@ -469,9 +475,15 @@ const GameBoard = ({
 
   // Enhanced board size change handler - now just updates internal state
   const handleBoardSizeChange = useCallback((newSize: number) => {
-    console.log('[SETTINGS] Internal board size changing from', boardSize, 'to', newSize);
+    console.log('[SETTINGS] Internal board size changing from', internalBoardSize, 'to', newSize);
     setBoardSize(newSize);
-  }, [boardSize, setBoardSize]);
+  }, [internalBoardSize, setBoardSize]);
+
+  // Enhanced question time change handler
+  const handleQuestionTimeChange = useCallback((newTime: number) => {
+    console.log('[SETTINGS] Internal question time changing from', internalQuestionTime, 'to', newTime);
+    setQuestionTime(newTime);
+  }, [internalQuestionTime, setQuestionTime]);
 
   const announcementKey =
     startingPlayer === "human"
@@ -539,14 +551,14 @@ const GameBoard = ({
             moveState={moveState}
             isModalOpen={isModalOpen}
             aiModalState={aiModalState}
-            questionTime={questionTime}
+            questionTime={actualQuestionTime}
             onHumanSubmit={handleHumanModalSubmit}
             onAISubmit={handleAIModalSubmit}
             onRestart={handleRestart}
             settingsOpen={settingsOpen}
             setSettingsOpen={setSettingsOpen}
             onBoardSizeChange={handleBoardSizeChange}
-            onQuestionTimeChange={v => setQuestionTime(Math.max(6, Math.min(40, v || DEFAULT_QUESTION_TIME)))}
+            onQuestionTimeChange={handleQuestionTimeChange}
             onSurpriseCountChange={setNumSurprises}
             onNumDefensesChange={setNumDefenses}
             onDifficultyChange={setDifficulty}
@@ -571,7 +583,7 @@ const GameBoard = ({
               isModalOpen={isModalOpen}
               aiModalState={aiModalState}
               winner={winner}
-              questionTime={questionTime}
+              questionTime={actualQuestionTime}
               onHumanSubmit={handleHumanModalSubmit}
               onAISubmit={handleAIModalSubmit}
               questionType={questionType}

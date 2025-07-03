@@ -1,7 +1,7 @@
-
 import { useEffect, useRef } from "react";
 import { getRandomQuestion, getValidMoves, getAIMove, getAIDefenseTile } from "./utils";
 import { PlayerType, Tile, DefenseTile, SurpriseTile } from "./types";
+import { playSound } from "@/lib/audioManager";
 
 // Enhanced AI question answering with more sophisticated difficulty scaling
 function getAIAnswer(question: any, difficulty: "easy" | "medium" | "hard") {
@@ -69,7 +69,7 @@ export function useAITurn({
       aiMovingRef.current = true;
       setDisableInput(true);
 
-      // Enhanced defense placement logic
+      // Enhanced defense placement logic with sound timing
       if (defensesUsed.ai < numDefenses) {
         const aiDefense = getAIDefenseTile({
           humanPos: positions.human,
@@ -84,16 +84,22 @@ export function useAITurn({
         if (aiDefense) {
           setDefenseTiles(prev => [...prev, { ...aiDefense, owner: "ai" }]);
           setDefensesUsed(d => ({ ...d, ai: d.ai + 1 }));
+          
+          // Play defense sound with perfect timing
+          console.log('[AUDIO] AI placed defense, playing defense sound');
+          playSound("defense", true, 0.5, 100);
+          
           toast({
             title: t("game.defense_ai_placed") || "AI placed a defense!",
             description: t("game.defense_ai_msg") || "AI blocked your path!",
             duration: 1400,
           });
+          
           setTimeout(() => {
             aiMovingRef.current = false;
             setTurn("human");
             setDisableInput(false);
-          }, 900);
+          }, 1000); // Increased delay to let defense sound finish
           return;
         }
       }
@@ -120,7 +126,7 @@ export function useAITurn({
         if (!winner) {
           setAIModalState({ question: aiQuestionWithChoice, targetTile: move });
         }
-      }, 650);
+      }, 750); // Slightly increased delay for better timing
     }
     // eslint-disable-next-line
   }, [

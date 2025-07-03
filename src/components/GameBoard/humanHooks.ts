@@ -1,5 +1,6 @@
 import { useCallback } from "react";
 import { getValidMoves } from "./utils";
+import { playSound } from "@/lib/audioManager";
 
 export function useHumanMoveHandler({
   winner, disableInput, turn, positions, BOARD_SIZE, defenseTiles, difficulty,
@@ -53,11 +54,12 @@ export function useHumanMoveHandler({
         setMoveState(null);
 
         if (!ok) {
+          // Wrong answer - switch turn immediately, no move sound
           setTurn("ai");
           return;
         }
 
-        // Move the player (sound is now handled in the modal)
+        // Correct answer - move the player and play move sound with perfect timing
         setPositions((p) => {
           setBoardPoints((prev) => {
             const newBoard = prev.map((row) => [...row]);
@@ -71,14 +73,20 @@ export function useHumanMoveHandler({
 
         setHumanHasMoved(true);
 
+        // Play move sound immediately after successful move
+        console.log('[AUDIO] Human moved successfully, playing move sound');
+        playSound("move", true, 0.5, 50); // Small delay to ensure position update
+
+        // Handle surprise after move sound
         setTimeout(() => {
           handleSurprise(tile, "human");
+          // Switch turn after surprise handling
           setTimeout(() => {
             if (!winner) {
               setTurn("ai");
             }
-          }, 600);
-        }, 100);
+          }, 700); // Increased delay to prevent overlap with surprise sounds
+        }, 200); // Delay to let move sound play first
       }
     });
     setIsModalOpen(true);

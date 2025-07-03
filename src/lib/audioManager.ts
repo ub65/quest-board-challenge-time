@@ -1,15 +1,18 @@
 /**
- * Audio Manager for handling MP3 sound effects
- * Provides a centralized system for loading and playing audio files
+ * Enhanced Audio Manager for handling MP3 sound effects with proper timing
+ * Provides a centralized system for loading and playing audio files without overlapping
  */
 
 export type SoundType = 'move' | 'correct' | 'wrong' | 'win' | 'surprise' | 'defense' | 'test';
 
 class AudioManager {
-  private audioCache: Map<SoundType, HTMLAudioElement> = new Map();
+  private audioCache: Map<SoundType, HTMLAudioElement[]> = new Map();
   private isInitialized = false;
   private volume = 0.5;
   private enabled = true;
+  private currentlyPlaying: Set<SoundType> = new Set();
+  private soundQueue: Array<{ type: SoundType; delay: number }> = [];
+  private isProcessingQueue = false;
 
   // Sound file mappings
   private soundFiles: Record<SoundType, string> = {
@@ -22,34 +25,64 @@ class AudioManager {
     test: '/sounds/test.mp3',
   };
 
+  // Sound priorities (higher number = higher priority)
+  private soundPriorities: Record<SoundType, number> = {
+    win: 10,
+    correct: 8,
+    wrong: 8,
+    surprise: 6,
+    defense: 5,
+    move: 3,
+    test: 1,
+  };
+
+  // Sound durations in milliseconds (estimated)
+  private soundDurations: Record<SoundType, number> = {
+    move: 300,
+    correct: 800,
+    wrong: 1000,
+    win: 2000,
+    surprise: 600,
+    defense: 500,
+    test: 400,
+  };
+
   constructor() {
     this.preloadSounds();
   }
 
   /**
-   * Preload all sound files into memory
+   * Preload all sound files into memory with multiple instances for overlapping
    */
   private async preloadSounds() {
     console.log('[AUDIO] Preloading sound files...');
     
     for (const [soundType, filePath] of Object.entries(this.soundFiles)) {
       try {
-        const audio = new Audio(filePath);
-        audio.preload = 'auto';
-        audio.volume = this.volume;
+        // Create multiple instances of each sound for potential overlapping
+        const audioInstances: HTMLAudioElement[] = [];
         
-        // Handle loading events
-        audio.addEventListener('canplaythrough', () => {
-          console.log(`[AUDIO] Loaded: ${soundType}`);
-        });
+        for (let i = 0; i < 3; i++) {
+          const audio = new Audio(filePath);
+          audio.preload = 'auto';
+          audio.volume = this.volume;
+          
+          // Handle loading events
+          audio.addEventListener('canplaythrough', () => {
+            if (i === 0) console.log(`[AUDIO] Loaded: ${soundType}`);
+          });
+          
+          audio.addEventListener('error', (e) => {
+            if (i === 0) {
+              console.warn(`[AUDIO] Failed to load ${soundType}:`, e);
+              this.createFallbackAudio(soundType as SoundType);
+            }
+          });
+          
+          audioInstances.push(audio);
+        }
         
-        audio.addEventListener('error', (e) => {
-          console.warn(`[AUDIO] Failed to load ${soundType}:`, e);
-          // Create fallback audio element
-          this.createFallbackAudio(soundType as SoundType);
-        });
-        
-        this.audioCache.set(soundType as SoundType, audio);
+        this.audioCache.set(soundType as SoundType, audioInstances);
       } catch (error) {
         console.warn(`[AUDIO] Error preloading ${soundType}:`, error);
         this.createFallbackAudio(soundType as SoundType);
@@ -63,11 +96,9 @@ class AudioManager {
   private createFallbackAudio(soundType: SoundType) {
     console.log(`[AUDIO] Creating fallback for ${soundType}`);
     
-    // Create a dummy audio element that will use Web Audio API
     const dummyAudio = new Audio();
     dummyAudio.volume = this.volume;
     
-    // Override the play method to use Web Audio API
     dummyAudio.play = () => {
       return new Promise<void>((resolve, reject) => {
         try {
@@ -79,7 +110,7 @@ class AudioManager {
       });
     };
     
-    this.audioCache.set(soundType, dummyAudio);
+    this.audioCache.set(soundType, [dummyAudio]);
   }
 
   /**
@@ -102,7 +133,6 @@ class AudioManager {
         
         oscillator.type = 'sine';
         
-        // Different frequencies for different sound types
         switch (soundType) {
           case 'move':
             oscillator.frequency.setValueAtTime(440, audioContext.currentTime);
@@ -168,7 +198,6 @@ class AudioManager {
     console.log('[AUDIO] Initializing audio system...');
     
     try {
-      // Test audio context
       const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
       if (audioContext.state === 'suspended') {
         await audioContext.resume();
@@ -183,31 +212,83 @@ class AudioManager {
   }
 
   /**
-   * Play a sound effect
+   * Get available audio instance for a sound type
    */
-  public async playSound(soundType: SoundType): Promise<void> {
-    if (!this.enabled) {
-      console.log(`[AUDIO] Sound disabled, skipping ${soundType}`);
+  private getAvailableAudioInstance(soundType: SoundType): HTMLAudioElement | null {
+    const instances = this.audioCache.get(soundType);
+    if (!instances) return null;
+
+    // Find an instance that's not currently playing
+    for (const audio of instances) {
+      if (audio.paused || audio.ended) {
+        return audio;
+      }
+    }
+
+    // If all instances are playing, return the first one (will be reset)
+    return instances[0];
+  }
+
+  /**
+   * Process the sound queue to prevent overlapping
+   */
+  private async processQueue() {
+    if (this.isProcessingQueue || this.soundQueue.length === 0) return;
+    
+    this.isProcessingQueue = true;
+    
+    while (this.soundQueue.length > 0) {
+      const { type, delay } = this.soundQueue.shift()!;
+      
+      if (delay > 0) {
+        await new Promise(resolve => setTimeout(resolve, delay));
+      }
+      
+      await this.playImmediately(type);
+    }
+    
+    this.isProcessingQueue = false;
+  }
+
+  /**
+   * Play a sound immediately without queueing
+   */
+  private async playImmediately(soundType: SoundType): Promise<void> {
+    if (!this.enabled || this.volume === 0) {
+      console.log(`[AUDIO] Sound disabled or muted, skipping ${soundType}`);
       return;
     }
 
-    if (this.volume === 0) {
-      console.log(`[AUDIO] Volume is 0, skipping ${soundType}`);
-      return;
-    }
+    console.log(`[AUDIO] Playing ${soundType} immediately at volume ${this.volume}`);
 
-    console.log(`[AUDIO] Playing ${soundType} at volume ${this.volume}`);
-
-    const audio = this.audioCache.get(soundType);
+    const audio = this.getAvailableAudioInstance(soundType);
     if (!audio) {
-      console.warn(`[AUDIO] Sound not found: ${soundType}`);
+      console.warn(`[AUDIO] No audio instance available for: ${soundType}`);
       return;
     }
 
     try {
+      // Stop current playback if any
+      if (!audio.paused) {
+        audio.pause();
+      }
+      
       // Reset audio to beginning
       audio.currentTime = 0;
       audio.volume = this.volume;
+      
+      // Mark as currently playing
+      this.currentlyPlaying.add(soundType);
+      
+      // Set up cleanup when sound ends
+      const cleanup = () => {
+        this.currentlyPlaying.delete(soundType);
+        audio.removeEventListener('ended', cleanup);
+        audio.removeEventListener('pause', cleanup);
+      };
+      
+      audio.addEventListener('ended', cleanup);
+      audio.addEventListener('pause', cleanup);
       
       // Play the audio
       const playPromise = audio.play();
@@ -216,8 +297,13 @@ class AudioManager {
         await playPromise;
         console.log(`[AUDIO] Successfully played ${soundType}`);
       }
+      
+      // Auto cleanup after expected duration
+      setTimeout(cleanup, this.soundDurations[soundType] + 100);
+      
     } catch (error) {
       console.warn(`[AUDIO] Failed to play ${soundType}:`, error);
+      this.currentlyPlaying.delete(soundType);
       
       // Try fallback if MP3 fails
       if (error.name === 'NotSupportedError' || error.name === 'NotAllowedError') {
@@ -228,6 +314,75 @@ class AudioManager {
   }
 
   /**
+   * Play a sound effect with smart timing
+   */
+  public async playSound(soundType: SoundType, delay: number = 0): Promise<void> {
+    if (!this.enabled || this.volume === 0) {
+      console.log(`[AUDIO] Sound disabled or muted, skipping ${soundType}`);
+      return;
+    }
+
+    // Check if a higher priority sound is currently playing
+    const currentPriority = this.soundPriorities[soundType];
+    let shouldInterrupt = true;
+    
+    for (const playingType of this.currentlyPlaying) {
+      if (this.soundPriorities[playingType] > currentPriority) {
+        shouldInterrupt = false;
+        break;
+      }
+    }
+
+    if (shouldInterrupt) {
+      // Stop lower priority sounds
+      for (const playingType of this.currentlyPlaying) {
+        if (this.soundPriorities[playingType] < currentPriority) {
+          const instances = this.audioCache.get(playingType);
+          if (instances) {
+            instances.forEach(audio => {
+              if (!audio.paused) {
+                audio.pause();
+              }
+            });
+          }
+          this.currentlyPlaying.delete(playingType);
+        }
+      }
+      
+      // Play immediately or with delay
+      if (delay > 0) {
+        setTimeout(() => this.playImmediately(soundType), delay);
+      } else {
+        await this.playImmediately(soundType);
+      }
+    } else {
+      // Queue the sound for later
+      console.log(`[AUDIO] Queueing ${soundType} due to higher priority sound playing`);
+      this.soundQueue.push({ type: soundType, delay });
+      this.processQueue();
+    }
+  }
+
+  /**
+   * Stop all currently playing sounds
+   */
+  public stopAllSounds(): void {
+    console.log('[AUDIO] Stopping all sounds');
+    
+    for (const instances of this.audioCache.values()) {
+      instances.forEach(audio => {
+        if (!audio.paused) {
+          audio.pause();
+          audio.currentTime = 0;
+        }
+      });
+    }
+    
+    this.currentlyPlaying.clear();
+    this.soundQueue.length = 0;
+  }
+
+  /**
    * Set volume (0.0 to 1.0)
    */
   public setVolume(volume: number): void {
@@ -235,8 +390,10 @@ class AudioManager {
     console.log(`[AUDIO] Volume set to ${this.volume}`);
     
     // Update volume for all cached audio elements
-    for (const audio of this.audioCache.values()) {
-      audio.volume = this.volume;
+    for (const instances of this.audioCache.values()) {
+      instances.forEach(audio => {
+        audio.volume = this.volume;
+      });
     }
   }
 
@@ -246,6 +403,10 @@ class AudioManager {
   public setEnabled(enabled: boolean): void {
     this.enabled = enabled;
     console.log(`[AUDIO] Sound ${enabled ? 'enabled' : 'disabled'}`);
+    
+    if (!enabled) {
+      this.stopAllSounds();
+    }
   }
 
   /**
@@ -268,13 +429,27 @@ class AudioManager {
   public isReady(): boolean {
     return this.isInitialized;
   }
+
+  /**
+   * Check if any sounds are currently playing
+   */
+  public isPlaying(): boolean {
+    return this.currentlyPlaying.size > 0;
+  }
+
+  /**
+   * Get currently playing sounds
+   */
+  public getCurrentlyPlaying(): SoundType[] {
+    return Array.from(this.currentlyPlaying);
+  }
 }
 
 // Create singleton instance
 export const audioManager = new AudioManager();
 
-// Convenience function for playing sounds
-export const playSound = async (soundType: SoundType, enabled: boolean = true, volume: number = 0.5) => {
+// Enhanced convenience function for playing sounds with perfect timing
+export const playSound = async (soundType: SoundType, enabled: boolean = true, volume: number = 0.5, delay: number = 0) => {
   if (!enabled) return;
   
   audioManager.setVolume(volume);
@@ -284,5 +459,21 @@ export const playSound = async (soundType: SoundType, enabled: boolean = true, v
     await audioManager.initialize();
   }
   
-  await audioManager.playSound(soundType);
+  await audioManager.playSound(soundType, delay);
+};
+
+// Enhanced convenience function for playing sounds in sequence
+export const playSoundSequence = async (sounds: Array<{ type: SoundType; delay: number }>, enabled: boolean = true, volume: number = 0.5) => {
+  if (!enabled) return;
+  
+  audioManager.setVolume(volume);
+  audioManager.setEnabled(enabled);
+  
+  if (!audioManager.isReady()) {
+    await audioManager.initialize();
+  }
+  
+  for (const { type, delay } of sounds) {
+    await audioManager.playSound(type, delay);
+  }
 };

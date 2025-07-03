@@ -58,12 +58,12 @@ export const useQuestionModal = (
     if (!isOpen || answered) return;
     if (time <= 0) {
       setAnswered(true);
-      // Play wrong sound for timeout
+      // Play wrong sound for timeout with slight delay
       console.log('[AUDIO] Question timeout, playing wrong sound');
       if (soundEnabled) {
-        playSound("wrong", soundEnabled, volume);
+        playSound("wrong", soundEnabled, volume, 100);
       }
-      setTimeout(() => onSubmit(false), 800);
+      setTimeout(() => onSubmit(false), 900);
       return;
     }
     const tmo = setTimeout(() => setTime(s => s - 1), 1000);
@@ -77,13 +77,15 @@ export const useQuestionModal = (
     const correct = originalIdx === question.correct;
     setAnswered(true);
     
-    // Play sound immediately when answer is selected
-    console.log(`[AUDIO] Answer selected: ${correct ? 'correct' : 'wrong'}, playing sound`);
+    // Play sound immediately when answer is selected with perfect timing
+    console.log(`[AUDIO] Answer selected: ${correct ? 'correct' : 'wrong'}, playing sound immediately`);
     if (soundEnabled) {
-      playSound(correct ? "correct" : "wrong", soundEnabled, volume);
+      // Play sound immediately without delay for instant feedback
+      playSound(correct ? "correct" : "wrong", soundEnabled, volume, 0);
     }
     
-    setTimeout(() => onSubmit(correct), 800);
+    // Submit result after sound has time to play
+    setTimeout(() => onSubmit(correct), correct ? 900 : 1100);
   };
 
   return {

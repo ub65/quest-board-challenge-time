@@ -173,11 +173,11 @@ const GameBoard = ({
       setHumanHasMoved(false); // Human needs to move first
     }
     
-    // Play a start game sound
+    // Play a start game sound with perfect timing
     console.log('[AUDIO] Game starting, playing start sound');
     setTimeout(() => {
-      playSound('correct', localSoundEnabled, volume);
-    }, 500); // Delay to ensure audio is ready
+      playSound('correct', localSoundEnabled, volume, 0);
+    }, 300); // Reduced delay for better responsiveness
   };
 
   useEffect(() => {
@@ -189,11 +189,12 @@ const GameBoard = ({
       aiMovingRef.current = false;
       setDefenseMode(false);
       
-      // Play win/lose sound
+      // Stop all other sounds and play win/lose sound with perfect timing
       console.log(`[AUDIO] Game ended, winner: ${winner}`);
+      audioManager.stopAllSounds(); // Clear any playing sounds
       setTimeout(() => {
-        playSound(winner === "human" ? "win" : "wrong", localSoundEnabled, volume);
-      }, 300);
+        playSound(winner === "human" ? "win" : "wrong", localSoundEnabled, volume, 0);
+      }, 200); // Small delay to ensure other sounds are stopped
     }
   }, [winner, localSoundEnabled, volume]);
 
@@ -217,17 +218,18 @@ const GameBoard = ({
     toast,
   });
 
-  // Enhanced surprise handler with sound
+  // Enhanced surprise handler with perfect sound timing
   const surpriseHandlerWithSound = useCallback((tile: any, player: string) => {
     const result = surpriseHandler(tile, player);
-    console.log('[AUDIO] Surprise triggered, playing surprise sound');
+    console.log('[AUDIO] Surprise triggered, playing surprise sound with delay');
+    // Play surprise sound with slight delay to not overlap with move sound
     setTimeout(() => {
-      playSound("surprise", localSoundEnabled, volume);
-    }, 200);
+      playSound("surprise", localSoundEnabled, volume, 0);
+    }, 300);
     return result;
   }, [surpriseHandler, localSoundEnabled, volume]);
 
-  // Enhanced handleDefenseClick function
+  // Enhanced handleDefenseClick function with perfect sound timing
   const handleDefenseClick = useCallback(async (tile: { x: number; y: number }) => {
     await initializeAudio(); // Ensure audio is ready
     
@@ -244,7 +246,7 @@ const GameBoard = ({
     
     if (problem) {
       console.log('[AUDIO] Defense placement failed, playing wrong sound');
-      playSound("wrong", localSoundEnabled, volume);
+      playSound("wrong", localSoundEnabled, volume, 0);
       toast({
         title: t("game.defense_fail") || "Invalid defense placement",
         description: (
@@ -265,7 +267,7 @@ const GameBoard = ({
     setDefenseMode(false); // Exit defense mode after successful placement
     
     console.log('[AUDIO] Defense placed successfully, playing defense sound');
-    playSound("defense", localSoundEnabled, volume);
+    playSound("defense", localSoundEnabled, volume, 0);
     toast({
       title: t("game.defense_placed") || "Defense Placed",
       description: (
@@ -287,7 +289,7 @@ const GameBoard = ({
     defenseMode,
   });
 
-  // Create human move handler (removed sound props since sound is now in modal)
+  // Create human move handler (sound is now handled in the hook)
   const { handleTileClick: humanTileClick } = useHumanMoveHandler({
     winner,
     disableInput,
@@ -439,24 +441,24 @@ const GameBoard = ({
         return newPos;
       });
       
-      // Play move sound
+      // Play move sound with perfect timing
       console.log('[AUDIO] AI moved, playing move sound');
       setTimeout(() => {
-        playSound("move", localSoundEnabled, volume);
+        playSound("move", localSoundEnabled, volume, 0);
       }, 100);
       
-      // Handle surprise if any
+      // Handle surprise if any with proper timing
       setTimeout(() => {
         surpriseHandlerWithSound(targetTile, "ai");
         
-        // Switch turn back to human after a delay
+        // Switch turn back to human after all sounds have time to play
         setTimeout(() => {
           if (!winner) {
             setTurn("human");
             setDisableInput(false);
           }
-        }, 600);
-      }, 100);
+        }, 700); // Increased delay to prevent sound overlap
+      }, 200); // Delay to let move sound play first
       
       setAIModalState(null);
     }
@@ -601,8 +603,11 @@ const GameBoard = ({
                 // Initialize audio and play a test sound when enabling
                 await initializeAudio();
                 setTimeout(() => {
-                  playSound('test', true, volume);
+                  playSound('test', true, volume, 0);
                 }, 200);
+              } else {
+                // Stop all sounds when disabling
+                audioManager.stopAllSounds();
               }
             }}
           >

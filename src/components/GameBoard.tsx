@@ -1,7 +1,7 @@
 import React, { useRef, useEffect, useState, useCallback } from "react";
 import { useLocalization } from "@/contexts/LocalizationContext";
 import { toast } from "@/components/ui/use-toast";
-import { PlayerType, DEFAULT_BOARD_SIZE, DEFAULT_QUESTION_TIME } from "./GameBoard/types";
+import { PlayerType, DEFAULT_BOARD_SIZE, DEFAULT_QUESTION_TIME, DEFAULT_DEFENSES } from "./GameBoard/types";
 import { getValidMoves, positionsEqual, generateRandomPoints, getRandomSurpriseTiles } from "./GameBoard/utils";
 import { useAITurn } from "./GameBoard/aiHooks";
 import { useHumanMoveHandler } from "./GameBoard/humanHooks";
@@ -27,6 +27,8 @@ const GameBoard = ({
   volume = 0.5,
   boardSize: propBoardSize = DEFAULT_BOARD_SIZE,
   questionTime: propQuestionTime = DEFAULT_QUESTION_TIME,
+  numSurprises: propNumSurprises,
+  numDefenses: propNumDefenses = DEFAULT_DEFENSES,
 }: {
   difficulty: "easy" | "medium" | "hard";
   onRestart: () => void;
@@ -38,6 +40,8 @@ const GameBoard = ({
   volume?: number;
   boardSize?: number;
   questionTime?: number;
+  numSurprises?: number;
+  numDefenses?: number;
 }) => {
   const { t, language } = useLocalization();
 
@@ -46,13 +50,15 @@ const GameBoard = ({
     settingsOpen, setSettingsOpen,
     questionTime: internalQuestionTime, setQuestionTime,
     boardSize: internalBoardSize, setBoardSize,
-    numSurprises, setNumSurprises,
-    numDefenses, setNumDefenses,
+    numSurprises: internalNumSurprises, setNumSurprises,
+    numDefenses: internalNumDefenses, setNumDefenses,
   } = useGameSettings(initialDifficulty);
 
   // Use prop values if provided, otherwise use internal state
   const actualBoardSize = propBoardSize || internalBoardSize;
   const actualQuestionTime = propQuestionTime || internalQuestionTime;
+  const actualNumSurprises = propNumSurprises !== undefined ? propNumSurprises : internalNumSurprises;
+  const actualNumDefenses = propNumDefenses !== undefined ? propNumDefenses : internalNumDefenses;
 
   console.log('[GAMEBOARD] Settings values:', {
     propBoardSize,
@@ -61,6 +67,12 @@ const GameBoard = ({
     propQuestionTime,
     internalQuestionTime,
     actualQuestionTime,
+    propNumSurprises,
+    internalNumSurprises,
+    actualNumSurprises,
+    propNumDefenses,
+    internalNumDefenses,
+    actualNumDefenses,
     gameKey: Date.now() % 10000
   });
 
@@ -80,7 +92,7 @@ const GameBoard = ({
     disableInput, setDisableInput,
     humanHasMoved, setHumanHasMoved,
     getRandomStartingPlayer,
-  } = useGameBoardState(actualBoardSize, numSurprises);
+  } = useGameBoardState(actualBoardSize, actualNumSurprises);
 
   // Local sound state for mute button
   const [localSoundEnabled, setLocalSoundEnabled] = useState(soundEnabled);
@@ -119,9 +131,13 @@ const GameBoard = ({
     }
   }, [audioInitialized]);
 
-  // Reset game when board size changes
+  // Reset game when board size, surprises, or defenses change
   useEffect(() => {
-    console.log('[GAME] Board size changed to:', actualBoardSize);
+    console.log('[GAME] Game settings changed:', {
+      boardSize: actualBoardSize,
+      numSurprises: actualNumSurprises,
+      numDefenses: actualNumDefenses
+    });
     const randomStartingPlayer = getRandomStartingPlayer();
     setStartingPlayer(randomStartingPlayer);
     setGameStarted(false);
@@ -134,7 +150,7 @@ const GameBoard = ({
     setHumanPoints(0);
     setAIPoints(0);
     setBoardPoints(generateRandomPoints(actualBoardSize));
-    setSurpriseTiles(getRandomSurpriseTiles(actualBoardSize, numSurprises));
+    setSurpriseTiles(getRandomSurpriseTiles(actualBoardSize, actualNumSurprises));
     setDefenseTiles([]);
     setDefensesUsed({ human: 0, ai: 0 });
     setDefenseMode(false);
@@ -144,7 +160,7 @@ const GameBoard = ({
     setAIModalState(null);
     setIsModalOpen(false);
     aiMovingRef.current = false;
-  }, [actualBoardSize, numSurprises, numDefenses, getRandomStartingPlayer, setPositions, setTurn, setWinner, setHumanPoints, setAIPoints, setBoardPoints, setSurpriseTiles, setDefenseTiles, setDefensesUsed, setDefenseMode, setHumanHasMoved, setDisableInput, setMoveState, setIsModalOpen]);
+  }, [actualBoardSize, actualNumSurprises, actualNumDefenses, getRandomStartingPlayer, setPositions, setTurn, setWinner, setHumanPoints, setAIPoints, setBoardPoints, setSurpriseTiles, setDefenseTiles, setDefensesUsed, setDefenseMode, setHumanHasMoved, setDisableInput, setMoveState, setIsModalOpen]);
 
   const handleStartGame = async () => {
     await initializeAudio(); // Initialize audio on game start
@@ -218,7 +234,7 @@ const GameBoard = ({
     const problem = canPlaceDefenseHere({
       tile,
       BOARD_SIZE,
-      numDefenses,
+      numDefenses: actualNumDefenses,
       positions,
       defenseTiles,
       surpriseTiles,
@@ -260,7 +276,7 @@ const GameBoard = ({
       ),
       duration: 2000,
     });
-  }, [BOARD_SIZE, numDefenses, positions, defenseTiles, surpriseTiles, defensesUsed, t, toast, setDefenseTiles, setDefensesUsed, setDefenseMode, localSoundEnabled, volume, initializeAudio]);
+  }, [BOARD_SIZE, actualNumDefenses, positions, defenseTiles, surpriseTiles, defensesUsed, t, toast, setDefenseTiles, setDefensesUsed, setDefenseMode, localSoundEnabled, volume, initializeAudio]);
 
   // Enhanced useDefenseModeHandler hook
   const { toggleDefensePlacement, cancelDefensePlacement } = useDefenseModeHandler({
@@ -304,7 +320,7 @@ const GameBoard = ({
     defensesUsed,
     defenseTiles,
     surpriseTiles,
-    numDefenses,
+    numDefenses: actualNumDefenses,
     difficulty,
     BOARD_SIZE,
     aiTarget,
@@ -448,7 +464,7 @@ const GameBoard = ({
 
   const handleRestart = useGameRestart({
     boardSize: actualBoardSize,
-    numSurprises,
+    numSurprises: actualNumSurprises,
     setPositions,
     setWinner,
     setTurn,
@@ -484,6 +500,18 @@ const GameBoard = ({
     console.log('[SETTINGS] Internal question time changing from', internalQuestionTime, 'to', newTime);
     setQuestionTime(newTime);
   }, [internalQuestionTime, setQuestionTime]);
+
+  // Enhanced surprises change handler
+  const handleSurprisesChange = useCallback((newCount: number) => {
+    console.log('[SETTINGS] Internal surprises count changing from', internalNumSurprises, 'to', newCount);
+    setNumSurprises(newCount);
+  }, [internalNumSurprises, setNumSurprises]);
+
+  // Enhanced defenses change handler
+  const handleDefensesChange = useCallback((newCount: number) => {
+    console.log('[SETTINGS] Internal defenses count changing from', internalNumDefenses, 'to', newCount);
+    setNumDefenses(newCount);
+  }, [internalNumDefenses, setNumDefenses]);
 
   const announcementKey =
     startingPlayer === "human"
@@ -525,7 +553,7 @@ const GameBoard = ({
             difficulty={difficulty}
             humanPoints={humanPoints}
             aiPoints={aiPoints}
-            numDefenses={numDefenses}
+            numDefenses={actualNumDefenses}
             defensesUsed={defensesUsed}
             onPlaceDefense={toggleDefensePlacement}
             defenseMode={defenseMode}
@@ -559,10 +587,10 @@ const GameBoard = ({
             setSettingsOpen={setSettingsOpen}
             onBoardSizeChange={handleBoardSizeChange}
             onQuestionTimeChange={handleQuestionTimeChange}
-            onSurpriseCountChange={setNumSurprises}
-            onNumDefensesChange={setNumDefenses}
+            onSurpriseCountChange={handleSurprisesChange}
+            onNumDefensesChange={handleDefensesChange}
             onDifficultyChange={setDifficulty}
-            surpriseCount={numSurprises}
+            surpriseCount={actualNumSurprises}
             playerName={playerName}
             soundEnabled={localSoundEnabled}
             onToggleSound={async () => {

@@ -32,7 +32,12 @@ export default function useIndexGameFlow() {
 
   // No online/other mode select - always AI
   const handleStart = () => {
-    console.log('[FLOW] Starting game with board size:', boardSize);
+    console.log('[FLOW] Starting game with settings:', {
+      boardSize,
+      numSurprises,
+      numDefenses,
+      questionTime
+    });
     setStep("game");
   };
 
@@ -57,6 +62,48 @@ export default function useIndexGameFlow() {
     }
   };
 
+  // Enhanced setNumSurprises with proper logging and game restart
+  const handleSetNumSurprises = (newCount: number) => {
+    console.log('[FLOW] Surprises count change requested from', numSurprises, 'to', newCount);
+    
+    if (newCount !== numSurprises) {
+      console.log('[FLOW] Surprises count is different, updating and restarting game');
+      setNumSurprises(newCount);
+      
+      // Force game restart when surprises count changes during gameplay
+      if (step === "game") {
+        setGameKey((k) => {
+          const newKey = k + 1;
+          console.log('[FLOW] Game key incremented to', newKey, 'due to surprises change');
+          return newKey;
+        });
+      }
+    } else {
+      console.log('[FLOW] Surprises count unchanged, no restart needed');
+    }
+  };
+
+  // Enhanced setNumDefenses with proper logging and game restart
+  const handleSetNumDefenses = (newCount: number) => {
+    console.log('[FLOW] Defenses count change requested from', numDefenses, 'to', newCount);
+    
+    if (newCount !== numDefenses) {
+      console.log('[FLOW] Defenses count is different, updating and restarting game');
+      setNumDefenses(newCount);
+      
+      // Force game restart when defenses count changes during gameplay
+      if (step === "game") {
+        setGameKey((k) => {
+          const newKey = k + 1;
+          console.log('[FLOW] Game key incremented to', newKey, 'due to defenses change');
+          return newKey;
+        });
+      }
+    } else {
+      console.log('[FLOW] Defenses count unchanged, no restart needed');
+    }
+  };
+
   return {
     difficulty, setDifficulty,
     gameKey, setGameKey,
@@ -68,8 +115,10 @@ export default function useIndexGameFlow() {
     questionTime, setQuestionTime,
     boardSize, 
     setBoardSize: handleSetBoardSize,
-    numSurprises, setNumSurprises,
-    numDefenses, setNumDefenses,
+    numSurprises, 
+    setNumSurprises: handleSetNumSurprises,
+    numDefenses, 
+    setNumDefenses: handleSetNumDefenses,
     questionType, setQuestionType,
     mode,
     handleRestart,

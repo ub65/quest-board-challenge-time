@@ -120,7 +120,7 @@ const GameSettingsModal = ({
       step: 1,
       value: pendingSurpriseCount,
       onValueChange: (v: number) => { 
-        console.log('[SETTINGS] Surprise count changed to:', v);
+        console.log('[SETTINGS] Surprise count slider changed from', pendingSurpriseCount, 'to', v);
         setPendingSurpriseCount(v); 
       },
       minLabelKey: "settings.surpriseMin",
@@ -134,7 +134,7 @@ const GameSettingsModal = ({
       step: 1,
       value: pendingNumDefenses,
       onValueChange: (v: number) => { 
-        console.log('[SETTINGS] Defense count changed to:', v);
+        console.log('[SETTINGS] Defense count slider changed from', pendingNumDefenses, 'to', v);
         setPendingNumDefenses(v); 
       },
       minLabelKey: "settings.defenseMin",
@@ -175,10 +175,14 @@ const GameSettingsModal = ({
     // Check what changed
     const boardSizeChanged = pendingBoardSize !== boardSize;
     const questionTimeChanged = pendingQuestionTime !== questionTime;
+    const surpriseCountChanged = pendingSurpriseCount !== surpriseCount;
+    const numDefensesChanged = pendingNumDefenses !== numDefenses;
     
     console.log('[SETTINGS] Changes detected:', {
       boardSizeChanged: boardSizeChanged ? `${boardSize} -> ${pendingBoardSize}` : 'no change',
-      questionTimeChanged: questionTimeChanged ? `${questionTime} -> ${pendingQuestionTime}` : 'no change'
+      questionTimeChanged: questionTimeChanged ? `${questionTime} -> ${pendingQuestionTime}` : 'no change',
+      surpriseCountChanged: surpriseCountChanged ? `${surpriseCount} -> ${pendingSurpriseCount}` : 'no change',
+      numDefensesChanged: numDefensesChanged ? `${numDefenses} -> ${pendingNumDefenses}` : 'no change'
     });
     
     // Apply all changes
@@ -192,8 +196,16 @@ const GameSettingsModal = ({
       onQuestionTimeChange(pendingQuestionTime);
     }
     
-    onSurpriseCountChange(pendingSurpriseCount);
-    onNumDefensesChange(pendingNumDefenses);
+    if (surpriseCountChanged) {
+      console.log('[SETTINGS] Calling onSurpriseCountChange with:', pendingSurpriseCount);
+      onSurpriseCountChange(pendingSurpriseCount);
+    }
+    
+    if (numDefensesChanged) {
+      console.log('[SETTINGS] Calling onNumDefensesChange with:', pendingNumDefenses);
+      onNumDefensesChange(pendingNumDefenses);
+    }
+    
     onDifficultyChange(pendingDifficulty);
     if (onSoundEnabledChange) onSoundEnabledChange(pendingSoundEnabled);
     if (onVolumeChange) onVolumeChange(pendingVolume);

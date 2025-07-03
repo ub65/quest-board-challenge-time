@@ -19,6 +19,8 @@ const Index = () => {
     boardSize: flow.boardSize,
     difficulty: flow.difficulty,
     questionTime: flow.questionTime,
+    numSurprises: flow.numSurprises,
+    numDefenses: flow.numDefenses,
     gameKey: flow.gameKey
   });
 
@@ -41,6 +43,26 @@ const Index = () => {
     flow.setQuestionTime(newTime);
   };
 
+  // Enhanced surprises change handler
+  const handleSurprisesChange = (newCount: number) => {
+    console.log('[INDEX] Surprises count change requested:', {
+      from: flow.numSurprises,
+      to: newCount,
+      gameKey: flow.gameKey
+    });
+    flow.setNumSurprises(newCount);
+  };
+
+  // Enhanced defenses change handler
+  const handleDefensesChange = (newCount: number) => {
+    console.log('[INDEX] Defenses count change requested:', {
+      from: flow.numDefenses,
+      to: newCount,
+      gameKey: flow.gameKey
+    });
+    flow.setNumDefenses(newCount);
+  };
+
   // --- Single-player flow only ---
   return (
     <div
@@ -57,9 +79,9 @@ const Index = () => {
         questionTime={flow.questionTime}
         onQuestionTimeChange={handleQuestionTimeChange}
         surpriseCount={flow.numSurprises}
-        onSurpriseCountChange={flow.setNumSurprises}
+        onSurpriseCountChange={handleSurprisesChange}
         numDefenses={flow.numDefenses}
-        onNumDefensesChange={flow.setNumDefenses}
+        onNumDefensesChange={handleDefensesChange}
         difficulty={flow.difficulty}
         onDifficultyChange={flow.setDifficulty}
         questionType={dummyQuestionType}
@@ -93,6 +115,8 @@ const Index = () => {
             volume={flow.volume}
             boardSize={flow.boardSize}
             questionTime={flow.questionTime}
+            numSurprises={flow.numSurprises}
+            numDefenses={flow.numDefenses}
           />
         </div>
       )}

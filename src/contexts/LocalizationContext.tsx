@@ -39,6 +39,7 @@ const translations = {
     'question.correct': 'Correct!',
     'question.wrong': 'Wrong',
     'question.answerMath': 'Solve the math problem',
+    'question.answerTrivia': 'Answer the trivia question',
     
     // AI modal
     'ai.answering': 'AI is answering...',
@@ -73,6 +74,7 @@ const translations = {
     'settings.questionType': 'Question Type',
     'settings.questionTypeTranslate': 'Word Translate',
     'settings.questionTypeMath': 'Math Question',
+    'settings.questionTypeTrivia': 'Hebrew Trivia',
     'question.mathPrompt': 'Solve:',
     
     // Difficulty selector
@@ -138,7 +140,7 @@ const translations = {
     "instructions.button": "Instructions",
     "instructions.title": "How to Play Tile Titans",
     "instructions.content":
-      "Welcome to Tile Titans!\n\nGoal: Be the first to reach your opponent's starting tile (the opposite corner) before the AI does!\n\nHow To Play:\n• You and the AI take turns. Your goal is to reach the opponent's start tile.\n• Each move, answer a question correctly to advance.\n• You can only move up, down, left, or right – no diagonal moves!\n• Question types: translation or math, as you choose on the opening screen.\n• There are surprise tiles – land on them for random effects!\n• Use defense blocks to block the AI (if enabled in settings).\n• The first to reach the opponent's starting tile (top-left for AI, bottom-right for you) wins.\n\nGood luck, Titan!",
+      "Welcome to Tile Titans!\n\nGoal: Be the first to reach your opponent's starting tile (the opposite corner) before the AI does!\n\nHow To Play:\n• You and the AI take turns. Your goal is to reach the opponent's start tile.\n• Each move, answer a question correctly to advance.\n• You can only move up, down, left, or right – no diagonal moves!\n• Question types: translation, math, or Hebrew trivia, as you choose on the opening screen.\n• There are surprise tiles – land on them for random effects!\n• Use defense blocks to block the AI (if enabled in settings).\n• The first to reach the opponent's starting tile (top-left for AI, bottom-right for you) wins.\n\nGood luck, Titan!",
     // --- Add these new keys:
     'game.startingPlayer.human': 'You start the game! 🚶 Click Start Game.',
     'game.startingPlayer.ai': 'AI starts the game! 🤖 Click Start Game.',
@@ -171,6 +173,7 @@ const translations = {
     'question.correct': 'נכון!',
     'question.wrong': 'שגוי',
     'question.answerMath': 'פתור את התרגיל',
+    'question.answerTrivia': 'ענה על שאלת הטריוויה',
     
     // AI modal
     'ai.answering': 'הבינה המלאכותית עונה...',
@@ -205,6 +208,7 @@ const translations = {
     'settings.questionType': 'סוג שאלה',
     'settings.questionTypeTranslate': 'תרגום מילים',
     'settings.questionTypeMath': 'שאלה במתמטיקה',
+    'settings.questionTypeTrivia': 'טריוויה בעברית',
     'question.mathPrompt': 'פתור:',
     
     // Difficulty selector
@@ -270,7 +274,7 @@ const translations = {
     "instructions.button": "הוראות משחק",
     "instructions.title": "איך משחקים דרך למטרה",
     "instructions.content":
-      "ברוכים הבאים לדרך למטרה!\n\nמטרה: להגיע ראשון למשבצת ההתחלה של היריב (הפינה הנגדית) לפני הבינה המלאכותית!\n\nאיך משחקים:\n• אתה והבינה משחקים בתורות. המטרה להגיע ראשון למשבצת ההתחלה של היריב.\n• בכל תור, ענה נכון על שאלה כדי להתקדם.\n• אפשר לזוז רק למעלה, למטה, שמאלה או ימינה – אין תזוזה באלכסון!\n• סוגי שאלות: תרגום או חשבון — לבחירתך על מסך הפתיחה.\n• יש משבצות הפתעה לאורך הדרך — פגוש אותן לאפקטים אקראיים!\n• אפשר להציב מחסומים נגד הבינה (אם הגדרת בהגדרות).\n• הראשון שמגיע לפינה של היריב (משמאל למעלה לבינה; מימין למטה עבורך) מנצח.\n\nבהצלחה!",
+      "ברוכים הבאים לדרך למטרה!\n\nמטרה: להגיע ראשון למשבצת ההתחלה של היריב (הפינה הנגדית) לפני הבינה המלאכותית!\n\nאיך משחקים:\n• אתה והבינה משחקים בתורות. המטרה להגיע ראשון למשבצת ההתחלה של היריב.\n• בכל תור, ענה נכון על שאלה כדי להתקדם.\n• אפשר לזוז רק למעלה, למטה, שמאלה או ימינה – אין תזוזה באלכסון!\n• סוגי שאלות: תרגום, חשבון או טריוויה בעברית — לבחירתך על מסך הפתיחה.\n• יש משבצות הפתעה לאורך הדרך — פגוש אותן לאפקטים אקראיים!\n• אפשר להציב מחסומים נגד הבינה (אם הגדרת בהגדרות).\n• הראשון שמגיע לפינה של היריב (משמאל למעלה לבינה; מימין למטה עבורך) מנצח.\n\nבהצלחה!",
     // --- Add these new keys:
     'game.startingPlayer.human': 'אתה מתחיל! 🚶 לחץ "התחל משחק".',
     'game.startingPlayer.ai': 'הבינה המלאכותית מתחילה! 🤖 לחץ "התחל משחק".',

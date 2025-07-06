@@ -3,6 +3,8 @@ import TranslateQuestionModal from "../TranslateQuestionModal";
 import AITranslateQuestionModal from "../AITranslateQuestionModal";
 import MathQuestionModal from "../MathQuestionModal";
 import AIMathQuestionModal from "../AIMathQuestionModal";
+import TriviaQuestionModal from "../TriviaQuestionModal";
+import AITriviaQuestionModal from "../AITriviaQuestionModal";
 import type { Question } from "@/lib/questions";
 import type { PlayerType, Tile } from "./types";
 
@@ -14,7 +16,7 @@ type GameBoardModalsProps = {
   questionTime: number;
   onHumanSubmit: (value: boolean) => void;
   onAISubmit: () => void;
-  questionType?: "translate" | "math";
+  questionType?: "translate" | "math" | "trivia";
   soundEnabled?: boolean;
   volume?: number;
 };
@@ -51,6 +53,16 @@ const GameBoardModals: React.FC<GameBoardModalsProps> = ({
             soundEnabled={soundEnabled}
             volume={volume}
           />
+        ) : questionType === "trivia" ? (
+          <TriviaQuestionModal
+            isOpen={isModalOpen}
+            question={moveState.question}
+            timeLimit={questionTime}
+            key={moveState.tile.x + "-" + moveState.tile.y + "-human-trivia"}
+            onSubmit={onHumanSubmit}
+            soundEnabled={soundEnabled}
+            volume={volume}
+          />
         ) : (
           <TranslateQuestionModal
             isOpen={isModalOpen}
@@ -69,6 +81,15 @@ const GameBoardModals: React.FC<GameBoardModalsProps> = ({
             isOpen={true}
             question={aiModalState.question}
             key={aiModalState.targetTile.x + "-" + aiModalState.targetTile.y + "-ai-math"}
+            onSubmit={onAISubmit}
+            soundEnabled={soundEnabled}
+            volume={volume}
+          />
+        ) : questionType === "trivia" ? (
+          <AITriviaQuestionModal
+            isOpen={true}
+            question={aiModalState.question}
+            key={aiModalState.targetTile.x + "-" + aiModalState.targetTile.y + "-ai-trivia"}
             onSubmit={onAISubmit}
             soundEnabled={soundEnabled}
             volume={volume}

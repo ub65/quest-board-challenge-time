@@ -18,7 +18,7 @@ export default function useIndexGameFlow() {
   const [boardSize, setBoardSize] = useState(7); // Default to 7x7
   const [numSurprises, setNumSurprises] = useState(4);
   const [numDefenses, setNumDefenses] = useState(DEFAULT_DEFENSES);
-  const [questionType, setQuestionType] = useState<"translate" | "math">("translate");
+  const [questionType, setQuestionType] = useState<"translate" | "math" | "trivia">("translate");
 
   // Only single-player "ai" mode
   const mode: Mode = "ai";

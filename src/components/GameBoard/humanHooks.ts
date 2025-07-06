@@ -24,7 +24,7 @@ export function useHumanMoveHandler({
   setTurn: any;
   setHumanPoints: any;
   handleSurprise: any;
-  questionType: "math" | "translate";
+  questionType: "math" | "translate" | "trivia";
   getQuestionForTurn: () => any;
   setHumanHasMoved: (b: boolean) => void;
   humanHasMoved?: boolean;

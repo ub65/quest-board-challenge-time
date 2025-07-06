@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import LanguageSelector from "./LanguageSelector";
 import QuestionTypeSelector from "./QuestionTypeSelector";
@@ -10,8 +9,8 @@ type WelcomeScreenProps = {
   setPlayerName: (name: string) => void;
   onStart: () => void;
   onSettings: () => void;
-  questionType: "translate" | "math";
-  setQuestionType: (q: "translate" | "math") => void;
+  questionType: "translate" | "math" | "trivia";
+  setQuestionType: (q: "translate" | "math" | "trivia") => void;
   language: string;
   t: (k: string, params?: any) => string;
 };

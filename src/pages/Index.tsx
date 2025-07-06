@@ -63,6 +63,12 @@ const Index = () => {
     flow.setNumDefenses(newCount);
   };
 
+  // Enhanced pause handler
+  const handlePause = () => {
+    console.log('[INDEX] Game paused, returning to welcome screen');
+    flow.setStep("welcome");
+  };
+
   // --- Single-player flow only ---
   return (
     <div
@@ -109,6 +115,7 @@ const Index = () => {
             key={flow.gameKey}
             difficulty={flow.difficulty}
             onRestart={flow.handleRestart}
+            onPause={handlePause}
             playerName={flow.playerName}
             questionType={flow.questionType}
             soundEnabled={flow.soundEnabled}

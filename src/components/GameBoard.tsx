@@ -19,6 +19,7 @@ import { playSound, audioManager } from "@/lib/audioManager";
 const GameBoard = ({
   difficulty: initialDifficulty,
   onRestart,
+  onPause,
   playerName,
   gameCode,
   onlineRole,
@@ -32,10 +33,11 @@ const GameBoard = ({
 }: {
   difficulty: "easy" | "medium" | "hard";
   onRestart: () => void;
+  onPause: () => void;
   playerName?: string;
   gameCode?: string;
   onlineRole?: "host" | "guest";
-  questionType?: "translate" | "math";
+  questionType?: "translate" | "math" | "trivia";
   soundEnabled?: boolean;
   volume?: number;
   boardSize?: number;
@@ -585,6 +587,7 @@ const GameBoard = ({
             onHumanSubmit={handleHumanModalSubmit}
             onAISubmit={handleAIModalSubmit}
             onRestart={handleRestart}
+            onPause={onPause}
             settingsOpen={settingsOpen}
             setSettingsOpen={setSettingsOpen}
             onBoardSizeChange={handleBoardSizeChange}

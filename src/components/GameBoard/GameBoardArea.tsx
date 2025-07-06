@@ -38,6 +38,7 @@ type GameBoardAreaProps = {
   onHumanSubmit: (ok: boolean) => void;
   onAISubmit: () => void;
   onRestart: () => void;
+  onPause: () => void;
   settingsOpen: boolean;
   setSettingsOpen: (b: boolean) => void;
   onBoardSizeChange: (v: number) => void;
@@ -56,7 +57,7 @@ const GameBoardArea: React.FC<GameBoardAreaProps> = ({
   language, t, turn, winner, difficulty, humanPoints, aiPoints, numDefenses, defensesUsed, onPlaceDefense, defenseMode,
   boardSize, boardPoints, positions, humanTarget, aiTarget, disableInput,
   handleTileClick, getValidMoves, positionsEqual, surpriseTiles, defenseTiles, aiPendingTarget,
-  moveState, isModalOpen, aiModalState, questionTime, onHumanSubmit, onAISubmit, onRestart,
+  moveState, isModalOpen, aiModalState, questionTime, onHumanSubmit, onAISubmit, onRestart, onPause,
   settingsOpen, setSettingsOpen,
   onBoardSizeChange, onQuestionTimeChange, onSurpriseCountChange, onNumDefensesChange, onDifficultyChange, surpriseCount,
   playerName, soundEnabled, onToggleSound,
@@ -73,6 +74,7 @@ const GameBoardArea: React.FC<GameBoardAreaProps> = ({
     >
       <GameHeader
         onRestart={onRestart}
+        onPause={onPause}
         difficulty={difficulty}
         soundEnabled={soundEnabled}
         onToggleSound={onToggleSound}

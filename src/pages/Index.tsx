@@ -1,7 +1,10 @@
 import React from "react";
 import GameBoard from "@/components/GameBoard";
+import OnlineGameBoard from "@/components/OnlineGameBoard";
+import OnlineLobby from "@/components/OnlineLobby";
 import { useLocalization } from "@/contexts/LocalizationContext";
 import WelcomeScreen from "@/components/WelcomeScreen";
+import GameModeSelector from "@/components/GameModeSelector";
 import GameSettingsModal from "@/components/GameSettingsModal";
 import useIndexGameFlow from "./useIndexGameFlow";
 
@@ -16,6 +19,7 @@ const Index = () => {
 
   console.log('[INDEX] Current flow state:', {
     step: flow.step,
+    mode: flow.mode,
     boardSize: flow.boardSize,
     difficulty: flow.difficulty,
     questionTime: flow.questionTime,
@@ -69,7 +73,6 @@ const Index = () => {
     flow.setStep("welcome");
   };
 
-  // --- Single-player flow only ---
   return (
     <div
       className={`
@@ -97,6 +100,7 @@ const Index = () => {
         volume={flow.volume}
         onVolumeChange={flow.setVolume}
       />
+      
       {flow.step === "welcome" && (
         <WelcomeScreen
           language={language}
@@ -109,7 +113,23 @@ const Index = () => {
           setQuestionType={flow.setQuestionType}
         />
       )}
-      {flow.step === "game" && (
+      
+      {flow.step === "mode-select" && (
+        <GameModeSelector
+          onSelect={flow.handleModeSelect}
+          t={t}
+        />
+      )}
+      
+      {flow.step === "online-lobby" && (
+        <OnlineLobby
+          onBack={() => flow.setStep("mode-select")}
+          onGameStart={flow.handleOnlineGameStart}
+          playerName={flow.playerName}
+        />
+      )}
+      
+      {flow.step === "game" && flow.mode === "ai" && (
         <div className="w-full max-w-3xl animate-fade-in">
           <GameBoard
             key={flow.gameKey}
@@ -124,6 +144,21 @@ const Index = () => {
             questionTime={flow.questionTime}
             numSurprises={flow.numSurprises}
             numDefenses={flow.numDefenses}
+          />
+        </div>
+      )}
+      
+      {flow.step === "game" && flow.mode === "online" && flow.onlineGameData && (
+        <div className="w-full max-w-3xl animate-fade-in">
+          <OnlineGameBoard
+            roomId={flow.onlineGameData.roomId}
+            playerRole={flow.onlineGameData.role}
+            playerName={flow.playerName}
+            opponentName={flow.onlineGameData.opponentName}
+            onLeave={() => flow.setStep("online-lobby")}
+            questionType={flow.questionType}
+            soundEnabled={flow.soundEnabled}
+            volume={flow.volume}
           />
         </div>
       )}

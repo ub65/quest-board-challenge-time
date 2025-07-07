@@ -27,6 +27,8 @@ const translations = {
     'game.youWin': '🎉 You Win!',
     'game.aiWins': '😔 AI Wins',
     'game.playAgain': 'Play Again',
+    'game.opponentWins': '😔 Opponent Wins!',
+    'game.opponentTurn': "Opponent's Turn",
     
     // Sound controls
     'sound.on': 'Sound On',
@@ -133,9 +135,43 @@ const translations = {
     'welcome.settings': 'Settings',
     'welcome.questionType': 'Question Type',
     'welcome.back': 'Back',
+    'welcome.chooseMode': 'Choose Game Mode',
+    'welcome.playVsAi': 'Play vs AI',
+    'welcome.playOnline': 'Play Online',
+    
+    // ONLINE MULTIPLAYER
+    'online.title': 'Online Multiplayer',
+    'online.description': 'Play with a friend online! Create a game or join with a code.',
+    'online.createGame': 'Create Game',
+    'online.joinGame': 'Join Game',
+    'online.enterCode': 'Enter Game Code',
+    'online.creating': 'Creating...',
+    'online.joining': 'Joining...',
+    'online.gameCreated': 'Game Created',
+    'online.shareCode': 'Share this code:',
+    'online.joined': 'Joined game!',
+    'online.gameStarting': 'Game is starting...',
+    'online.error': 'Error',
+    'online.createFailed': 'Failed to create game',
+    'online.joinFailed': 'Failed to join game. Check the code and try again.',
+    'online.invalidCode': 'Invalid code',
+    'online.enterValidCode': 'Please enter a valid game code.',
+    'online.waitingForPlayer': 'Waiting for opponent...',
+    'online.shareThisCode': 'Share this code:',
+    'online.waitingDescription': 'Your friend can join using this code',
+    'online.cancel': 'Cancel',
+    'online.connecting': 'Connecting to game...',
+    'online.disconnected': 'Connection lost',
+    'online.backToLobby': 'Back to Lobby',
+    'online.loading': 'Loading game...',
+    'online.host': 'Host',
+    'online.guest': 'Guest',
     
     // New: support fallbacks for {n} interpolation
     'game.youLabel': 'You',
+    
+    // General
+    'general.back': 'Back',
     
     // --- Instructions ---
     "instructions.button": "Instructions",
@@ -162,6 +198,8 @@ const translations = {
     'game.youWin': '🎉 ניצחת!',
     'game.aiWins': '😔 הבינה המלאכותית ניצחה',
     'game.playAgain': 'שחק שוב',
+    'game.opponentWins': '😔 היריב ניצח!',
+    'game.opponentTurn': 'תור היריב',
     
     // Sound controls
     'sound.on': 'קול פועל',
@@ -268,9 +306,43 @@ const translations = {
     'welcome.settings': 'הגדרות',
     'welcome.questionType': 'סוג שאלה',
     'welcome.back': 'חזרה',
+    'welcome.chooseMode': 'בחר מצב משחק',
+    'welcome.playVsAi': 'שחק נגד הבינה המלאכותית',
+    'welcome.playOnline': 'שחק אונליין',
+    
+    // ONLINE MULTIPLAYER
+    'online.title': 'משחק מקוון',
+    'online.description': 'שחק עם חבר באינטרנט! צור משחק או הצטרף עם קוד.',
+    'online.createGame': 'צור משחק',
+    'online.joinGame': 'הצטרף למשחק',
+    'online.enterCode': 'הכנס קוד משחק',
+    'online.creating': 'יוצר...',
+    'online.joining': 'מצטרף...',
+    'online.gameCreated': 'המשחק נוצר',
+    'online.shareCode': 'שתף את הקוד הזה:',
+    'online.joined': 'הצטרפת למשחק!',
+    'online.gameStarting': 'המשחק מתחיל...',
+    'online.error': 'שגיאה',
+    'online.createFailed': 'יצירת המשחק נכשלה',
+    'online.joinFailed': 'הצטרפות למשחק נכשלה. בדוק את הקוד ונסה שוב.',
+    'online.invalidCode': 'קוד לא תקין',
+    'online.enterValidCode': 'אנא הכנס קוד משחק תקין.',
+    'online.waitingForPlayer': 'מחכה ליריב...',
+    'online.shareThisCode': 'שתף את הקוד הזה:',
+    'online.waitingDescription': 'החבר שלך יכול להצטרף באמצעות הקוד הזה',
+    'online.cancel': 'בטל',
+    'online.connecting': 'מתחבר למשחק...',
+    'online.disconnected': 'החיבור אבד',
+    'online.backToLobby': 'חזרה ללובי',
+    'online.loading': 'טוען משחק...',
+    'online.host': 'מארח',
+    'online.guest': 'אורח',
     
     // New: support fallbacks for {n} interpolation
     'game.youLabel': 'אתה',
+    
+    // General
+    'general.back': 'חזרה',
     
     // --- Instructions ---
     "instructions.button": "הוראות משחק",

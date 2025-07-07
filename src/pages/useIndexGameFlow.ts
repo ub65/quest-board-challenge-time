@@ -1,43 +1,59 @@
 import { useState } from "react";
 import { DEFAULT_DEFENSES } from "@/components/GameBoard/types";
 
-type Mode = "ai";
-type Step = "welcome" | "game";
+type Mode = "ai" | "online";
+type Step = "welcome" | "mode-select" | "online-lobby" | "game";
+
+type OnlineGameData = {
+  roomId: string;
+  role: "host" | "guest";
+  opponentName: string;
+};
 
 export default function useIndexGameFlow() {
   const [difficulty, setDifficulty] = useState<"easy" | "medium" | "hard">("easy");
   const [gameKey, setGameKey] = useState(0);
-
-  // Only "welcome" and "game" remain
   const [step, setStep] = useState<Step>("welcome");
+  const [mode, setMode] = useState<Mode>("ai");
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [playerName, setPlayerName] = useState("");
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [volume, setVolume] = useState<number>(0.5);
   const [questionTime, setQuestionTime] = useState(20);
-  const [boardSize, setBoardSize] = useState(7); // Default to 7x7
+  const [boardSize, setBoardSize] = useState(7);
   const [numSurprises, setNumSurprises] = useState(4);
   const [numDefenses, setNumDefenses] = useState(DEFAULT_DEFENSES);
   const [questionType, setQuestionType] = useState<"translate" | "math" | "trivia">("translate");
-
-  // Only single-player "ai" mode
-  const mode: Mode = "ai";
+  const [onlineGameData, setOnlineGameData] = useState<OnlineGameData | null>(null);
 
   const handleRestart = () => {
     console.log('[FLOW] Restarting game, incrementing game key');
     setGameKey((k) => k + 1);
     setStep("welcome");
     setPlayerName("");
+    setOnlineGameData(null);
   };
 
-  // No online/other mode select - always AI
   const handleStart = () => {
-    console.log('[FLOW] Starting game with settings:', {
-      boardSize,
-      numSurprises,
-      numDefenses,
-      questionTime
-    });
+    console.log('[FLOW] Starting game selection');
+    setStep("mode-select");
+  };
+
+  const handleModeSelect = (selectedMode: Mode) => {
+    console.log('[FLOW] Mode selected:', selectedMode);
+    setMode(selectedMode);
+    
+    if (selectedMode === "ai") {
+      setStep("game");
+    } else if (selectedMode === "online") {
+      setStep("online-lobby");
+    }
+  };
+
+  const handleOnlineGameStart = (roomId: string, role: "host" | "guest", opponentName: string) => {
+    console.log('[FLOW] Online game starting:', { roomId, role, opponentName });
+    setOnlineGameData({ roomId, role, opponentName });
+    setMode("online");
     setStep("game");
   };
 
@@ -108,6 +124,7 @@ export default function useIndexGameFlow() {
     difficulty, setDifficulty,
     gameKey, setGameKey,
     step, setStep,
+    mode, setMode,
     settingsOpen, setSettingsOpen,
     playerName, setPlayerName,
     soundEnabled, setSoundEnabled,
@@ -120,8 +137,10 @@ export default function useIndexGameFlow() {
     numDefenses, 
     setNumDefenses: handleSetNumDefenses,
     questionType, setQuestionType,
-    mode,
+    onlineGameData, setOnlineGameData,
     handleRestart,
     handleStart,
+    handleModeSelect,
+    handleOnlineGameStart,
   };
 }

@@ -2,58 +2,74 @@ import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/use-toast";
 import { ToastAction } from "@/components/ui/toast";
+import { gameRoomService } from "@/lib/supabase";
+import { useLocalization } from "@/contexts/LocalizationContext";
 
-/**
- * Online lobby supporting game creation/joining flows, now allows playing vs AI after joining.
- */
-const OnlineLobby: React.FC<{
+type OnlineLobbyProps = {
   onBack?: () => void;
-  t: (k: string, params?: any) => string;
-  onGameStart: (gameCode: string, role: "host" | "guest") => void;
-  onVsAISolo?: () => void;
-}> = ({
+  onGameStart: (roomId: string, role: "host" | "guest", opponentName: string) => void;
+  playerName: string;
+};
+
+const OnlineLobby: React.FC<OnlineLobbyProps> = ({
   onBack,
-  t,
   onGameStart,
-  onVsAISolo,
+  playerName,
 }) => {
-  const [step, setStep] = useState<
-    "menu" | "create" | "join" | "wait" | "error" | "choose-opponent"
-  >("menu");
+  const { t } = useLocalization();
+  const [step, setStep] = useState<"menu" | "create" | "join" | "waiting">("menu");
   const [gameCode, setGameCode] = useState<string>("");
+  const [roomId, setRoomId] = useState<string>("");
   const [isCreating, setIsCreating] = useState(false);
   const [isJoining, setIsJoining] = useState(false);
-  // Track if the user is host or guest for the vs friend option
-  const [currentRole, setCurrentRole] = useState<"host" | "guest" | null>(null);
-
-  function generateCode() {
-    return Math.random().toString(36).substring(2, 8).toUpperCase();
-  }
+  const [isWaiting, setIsWaiting] = useState(false);
 
   // Handler: Start game creation
-  const handleCreateGame = () => {
+  const handleCreateGame = async () => {
     setIsCreating(true);
-    setTimeout(() => {
-      const newCode = generateCode();
-      setGameCode(newCode);
-      setCurrentRole("host");
-      setIsCreating(false);
-      toast({
-        title: t("online.lobbyGameCreated") || "Game Created",
-        description:
-          `${t("online.lobbyShareCode") || "Share this code:"} ${newCode}`,
-        duration: 45000,
-        action: (
-          <ToastAction altText={t("online.lobbyContinue") || "Continue"} onClick={() => {
-            setStep("choose-opponent");
-            // Dismiss the toast by id if needed (Radix Toast will close automatically)
-          }}>
-            {t("online.lobbyContinue") || "Continue"}
-          </ToastAction>
-        ),
+    try {
+      const room = await gameRoomService.createRoom(playerName, {
+        boardSize: 7,
+        questionTime: 20,
+        numSurprises: 4,
+        numDefenses: 3
       });
-      // Don't move to "choose-opponent" yet—wait for user to press Continue.
-    }, 700);
+      
+      setGameCode(room.code);
+      setRoomId(room.id);
+      setStep("waiting");
+      setIsWaiting(true);
+      
+      toast({
+        title: t("online.gameCreated") || "Game Created",
+        description: `${t("online.shareCode") || "Share this code:"} ${room.code}`,
+        duration: 10000,
+      });
+
+      // Wait for opponent to join
+      const subscription = gameRoomService.subscribeToRoom(room.id, (payload) => {
+        if (payload.new?.status === 'active') {
+          subscription.unsubscribe();
+          // Get opponent name
+          gameRoomService.getRoom(room.id).then((roomData) => {
+            const guestPlayer = roomData.game_players.find(p => p.role === 'guest');
+            if (guestPlayer) {
+              onGameStart(room.id, 'host', guestPlayer.player_name || 'Guest');
+            }
+          });
+        }
+      });
+
+    } catch (error) {
+      console.error('Failed to create game:', error);
+      toast({
+        title: t("online.error") || "Error",
+        description: t("online.createFailed") || "Failed to create game",
+        variant: "destructive"
+      });
+    } finally {
+      setIsCreating(false);
+    }
   };
 
   // Handler: Show join screen
@@ -62,31 +78,43 @@ const OnlineLobby: React.FC<{
     setGameCode("");
   };
 
-  // Handler: Submit join code (to be implemented)
-  const handleSubmitJoin = (e: React.FormEvent) => {
+  // Handler: Submit join code
+  const handleSubmitJoin = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!gameCode.trim() || gameCode.length < 4) {
       toast({
-        title: t("online.lobbyInvalidCode") || "Invalid code",
-        description: t("online.lobbyEnterValidCode") || "Please enter a valid game code.",
+        title: t("online.invalidCode") || "Invalid code",
+        description: t("online.enterValidCode") || "Please enter a valid game code.",
         variant: "destructive",
       });
       return;
     }
+    
     setIsJoining(true);
-    setTimeout(() => {
-      setIsJoining(false);
-      setCurrentRole("guest");
+    try {
+      const room = await gameRoomService.joinRoom(gameCode.trim(), playerName);
+      
+      // Get host name
+      const roomData = await gameRoomService.getRoom(room.id);
+      const hostPlayer = roomData.game_players.find(p => p.role === 'host');
+      
       toast({
-        title: t("online.lobbyJoined") || "Joined game!",
-        description: t("online.lobbyJoinedDesc") || "Waiting for the host...",
+        title: t("online.joined") || "Joined game!",
+        description: t("online.gameStarting") || "Game is starting...",
       });
-      // Immediately call onGameStart after joining as guest (skip choose-opponent)
-      if (onGameStart) {
-        onGameStart(gameCode, "guest");
-      }
-      // Optionally, you could setStep("wait") if you want to show a waiting room.
-    }, 800);
+      
+      onGameStart(room.id, 'guest', hostPlayer?.player_name || 'Host');
+      
+    } catch (error) {
+      console.error('Failed to join game:', error);
+      toast({
+        title: t("online.error") || "Error",
+        description: t("online.joinFailed") || "Failed to join game. Check the code and try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsJoining(false);
+    }
   };
 
   // Handler: Back to menu
@@ -95,57 +123,58 @@ const OnlineLobby: React.FC<{
     setGameCode("");
     setIsCreating(false);
     setIsJoining(false);
-    setCurrentRole(null);
+    setIsWaiting(false);
   };
 
-  // Handler: Play vs AI (from lobby)
-  const handleVsAI = () => {
-    if (onVsAISolo) onVsAISolo();
-  };
-
-  // Handler: Play vs Friend
-  const handleVsFriend = () => {
-    if (gameCode && currentRole) {
-      onGameStart(gameCode, currentRole);
-    }
-  };
-
-  // Lobby/menu screens
   return (
     <div className="flex flex-col items-center justify-center min-h-screen w-full bg-gradient-to-br from-sky-100 via-blue-200 to-violet-100 px-4">
       <div className="w-full max-w-sm mx-auto bg-white/95 shadow-xl rounded-3xl p-7 flex flex-col gap-8 mt-10 animate-fade-in">
-        <h1 className="text-2xl font-extrabold text-center text-primary">🕹️ {t("online.lobbyTitle") || "Online Lobby"}</h1>
+        <h1 className="text-2xl font-extrabold text-center text-primary">
+          🌐 {t("online.title") || "Online Multiplayer"}
+        </h1>
+        
         {step === "menu" && (
           <>
-            <p className="text-center text-gray-500">{t("online.lobbyDesc") || "Invite a friend to play online, or join their game with a code."}</p>
+            <p className="text-center text-gray-500">
+              {t("online.description") || "Play with a friend online! Create a game or join with a code."}
+            </p>
             <div className="flex flex-col gap-4">
-              <Button className="w-full" onClick={handleCreateGame} disabled={isCreating}>
-                {isCreating ? t("online.lobbyCreating") || "Creating..." : t("online.lobbyCreate") || "Create Game"}
+              <Button 
+                className="w-full" 
+                onClick={handleCreateGame} 
+                disabled={isCreating}
+              >
+                {isCreating ? 
+                  (t("online.creating") || "Creating...") : 
+                  (t("online.createGame") || "Create Game")
+                }
               </Button>
-              <Button className="w-full" variant="secondary" onClick={handleJoinGame}>
-                {t("online.lobbyJoin") || "Join Game"}
+              <Button 
+                className="w-full" 
+                variant="secondary" 
+                onClick={handleJoinGame}
+              >
+                {t("online.joinGame") || "Join Game"}
               </Button>
             </div>
-            <Button className="w-full mt-3" variant="ghost" onClick={onBack}>
+            <Button 
+              className="w-full mt-3" 
+              variant="ghost" 
+              onClick={onBack}
+            >
               {t("general.back") || "Back"}
             </Button>
-          </>
-        )}
-
-        {step === "create" && (
-          <>
-            <p>{t("online.lobbyCreating") || "Creating game..."}</p>
           </>
         )}
 
         {step === "join" && (
           <form onSubmit={handleSubmitJoin} className="flex flex-col gap-5">
             <label className="font-medium text-center">
-              {t("online.lobbyEnterCode") || "Enter a game code"}
+              {t("online.enterCode") || "Enter Game Code"}
             </label>
             <input
               autoFocus
-              className="w-full text-center border border-gray-300 rounded-lg px-4 py-3 text-lg tracking-widest font-mono"
+              className="w-full text-center border border-gray-300 rounded-lg px-4 py-3 text-lg tracking-widest font-mono uppercase"
               value={gameCode}
               maxLength={8}
               onChange={e => setGameCode(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ""))}
@@ -153,32 +182,52 @@ const OnlineLobby: React.FC<{
               inputMode="text"
               spellCheck={false}
             />
-            <Button type="submit" className="w-full" disabled={isJoining}>
-              {isJoining ? t("online.lobbyJoining") || "Joining..." : t("online.lobbyJoin") || "Join Game"}
+            <Button 
+              type="submit" 
+              className="w-full" 
+              disabled={isJoining}
+            >
+              {isJoining ? 
+                (t("online.joining") || "Joining...") : 
+                (t("online.joinGame") || "Join Game")
+              }
             </Button>
-            <Button type="button" variant="ghost" className="w-full" onClick={handleBackToMenu}>
+            <Button 
+              type="button" 
+              variant="ghost" 
+              className="w-full" 
+              onClick={handleBackToMenu}
+            >
               {t("general.back") || "Back"}
             </Button>
           </form>
         )}
 
-        {/* CHOOSE OPPONENT STEP */}
-        {/* Only hosts see choose-opponent after creating, guests go straight to the board */}
-        {step === "choose-opponent" && currentRole === "host" && (
+        {step === "waiting" && (
           <>
-            <p className="text-center text-gray-500">
-              {t("online.lobbyChooseOpponent") || "Do you want to play against AI or a friend?"}
-            </p>
-            <div className="flex flex-col gap-4">
-              <Button className="w-full" onClick={handleVsAI}>
-                🤖 {t("online.lobbyVsAI") || "Play vs AI"}
-              </Button>
-              <Button className="w-full" onClick={handleVsFriend}>
-                🧑‍🤝‍🧑 {t("online.lobbyVsFriend") || "Play vs Friend"}
-              </Button>
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+              <p className="text-lg font-medium mb-2">
+                {t("online.waitingForPlayer") || "Waiting for opponent..."}
+              </p>
+              <div className="bg-gray-100 rounded-lg p-4 mb-4">
+                <p className="text-sm text-gray-600 mb-2">
+                  {t("online.shareThisCode") || "Share this code:"}
+                </p>
+                <div className="text-2xl font-mono font-bold tracking-widest text-primary">
+                  {gameCode}
+                </div>
+              </div>
+              <p className="text-sm text-gray-500">
+                {t("online.waitingDescription") || "Your friend can join using this code"}
+              </p>
             </div>
-            <Button className="w-full mt-3" variant="ghost" onClick={handleBackToMenu}>
-              {t("general.back") || "Back"}
+            <Button 
+              variant="ghost" 
+              className="w-full" 
+              onClick={handleBackToMenu}
+            >
+              {t("online.cancel") || "Cancel"}
             </Button>
           </>
         )}

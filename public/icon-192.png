@@ -1,0 +1,11 @@
+<svg width="192" height="192" viewBox="0 0 192 192" xmlns="http://www.w3.org/2000/svg">
+  <rect width="192" height="192" fill="#2563eb" rx="24"/>
+  <rect x="24" y="24" width="144" height="144" fill="#3b82f6" rx="12"/>
+  <rect x="36" y="36" width="48" height="48" fill="#60a5fa" rx="6"/>
+  <rect x="108" y="36" width="48" height="48" fill="#93c5fd" rx="6"/>
+  <rect x="36" y="108" width="48" height="48" fill="#93c5fd" rx="6"/>
+  <rect x="108" y="108" width="48" height="48" fill="#60a5fa" rx="6"/>
+  <circle cx="60" cy="60" r="12" fill="#1d4ed8"/>
+  <circle cx="132" cy="132" r="12" fill="#1d4ed8"/>
+  <text x="96" y="170" text-anchor="middle" fill="white" font-family="Arial, sans-serif" font-size="16" font-weight="bold">TITANS</text>
+</svg>

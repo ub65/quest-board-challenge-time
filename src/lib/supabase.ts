@@ -16,7 +16,7 @@ export const authService = {
   async signInAsGuest() {
     // Generate a temporary email and password for guest users
     const tempId = Math.random().toString(36).substring(2, 15)
-    const tempEmail = `guest_${tempId}@temp.local`
+    const tempEmail = `guest_${tempId}@temp.test`
     const tempPassword = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15)
     
     // Try to sign up first, if user exists, sign in

@@ -12,11 +12,30 @@ export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey)
 
 // Authentication helpers
 export const authService = {
-  // Sign in anonymously or with a temporary user
-  async signInAnonymously() {
-    const { data, error } = await supabase.auth.signInAnonymously()
-    if (error) throw error
-    return data
+  // Sign in with a temporary email/password for guest users
+  async signInAsGuest() {
+    // Generate a temporary email and password for guest users
+    const tempId = Math.random().toString(36).substring(2, 15)
+    const tempEmail = `guest_${tempId}@temp.local`
+    const tempPassword = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15)
+    
+    // Try to sign up first, if user exists, sign in
+    const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+      email: tempEmail,
+      password: tempPassword,
+    })
+    
+    if (signUpError) {
+      // If signup fails, try to sign in (user might already exist)
+      const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+        email: tempEmail,
+        password: tempPassword,
+      })
+      if (signInError) throw signInError
+      return signInData
+    }
+    
+    return signUpData
   },
 
   // Get current user
@@ -29,7 +48,7 @@ export const authService = {
   async ensureAuthenticated() {
     let user = await this.getCurrentUser()
     if (!user) {
-      const authData = await this.signInAnonymously()
+      const authData = await this.signInAsGuest()
       user = authData.user
     }
     return user

@@ -27,7 +27,7 @@ const GameModeSelector: React.FC<GameModeSelectorProps> = ({ onSelect, t }) => (
         </button>
       </div>
     </div>
-    <div className="mt-8 text-xs text-gray-500">
+        &copy; 2025 Math Board Game ❤️
       &copy; {new Date().getFullYear()} Math Board Game ❤️
     </div>
   </div>

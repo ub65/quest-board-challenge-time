@@ -94,7 +94,7 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = ({
         </div>
       </div>
       <div className="mt-8 text-xs text-gray-500">
-        &copy; {new Date().getFullYear()} Math Board Game ❤️
+        &copy; 2025 Math Board Game ❤️
       </div>
       <InstructionsModal open={showInstructions} onOpenChange={setShowInstructions} />
     </div>

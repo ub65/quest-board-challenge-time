@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/use-toast";
 import { ToastAction } from "@/components/ui/toast";
-import { gameRoomService } from "@/lib/supabase";
+import { gameRoomService, authService } from "@/lib/supabase";
 import { useLocalization } from "@/contexts/LocalizationContext";
 
 type OnlineLobbyProps = {
@@ -24,10 +24,31 @@ const OnlineLobby: React.FC<OnlineLobbyProps> = ({
   const [isJoining, setIsJoining] = useState(false);
   const [isWaiting, setIsWaiting] = useState(false);
 
+  // Initialize authentication on component mount
+  React.useEffect(() => {
+    const initAuth = async () => {
+      try {
+        await authService.ensureAuthenticated();
+      } catch (error) {
+        console.error('Failed to initialize authentication:', error);
+        toast({
+          title: t("online.error") || "Error",
+          description: "Failed to initialize. Please refresh the page.",
+          variant: "destructive"
+        });
+      }
+    };
+    
+    initAuth();
+  }, [t]);
+
   // Handler: Start game creation
   const handleCreateGame = async () => {
     setIsCreating(true);
     try {
+      // Ensure authentication before creating room
+      await authService.ensureAuthenticated();
+      
       const room = await gameRoomService.createRoom(playerName, {
         boardSize: 7,
         questionTime: 20,
@@ -92,6 +113,9 @@ const OnlineLobby: React.FC<OnlineLobbyProps> = ({
     
     setIsJoining(true);
     try {
+      // Ensure authentication before joining room
+      await authService.ensureAuthenticated();
+      
       const room = await gameRoomService.joinRoom(gameCode.trim(), playerName);
       
       // Get host name

@@ -16,25 +16,26 @@ export const authService = {
   async signInAsGuest() {
     // Generate a temporary email and password for guest users
     const tempId = Math.random().toString(36).substring(2, 15)
-    const tempEmail = `guest_${tempId}@temp.test`
-    const tempPassword = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15)
+    const tempEmail = `guest_${tempId}@example.com` // Changed to valid domain
+    const tempPassword = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15) + "A1!" // Ensure password meets requirements
     
-    // Try to sign up first, if user exists, sign in
+    console.log('[AUTH] Attempting to sign up guest user:', tempEmail)
+    
+    // Try to sign up first
     const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
       email: tempEmail,
       password: tempPassword,
+      options: {
+        emailRedirectTo: undefined // Disable email confirmation
+      }
     })
     
     if (signUpError) {
-      // If signup fails, try to sign in (user might already exist)
-      const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
-        email: tempEmail,
-        password: tempPassword,
-      })
-      if (signInError) throw signInError
-      return signInData
+      console.error('[AUTH] Sign up failed:', signUpError)
+      throw signUpError
     }
     
+    console.log('[AUTH] Guest user signed up successfully:', signUpData.user?.id)
     return signUpData
   },
 
@@ -48,9 +49,11 @@ export const authService = {
   async ensureAuthenticated() {
     let user = await this.getCurrentUser()
     if (!user) {
+      console.log('[AUTH] No user found, creating guest user')
       const authData = await this.signInAsGuest()
       user = authData.user
     }
+    console.log('[AUTH] User authenticated:', user?.id)
     return user
   }
 }
@@ -59,53 +62,79 @@ export const authService = {
 export const gameRoomService = {
   // Create a new game room
   async createRoom(hostName: string, settings: any) {
+    console.log('[GAME] Creating room for host:', hostName)
+    
     // Ensure user is authenticated
     const user = await authService.ensureAuthenticated()
-    if (!user) throw new Error('Authentication required')
+    if (!user) {
+      throw new Error('Authentication required')
+    }
 
+    console.log('[GAME] User authenticated, creating room with user ID:', user.id)
+
+    // Generate a simple 6-character code
     const code = Math.random().toString(36).substring(2, 8).toUpperCase()
+    
+    const roomData = {
+      code,
+      host_id: user.id,
+      status: 'waiting' as const,
+      settings,
+      game_state: {
+        board_size: settings.boardSize || 7,
+        positions: { host: { x: 0, y: 0 }, guest: { x: settings.boardSize - 1 || 6, y: settings.boardSize - 1 || 6 } },
+        points: { host: 0, guest: 0 },
+        current_turn: 'host',
+        board_points: [],
+        surprise_tiles: [],
+        defense_tiles: [],
+        defenses_used: { host: 0, guest: 0 }
+      }
+    }
+
+    console.log('[GAME] Inserting room data:', roomData)
     
     const { data, error } = await supabase
       .from('game_rooms')
-      .insert({
-        code,
-        host_id: user.id,
-        status: 'waiting',
-        settings,
-        game_state: {
-          board_size: settings.boardSize || 7,
-          positions: { host: { x: 0, y: 0 }, guest: { x: settings.boardSize - 1 || 6, y: settings.boardSize - 1 || 6 } },
-          points: { host: 0, guest: 0 },
-          current_turn: 'host',
-          board_points: [],
-          surprise_tiles: [],
-          defense_tiles: [],
-          defenses_used: { host: 0, guest: 0 }
-        }
-      })
+      .insert(roomData)
       .select()
       .single()
 
-    if (error) throw error
+    if (error) {
+      console.error('[GAME] Failed to create room:', error)
+      throw error
+    }
+
+    console.log('[GAME] Room created successfully:', data.id)
 
     // Add host as player
+    const playerData = {
+      game_room_id: data.id,
+      user_id: user.id,
+      role: 'host' as const,
+      player_name: hostName,
+      is_connected: true
+    }
+
+    console.log('[GAME] Adding host as player:', playerData)
+
     const { error: playerError } = await supabase
       .from('game_players')
-      .insert({
-        game_room_id: data.id,
-        user_id: user.id,
-        role: 'host',
-        player_name: hostName,
-        is_connected: true
-      })
+      .insert(playerData)
 
-    if (playerError) throw playerError
+    if (playerError) {
+      console.error('[GAME] Failed to add host as player:', playerError)
+      throw playerError
+    }
 
+    console.log('[GAME] Host added as player successfully')
     return data
   },
 
   // Join existing room
   async joinRoom(code: string, guestName: string) {
+    console.log('[GAME] Joining room with code:', code)
+    
     // Ensure user is authenticated
     const user = await authService.ensureAuthenticated()
     if (!user) throw new Error('Authentication required')
@@ -118,7 +147,12 @@ export const gameRoomService = {
       .eq('status', 'waiting')
       .single()
 
-    if (roomError || !room) throw new Error('Room not found or already started')
+    if (roomError || !room) {
+      console.error('[GAME] Room not found:', roomError)
+      throw new Error('Room not found or already started')
+    }
+
+    console.log('[GAME] Room found:', room.id)
 
     // Add guest as player
     const { error: playerError } = await supabase
@@ -131,7 +165,10 @@ export const gameRoomService = {
         is_connected: true
       })
 
-    if (playerError) throw playerError
+    if (playerError) {
+      console.error('[GAME] Failed to add guest as player:', playerError)
+      throw playerError
+    }
 
     // Update room to set guest_id
     const { error: updateGuestError } = await supabase
@@ -139,7 +176,10 @@ export const gameRoomService = {
       .update({ guest_id: user.id })
       .eq('id', room.id)
 
-    if (updateGuestError) throw updateGuestError
+    if (updateGuestError) {
+      console.error('[GAME] Failed to update guest_id:', updateGuestError)
+      throw updateGuestError
+    }
 
     // Update room status to active
     const { data: updatedRoom, error: updateError } = await supabase
@@ -149,8 +189,12 @@ export const gameRoomService = {
       .select()
       .single()
 
-    if (updateError) throw updateError
+    if (updateError) {
+      console.error('[GAME] Failed to update room status:', updateError)
+      throw updateError
+    }
 
+    console.log('[GAME] Successfully joined room')
     return updatedRoom
   },
 
